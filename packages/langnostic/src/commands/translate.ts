@@ -3,7 +3,7 @@ import { chunk, groupBy } from 'lodash-es';
 import Config from '../config';
 import { expandTargetPaths } from '../core';
 import { printGroupStatus } from '../core/output/print';
-import { TranslationGroupBatch } from '../core/runner/TranslationGroupBatch';
+import { TranslationGroupBatch } from '../core/runner/translation-group-batch';
 import type {
   Plugin,
   TranslationGroup,

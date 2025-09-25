@@ -1,4 +1,4 @@
-import type { TranslationGroupBatch } from './runner/TranslationGroupBatch';
+import type { TranslationGroupBatch } from './runner/translation-group-batch';
 
 export type TranslationFileItem = Readonly<{
   locale: Locale;
