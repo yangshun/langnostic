@@ -18,8 +18,7 @@ export type ConfigGroupPathItem = {
 };
 
 type ConfigPluginType = 'json' | 'mdx' | 'string';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ConfigPluginOptions = Record<string, any>;
+type ConfigPluginOptions = Record<string, unknown>;
 type ConfigPlugin =
   | ConfigPluginType
   | [ConfigPluginType, ConfigPluginOptions]

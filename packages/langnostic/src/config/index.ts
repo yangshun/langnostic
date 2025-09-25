@@ -1,6 +1,6 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { cosmiconfigSync } from 'cosmiconfig';
-import fs from 'fs';
-import path from 'path';
 
 import { configDefault } from './config-default';
 import type { ConfigType } from './types';
@@ -38,7 +38,9 @@ export default class Config {
   public static initializeConfig(
     searchPath?: string,
   ): Readonly<
-    { filepath: null; result: 'error'; } | { filepath: string; result: 'created'; } | { filepath: string; result: 'exists'; }
+    | { filepath: null; result: 'error' }
+    | { filepath: string; result: 'created' }
+    | { filepath: string; result: 'exists' }
   > {
     const result = configExplorerSync.search(searchPath);
 

@@ -129,7 +129,7 @@ export function buildTargetMDXContent(
     return translatedContent?.[hash] || '';
   });
 
-  return '\n' + joinSegmentedMDXContent(newContent);
+  return `\n${joinSegmentedMDXContent(newContent)}`;
 }
 
 export function buildTargetMDX(

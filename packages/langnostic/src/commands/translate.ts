@@ -15,7 +15,7 @@ import mdxPlugin from '../plugins/mdx/mdx-plugin';
 import { generate } from '../translation/generate';
 import mapAsync from '../utils/map-async';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// biome-ignore lint/suspicious/noExplicitAny: Each plugin can have its own options
 const DEFAULTS_PLUGINS: Record<string, (options?: any) => Plugin> = {
   json: jsonPlugin,
   mdx: mdxPlugin,
@@ -137,11 +137,16 @@ export async function translate({
         return;
       }
 
-      const batch = groups.get(job.group)!.batches.get(job.batch)!;
-
-      batch.startTranslating();
+      const batch = groups.get(job.group)?.batches.get(job.batch);
+      if (batch == null) {
+        console.warn(
+          `Batch ${job.batch} in group ${job.group} not found. Skipping...`,
+        );
+        return;
+      }
 
       try {
+        batch.startTranslating();
         const instructions = (await group.plugin.getInstructions?.()) || '';
         const translatedStrings = await generate(job, {
           ai: config.ai,

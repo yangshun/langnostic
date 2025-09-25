@@ -1,5 +1,5 @@
-import fs from 'fs/promises';
-import * as path from 'path';
+import fs from 'node:fs/promises';
+import * as path from 'node:path';
 
 export async function readFile(filePath: string): Promise<string> {
   return await fs.readFile(filePath, 'utf8');
@@ -13,7 +13,7 @@ export async function writeFile(
 
   await fs.mkdir(dir, { recursive: true });
 
-  return await fs.writeFile(filePath, content.trim() + '\n', 'utf8');
+  return await fs.writeFile(filePath, `${content.trim()}\n`, 'utf8');
 }
 
 export async function fileExists(filePath: string): Promise<boolean> {

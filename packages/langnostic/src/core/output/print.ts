@@ -57,7 +57,7 @@ export function printGroupStatus(
       '',
       [
         `${chalk.bold('Batches:')} `,
-        chalk.bold.green(`${completedBatches} successful`) + ',',
+        `${chalk.bold.green(`${completedBatches} successful`)},`,
         `${totalBatches} total`,
       ].join(' '),
       `${chalk.bold('Duration:')} ${formatDuration(Date.now() - timeStart)}`,

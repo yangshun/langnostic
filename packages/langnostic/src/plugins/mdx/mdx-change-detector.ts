@@ -44,7 +44,9 @@ function findMissingOrUpdatedFrontmatterKeys(
 ): ReadonlyArray<string> {
   return Object.keys(sourceFrontmatter).filter((key) => {
     // If key is not present in target frontmatter, it needs translation
-    if (!(key in targetFrontmatter)) {return true;}
+    if (!(key in targetFrontmatter)) {
+      return true;
+    }
 
     const sourceHash = generateHash(sourceFrontmatter[key]);
 
@@ -201,8 +203,9 @@ export async function processFileForChanges(
             cleanSourceFrontmatter,
           ).reduce(
             (acc, key) => {
-              if (registryData.frontmatter[key])
-                {acc[key] = registryData.frontmatter[key];}
+              if (registryData.frontmatter[key]) {
+                acc[key] = registryData.frontmatter[key];
+              }
 
               return acc;
             },
@@ -283,7 +286,9 @@ async function rebuildTargetContent({
     contentDiff.isReorderOrRemoval ||
     excludedFrontmatterKeysToUpdate.length > 0;
 
-  if (!needsRebuild) {return;}
+  if (!needsRebuild) {
+    return;
+  }
 
   // Rebuild content
   const updatedTargetMDXContent = contentDiff.isReorderOrRemoval

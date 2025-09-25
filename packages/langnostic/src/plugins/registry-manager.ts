@@ -1,5 +1,5 @@
+import path from 'node:path';
 import grayMatter from 'gray-matter';
-import path from 'path';
 
 import type { Registry, TranslationFileMetadata } from '../core/types';
 import { readFile, writeFile } from '../lib/file-service';
@@ -28,7 +28,7 @@ export default function registryManager() {
         const data = await readFile(registryPath);
 
         return JSON.parse(data) as Registry;
-      } catch (error) {
+      } catch (_error) {
         // If file doesn't exist, return empty registry
         return {
           content: {

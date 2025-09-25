@@ -12,14 +12,14 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsup",
-    "lint": "eslint src --fix",
-    "dev": "tsup --watch",
     "clean": "rimraf dist",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md,mdx}\"",
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "lint": "biome check --write --unsafe",
+    "format": "biome format --write",
+    "tc": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
-    "tc": "tsc",
     "verify": "npm run tc && npm run test && npm run build",
     "prepublishOnly": "npm run verify"
   },
@@ -46,11 +46,9 @@
     "zod": "^3.24.3"
   },
   "devDependencies": {
-    "@greatfrontend/eslint-config": "0.2.0",
     "@types/lodash-es": "^4.17.6",
     "@types/node": "22.15.0",
     "@types/yargs": "^17.0.33",
-    "eslint": "^9.34.0",
     "prettier": "3.5.3",
     "rimraf": "^6.0.1",
     "tsup": "^8.3.6",

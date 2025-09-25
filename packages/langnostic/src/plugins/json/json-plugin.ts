@@ -116,7 +116,10 @@ function sortKeys(
 ): Record<string, TranslationEntry> {
   return Object.keys(obj)
     .sort()
-    .reduce((acc, key) => ({ ...acc, [key]: obj[key] }), {});
+    .reduce((acc: Record<string, TranslationEntry>, key) => {
+      acc[key] = obj[key];
+      return acc;
+    }, {});
 }
 
 async function readJson(

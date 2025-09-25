@@ -1,5 +1,5 @@
+import path from 'node:path';
 import { generateObject } from 'ai';
-import path from 'path';
 import { z } from 'zod';
 
 import { RUNS_PATH } from '../core/constants';
@@ -79,10 +79,10 @@ export async function generate(
       translationStringsMap.set(
         hashStringItem(r.batchId, r.id),
         r.translations.reduce(
-          (acc, { locale, string }) => ({
-            ...acc,
-            [locale]: string,
-          }),
+          (acc: Record<string, string>, { locale, string }) => {
+            acc[locale] = string;
+            return acc;
+          },
           {},
         ),
       );
@@ -92,6 +92,7 @@ export async function generate(
       ...string,
       targets: Object.entries(
         // TODO: report if there are missing results from the LLM
+        // biome-ignore lint/style/noNonNullAssertion: TODO
         translationStringsMap.get(hashStringItem(string.batchId, string.id))!,
       ).map(([locale, translation]) => ({
         locale,

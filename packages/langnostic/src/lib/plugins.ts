@@ -65,7 +65,7 @@ export function buildTranslationStrings(
 function getTranslationSource(
   value: string | { defaultMessage: string; description: string },
   locale: Locale,
-): { description?: string; locale: Locale; string: string; } {
+): { description?: string; locale: Locale; string: string } {
   return typeof value === 'object'
     ? { description: value.description, locale, string: value.defaultMessage }
     : { locale, string: value };

@@ -20,11 +20,14 @@ export type TranslationGroup = {
   groupId: TranslationGroupId;
   plugin: Plugin;
   stringsPerRequest: number;
-}
+};
 
 export type TranslationGroups = Map<TranslationGroupId, TranslationGroup>;
 export type TranslationGroupBatchStatus =
-  'error' | 'queued' | 'success' | 'translating';
+  | 'error'
+  | 'queued'
+  | 'success'
+  | 'translating';
 
 export type TranslationString = Readonly<{
   locale: Locale;
@@ -42,8 +45,9 @@ export type TranslationStringArg = Readonly<{
   batchId: TranslationGroupBatchId;
   id: string;
   source: Readonly<{
-      description?: string; // Optional context for the translation
-    }> & TranslationString;
+    description?: string; // Optional context for the translation
+  }> &
+    TranslationString;
   // Let plugin decide which locales to translate to because
   // only it knows what hasn't been translated
   targets: ReadonlyArray<Locale>;
@@ -78,7 +82,7 @@ export type Plugin = {
    * Unique identifier for the plugin type
    */
   type: string;
-}
+};
 
 export type TranslationRequestJob = Readonly<{
   batch: TranslationGroupBatchId;
@@ -97,4 +101,4 @@ export type Registry = {
     targets: Record<Locale, Array<string>>;
   };
   frontmatter: Record<string, string>;
-}
+};

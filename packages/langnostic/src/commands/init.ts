@@ -1,6 +1,6 @@
+import path from 'node:path';
 import { intro, outro, spinner } from '@clack/prompts';
 import chalk from 'chalk';
-import path from 'path';
 
 import Config from '../config';
 
@@ -34,7 +34,6 @@ export async function init() {
       break;
     }
     default: {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const _: never = initResult;
 
       break;
