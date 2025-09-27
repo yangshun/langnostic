@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { RUNS_PATH } from '@/core/constants';
 import type {
   TranslationGroupBatchId,
+  TranslationLocale,
   TranslationRequestJob,
   TranslationStringResult,
 } from '@/core/types';
@@ -73,7 +74,10 @@ export async function generate(
       );
     }
 
-    const translationStringsMap = new Map<string, Record<Locale, string>>();
+    const translationStringsMap = new Map<
+      string,
+      Record<TranslationLocale, string>
+    >();
 
     result.object.data.forEach((r) => {
       translationStringsMap.set(

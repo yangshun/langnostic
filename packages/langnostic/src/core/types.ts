@@ -1,7 +1,8 @@
 import type { TranslationGroupBatch } from './runner/translation-group-batch';
 
+export type TranslationLocale = string;
 export type TranslationFileItem = Readonly<{
-  locale: Locale;
+  locale: TranslationLocale;
   path: string;
 }>;
 
@@ -18,7 +19,7 @@ export type TranslationRunId = string;
 export type TranslationGroup = {
   batches: Map<TranslationGroupBatchId, TranslationGroupBatch>;
   groupId: TranslationGroupId;
-  plugin: Plugin;
+  plugin: LangnosticPlugin;
   stringsPerRequest: number;
 };
 
@@ -30,7 +31,7 @@ export type TranslationGroupBatchStatus =
   | 'translating';
 
 export type TranslationString = Readonly<{
-  locale: Locale;
+  locale: TranslationLocale;
   string: string;
 }>;
 
@@ -50,10 +51,10 @@ export type TranslationStringArg = Readonly<{
     TranslationString;
   // Let plugin decide which locales to translate to because
   // only it knows what hasn't been translated
-  targets: ReadonlyArray<Locale>;
+  targets: ReadonlyArray<TranslationLocale>;
 }>;
 
-export type Plugin = {
+export type LangnosticPlugin = {
   /**
    * Plugin-specific prompt
    */
@@ -91,14 +92,3 @@ export type TranslationRequestJob = Readonly<{
   runId: TranslationRunId;
   strings: ReadonlyArray<TranslationStringArg>;
 }>;
-
-export type Registry = {
-  content: {
-    source: {
-      hashes: Array<string>;
-      locale: Locale;
-    };
-    targets: Record<Locale, Array<string>>;
-  };
-  frontmatter: Record<string, string>;
-};

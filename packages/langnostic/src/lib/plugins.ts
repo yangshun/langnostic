@@ -2,6 +2,7 @@ import { groupBy, mapValues } from 'lodash-es';
 
 import type {
   TranslationFileMetadata,
+  TranslationLocale,
   TranslationStringArg,
   TranslationStringResult,
 } from '@/core/types';
@@ -11,14 +12,14 @@ import type {
  */
 export function buildTranslatedContentMap(
   translatedStrings: ReadonlyArray<TranslationStringResult>,
-): Map<Locale, Record<string, string>> {
+): Map<TranslationLocale, Record<string, string>> {
   const grouped = groupBy(
     translatedStrings.flatMap(({ id, targets }) =>
       targets.map(({ locale, string }) => ({ id, locale, string })),
     ),
     'locale',
   );
-  const contentMap = new Map<Locale, Record<string, string>>(
+  const contentMap = new Map<TranslationLocale, Record<string, string>>(
     Object.entries(
       mapValues(grouped, (translations) =>
         Object.fromEntries(translations.map(({ id, string }) => [id, string])),
@@ -38,7 +39,7 @@ export function buildTranslationStrings(
         description: string;
       }
   >,
-  changes: Record<Locale, ReadonlyArray<string>>,
+  changes: Record<TranslationLocale, ReadonlyArray<string>>,
   file: TranslationFileMetadata,
 ): ReadonlyArray<TranslationStringArg> {
   return Object.entries(content).reduce<Array<TranslationStringArg>>(
@@ -64,8 +65,8 @@ export function buildTranslationStrings(
 
 function getTranslationSource(
   value: string | { defaultMessage: string; description: string },
-  locale: Locale,
-): { description?: string; locale: Locale; string: string } {
+  locale: TranslationLocale,
+): { description?: string; locale: TranslationLocale; string: string } {
   return typeof value === 'object'
     ? { description: value.description, locale, string: value.defaultMessage }
     : { locale, string: value };

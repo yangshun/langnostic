@@ -1,5 +1,5 @@
 import type {
-  Plugin,
+  LangnosticPlugin,
   TranslationFileMetadata,
   TranslationStringArg,
 } from '@/core/types';
@@ -18,7 +18,7 @@ type TranslationEntry =
   | Readonly<{ defaultMessage: string; description: string }>
   | string;
 
-export default function JsonPlugin(): Plugin {
+export default function JsonPlugin(): LangnosticPlugin {
   const files: Array<TranslationFileMetadata> = [];
 
   return {

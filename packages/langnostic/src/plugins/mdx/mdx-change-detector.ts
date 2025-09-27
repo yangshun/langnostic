@@ -1,9 +1,9 @@
 import grayMatter from 'gray-matter';
 
 import type {
-  Registry,
   TranslationFileItem,
   TranslationFileMetadata,
+  TranslationLocale,
 } from '@/core/types';
 import { fileExists, readFile, writeFile } from '@/lib/file-service';
 import {
@@ -12,9 +12,9 @@ import {
   generateHash,
   generateMDXContentHashList,
   getFrontmatterWithoutExcludedKeys,
-} from '@/lib/mdx-file';
-import registryManager from '@/plugins/registry-manager';
+} from './mdx-file';
 import type { PluginOptions } from './mdx-plugin';
+import registryManager, { type Registry } from './registry-manager';
 
 type DiffResult = Readonly<{
   isReorderOrRemoval: boolean;
@@ -135,19 +135,22 @@ export async function processFileForChanges(
   file: TranslationFileMetadata,
   options?: PluginOptions,
 ): Promise<{
-  content: Record<Locale, ReadonlyArray<string>>;
-  frontmatter: Record<Locale, ReadonlyArray<string>>;
+  content: Record<TranslationLocale, ReadonlyArray<string>>;
+  frontmatter: Record<TranslationLocale, ReadonlyArray<string>>;
 }> {
   const { frontmatterExcludedKeys } = options || {};
   const registry = registryManager();
   const registryData = await registry.load(file.source.path);
 
   const result: {
-    content: Record<Locale, ReadonlyArray<string>>;
-    frontmatter: Record<Locale, ReadonlyArray<string>>;
+    content: Record<TranslationLocale, ReadonlyArray<string>>;
+    frontmatter: Record<TranslationLocale, ReadonlyArray<string>>;
   } = { content: {}, frontmatter: {} };
 
-  const registryUpdatedMDXContent: Record<Locale, Array<string>> = {};
+  const registryUpdatedMDXContent: Record<
+    TranslationLocale,
+    Array<string>
+  > = {};
   let registryUpdatedFrontmatter: Record<string, string> | null = null;
 
   const sourceContent = await readFile(file.source.path);

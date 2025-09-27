@@ -1,7 +1,7 @@
 import grayMatter from 'gray-matter';
 
 import type {
-  Plugin,
+  LangnosticPlugin,
   TranslationFileMetadata,
   TranslationStringArg,
 } from '@/core/types';
@@ -11,21 +11,18 @@ import {
   writeFile,
 } from '@/lib/file-service';
 import {
-  buildTargetMDX,
-  generateSourceMDXContentHashMap,
-} from '@/lib/mdx-file';
-import {
   buildTranslatedContentMap,
   buildTranslationStrings,
 } from '@/lib/plugins';
-import registryManager from '@/plugins/registry-manager';
 import { processFileForChanges } from './mdx-change-detector';
+import { buildTargetMDX, generateSourceMDXContentHashMap } from './mdx-file';
+import registryManager from './registry-manager';
 
 export type PluginOptions = Readonly<{
   frontmatterExcludedKeys?: Array<string>;
 }>;
 
-export default function mdxPlugin(options: PluginOptions): Plugin {
+export default function mdxPlugin(options: PluginOptions): LangnosticPlugin {
   const files: Array<TranslationFileMetadata> = [];
   const registry = registryManager();
 

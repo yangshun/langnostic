@@ -5,7 +5,7 @@ import { expandTargetPaths } from '@/core';
 import { printGroupStatus } from '@/core/output/print';
 import { TranslationGroupBatch } from '@/core/runner/translation-group-batch';
 import type {
-  Plugin,
+  LangnosticPlugin,
   TranslationGroup,
   TranslationGroupId,
   TranslationRequestJob,
@@ -16,7 +16,7 @@ import { generate } from '@/translation/generate';
 import mapAsync from '@/utils/map-async';
 
 // biome-ignore lint/suspicious/noExplicitAny: Each plugin can have its own options
-const DEFAULTS_PLUGINS: Record<string, (options?: any) => Plugin> = {
+const DEFAULTS_PLUGINS: Record<string, (options?: any) => LangnosticPlugin> = {
   json: jsonPlugin,
   mdx: mdxPlugin,
 };

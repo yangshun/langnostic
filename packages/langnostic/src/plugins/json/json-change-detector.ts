@@ -1,4 +1,4 @@
-import type { TranslationFileMetadata } from '@/core/types';
+import type { TranslationFileMetadata, TranslationLocale } from '@/core/types';
 import { fileExists, readFile, writeFile } from '@/lib/file-service';
 
 function compareJsonData(
@@ -25,10 +25,10 @@ function compareJsonData(
 
 export async function processFileForChanges(
   file: TranslationFileMetadata,
-): Promise<Record<Locale, Array<string>>> {
+): Promise<Record<TranslationLocale, Array<string>>> {
   const sourceContent = await readFile(file.source.path);
   const sourceJson = JSON.parse(sourceContent);
-  const result: Record<Locale, Array<string>> = {};
+  const result: Record<TranslationLocale, Array<string>> = {};
 
   // Process each target file
   for (const target of file.targets) {

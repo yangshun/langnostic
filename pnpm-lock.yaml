@@ -58,6 +58,12 @@ importers:
         specifier: 5.9.2
         version: 5.9.2
 
+  packages/common:
+    dependencies:
+      langnostic:
+        specifier: ^0.0.8
+        version: 0.0.8(react@19.1.1)(typescript@5.9.2)
+
   packages/langnostic:
     dependencies:
       '@ai-sdk/deepseek':
@@ -1268,6 +1274,11 @@ packages:
   kind-of@6.0.3:
     resolution: {integrity: sha512-dcS1ul+9tmeD95T+x28/ehLgd9mENa3LsvDTtzm3vyBEO7RPptvAD+t44WVXaUjTBRcrpFeFlC8WCruUR456hw==}
     engines: {node: '>=0.10.0'}
+
+  langnostic@0.0.8:
+    resolution: {integrity: sha512-9NoH9izsMWP6ok4CxFSJcgFm8rIi5vA6f3CZgH6v/L1iHz0oFNYfkQ8SOJpYUq6cyg7dGXieD2/alHIKh0k3Fg==}
+    engines: {node: 18.18.2, pnpm: 8.15.8}
+    hasBin: true
 
   lilconfig@3.1.3:
     resolution: {integrity: sha512-/vlFKAoH5Cgt3Ie+JLhRbwOsCQePABiU3tJ1egGvyQ+33R/vcwM2Zl2QR/LzjsBeItPt3oSVXapn+m4nQDvpzw==}
@@ -2940,6 +2951,33 @@ snapshots:
       diff-match-patch: 1.0.5
 
   kind-of@6.0.3: {}
+
+  langnostic@0.0.8(react@19.1.1)(typescript@5.9.2):
+    dependencies:
+      '@ai-sdk/deepseek': 0.2.16(zod@3.25.76)
+      '@ai-sdk/google': 1.2.22(zod@3.25.76)
+      '@ai-sdk/openai': 1.3.24(zod@3.25.76)
+      '@clack/prompts': 0.9.1
+      ai: 4.3.19(react@19.1.1)(zod@3.25.76)
+      chalk: 5.6.2
+      cosmiconfig: 9.0.0(typescript@5.9.2)
+      dotenv: 16.6.1
+      globby: 13.2.2
+      gray-matter: 4.0.3
+      json5: 2.2.3
+      lodash-es: 4.17.21
+      log-update: 6.1.0
+      murmurhash: 2.0.1
+      remark-mdx: 3.1.1
+      remark-parse: 11.0.0
+      remark-stringify: 11.0.0
+      unified: 11.0.5
+      yargs: 17.7.2
+      zod: 3.25.76
+    transitivePeerDependencies:
+      - react
+      - supports-color
+      - typescript
 
   lilconfig@3.1.3: {}
 

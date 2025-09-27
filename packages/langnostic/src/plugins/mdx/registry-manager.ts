@@ -1,14 +1,25 @@
 import path from 'node:path';
 import grayMatter from 'gray-matter';
 
-import type { Registry, TranslationFileMetadata } from '@/core/types';
+import type { TranslationFileMetadata, TranslationLocale } from '@/core/types';
 import { readFile, writeFile } from '@/lib/file-service';
 import {
   generateHash,
   generateMDXContentHashList,
   getFrontmatterWithoutExcludedKeys,
-} from '@/lib/mdx-file';
-import type { PluginOptions } from './mdx/mdx-plugin';
+} from './mdx-file';
+import type { PluginOptions } from './mdx-plugin';
+
+export type Registry = {
+  content: {
+    source: {
+      hashes: Array<string>;
+      locale: TranslationLocale;
+    };
+    targets: Record<TranslationLocale, Array<string>>;
+  };
+  frontmatter: Record<string, string>;
+};
 
 export default function registryManager() {
   function getRegistryPath(sourceFilePath: string): string {
