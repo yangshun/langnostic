@@ -1,10 +1,11 @@
+import { google } from '@ai-sdk/google';
 import JsonPlugin from '@langnostic/plugin-json';
 import MdxPlugin from '@langnostic/plugin-mdx';
 import type { ConfigType } from 'langnostic';
 
 export default {
   ai: {
-    provider: 'google',
+    model: google('gemini-2.5-flash'),
   },
   localeConfig: {
     source: 'en-US',

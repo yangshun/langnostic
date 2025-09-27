@@ -133,8 +133,7 @@ export async function translate({
       try {
         batch.startTranslating();
         const instructions = (await group.plugin.getInstructions?.()) || '';
-        const translatedStrings = await generate(job, {
-          ai: config.ai,
+        const translatedStrings = await generate(config.ai, job, {
           debug,
           instructions,
         });

@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { RUNS_PATH } from '@/core/constants';
 import type {
+  TranslationAI,
   TranslationGroupBatchId,
   TranslationLocale,
   TranslationRequestJob,
@@ -11,23 +12,21 @@ import type {
 } from '@/core/types';
 import { writeFile } from '@/lib/file-service';
 import { getPromptTemplate } from './prompt';
-import type { TranslationAI } from './providers';
-import { providerModel } from './providers';
 
 function hashStringItem(batchId: TranslationGroupBatchId, id: string): string {
   return `${batchId}#${id}`;
 }
 
 export async function generate(
+  ai: TranslationAI,
   job: TranslationRequestJob,
   options: Readonly<{
-    ai: TranslationAI;
     debug?: boolean;
     instructions?: string;
   }>,
 ): Promise<ReadonlyArray<TranslationStringResult>> {
   const { jobId, runId, strings } = job;
-  const { ai, debug, instructions } = options;
+  const { debug, instructions } = options;
   const filePathPrefix = [RUNS_PATH, runId, jobId];
 
   try {
@@ -37,7 +36,7 @@ export async function generate(
       return [];
     }
 
-    const model = providerModel(ai);
+    const { model } = ai;
     const prompt = getPromptTemplate(
       instructions || '',
       JSON.stringify(strings),
@@ -64,7 +63,8 @@ export async function generate(
           }),
         ),
       }),
-      temperature: ai.temperature || 0,
+      // TODO: Allow more configuration
+      temperature: 0,
     });
 
     if (debug) {

@@ -1,5 +1,4 @@
-import type { LangnosticPlugin } from '@/core/types';
-import type { TranslationAI } from '@/translation/providers';
+import type { LangnosticPlugin, TranslationAI } from '@/core/types';
 
 export type ConfigType = {
   ai: TranslationAI;

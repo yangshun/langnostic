@@ -10,7 +10,7 @@
     "noEmit": true,
     "noUnusedLocals": true,
     "esModuleInterop": true,
-    "skipLibCheck": true,
+    "skipLibCheck": true
   },
   "include": ["src", "tsup.config.ts", "vitest.config.ts"]
 }

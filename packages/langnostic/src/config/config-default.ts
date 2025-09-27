@@ -1,11 +1,12 @@
 // TODO: Define as a `.ts` file and bundle into the package as a string during build time
 export const configFileDefault = `
+import { openai } from '@ai-sdk/openai';
 import JsonPlugin from '@langnostic/plugin-json';
 import type { ConfigType } from 'langnostic';
 
 export default {
   ai: {
-    provider: 'openai',
+    model: openai('gpt-5'),
   },
   groups: [
     {

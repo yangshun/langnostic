@@ -10,8 +10,9 @@
   },
   "keywords": [],
   "devDependencies": {
-    "langnostic": "workspace:^",
+    "@ai-sdk/google": "^2.0.17",
     "@langnostic/plugin-json": "workspace:^",
-    "@langnostic/plugin-mdx": "workspace:^"
+    "@langnostic/plugin-mdx": "workspace:^",
+    "langnostic": "workspace:^"
   }
 }

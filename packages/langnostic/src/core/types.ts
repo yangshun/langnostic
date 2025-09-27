@@ -1,4 +1,9 @@
+import type { LanguageModel } from 'ai';
 import type { TranslationGroupBatch } from './runner/translation-group-batch';
+
+export type TranslationAI = Readonly<{
+  model: LanguageModel;
+}>;
 
 export type TranslationLocale = string;
 export type TranslationFileItem = Readonly<{

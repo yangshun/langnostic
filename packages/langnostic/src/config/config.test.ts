@@ -7,7 +7,7 @@ import type { ConfigType } from 'langnostic';
 
 export default {
   ai: {
-    provider: 'openai',
+    model: 'openai/gpt-5',
   },
   groups: [],
   localeConfig: {
