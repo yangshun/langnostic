@@ -1,0 +1,17 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "cache": false,
+      "dependsOn": ["^build"]
+    },
+    "tc": {
+      "cache": false,
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "cache": false,
+      "dependsOn": ["^build"]
+    }
+  }
+}

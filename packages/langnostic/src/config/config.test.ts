@@ -1,7 +1,21 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import Config from '.';
-import { configFileDefault } from './config-default';
+
+const configFileTest = `
+import type { ConfigType } from 'langnostic';
+
+export default {
+  ai: {
+    provider: 'openai',
+  },
+  groups: [],
+  localeConfig: {
+    source: 'en-US',
+    target: ['zh-CN'],
+  },
+} satisfies ConfigType;
+`;
 
 const FIXTURE_PATH = path.join(process.cwd(), '__fixture__');
 
@@ -23,10 +37,7 @@ describe('Config', () => {
       fs.mkdirSync(dir, {
         recursive: true,
       });
-      fs.writeFileSync(
-        path.join(dir, 'langnostic.config.ts'),
-        configFileDefault,
-      );
+      fs.writeFileSync(path.join(dir, 'langnostic.config.ts'), configFileTest);
 
       const configInstance = new Config(dir);
 
@@ -60,7 +71,7 @@ describe('Config', () => {
 
       const configPath = path.join(dir, 'langnostic.config.ts');
 
-      fs.writeFileSync(configPath, configFileDefault);
+      fs.writeFileSync(configPath, configFileTest);
 
       const { result } = Config.initializeConfig(dir);
 
