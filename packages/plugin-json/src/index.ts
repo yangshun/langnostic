@@ -1,15 +1,11 @@
+import fs from 'node:fs/promises';
+import { pathExists, writeJson } from 'fs-extra/esm';
 import type {
   LangnosticPlugin,
   TranslationFileMetadata,
   TranslationStringArg,
 } from 'langnostic';
-import {
-  buildTranslatedContentMap,
-  buildTranslationStrings,
-  ensureFileAndDirExists,
-  readFile,
-  writeFile,
-} from 'langnostic';
+import { buildTranslatedContentMap, buildTranslationStrings } from 'langnostic';
 import { processFileForChanges } from './json-change-detector';
 
 type TranslationEntry =
@@ -61,7 +57,7 @@ export default function JsonPlugin(): LangnosticPlugin {
       }
 
       const file = files.find(
-        (f) => f.source.path === translatedStrings[0].batchId,
+        (file_) => file_.source.path === translatedStrings[0].batchId,
       );
 
       if (file == null) {
@@ -124,7 +120,7 @@ async function readJson(
   path: string,
 ): Promise<Record<string, TranslationEntry> | null> {
   try {
-    const content = await readFile(path);
+    const content = await fs.readFile(path, 'utf8');
 
     return JSON.parse(content);
   } catch {
@@ -132,19 +128,22 @@ async function readJson(
   }
 }
 
-async function writeJson(path: string, data: Record<string, TranslationEntry>) {
-  await writeFile(path, JSON.stringify(sortKeys(data), null, 2));
-}
-
 async function processTargetFile(
   target: { locale: string; path: string },
   translatedContentMap: Map<string, Record<string, string>>,
   sourceJson: Record<string, TranslationEntry>,
 ) {
-  // Ensure target file and its directory exist
-  await ensureFileAndDirExists(target.path, JSON.stringify({}, null, 2));
+  const targetJson = await (async () => {
+    try {
+      if (await pathExists(target.path)) {
+        return (await readJson(target.path)) ?? {};
+      }
+    } catch {
+      // Nothing
+    }
 
-  const targetJson = (await readJson(target.path)) || {};
+    return {};
+  })();
   const translatedContent = translatedContentMap.get(target.locale) || {};
 
   const mergedContent = mergeTranslations(
@@ -153,5 +152,5 @@ async function processTargetFile(
     sourceJson,
   );
 
-  await writeJson(target.path, mergedContent);
+  await writeJson(target.path, sortKeys(mergedContent), { spaces: 2 });
 }

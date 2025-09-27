@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { generateObject } from 'ai';
+import { outputFile, outputJson } from 'fs-extra/esm';
 import { z } from 'zod';
-
 import { RUNS_PATH } from '@/core/constants';
 import type {
   TranslationAI,
@@ -10,7 +10,6 @@ import type {
   TranslationRequestJob,
   TranslationStringResult,
 } from '@/core/types';
-import { writeFile } from '@/lib/file-service';
 import { getPromptTemplate } from './prompt';
 
 type BatchStringItemHash = string;
@@ -47,7 +46,7 @@ export async function generate(
     );
 
     if (debug) {
-      await writeFile(path.join(...filePathPrefix, 'prompt.txt'), prompt);
+      await outputFile(path.join(...filePathPrefix, 'prompt.txt'), prompt);
     }
 
     const result = await generateObject({
@@ -72,10 +71,9 @@ export async function generate(
     });
 
     if (debug) {
-      await writeFile(
-        path.join(...filePathPrefix, 'response.json'),
-        JSON.stringify(result, null, 2),
-      );
+      await outputJson(path.join(...filePathPrefix, 'response.json'), result, {
+        spaces: 2,
+      });
     }
 
     const translationStringsMap = new Map<
@@ -109,7 +107,7 @@ export async function generate(
     }));
   } catch (err) {
     if (debug) {
-      await writeFile(
+      await outputFile(
         path.join(...filePathPrefix, 'error.log'),
         (err as Error).toString(),
       );

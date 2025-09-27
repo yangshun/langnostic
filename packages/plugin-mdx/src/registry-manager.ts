@@ -1,8 +1,8 @@
+import fs from 'node:fs/promises';
 import path from 'node:path';
+import { outputJson } from 'fs-extra/esm';
 import grayMatter from 'gray-matter';
-
 import type { TranslationFileMetadata, TranslationLocale } from 'langnostic';
-import { readFile, writeFile } from 'langnostic';
 import type { PluginOptions } from '.';
 import {
   generateHash,
@@ -36,7 +36,7 @@ export default function registryManager() {
     async load(sourceFilePath: string): Promise<Registry> {
       try {
         const registryPath = getRegistryPath(sourceFilePath);
-        const data = await readFile(registryPath);
+        const data = await fs.readFile(registryPath, 'utf8');
 
         return JSON.parse(data) as Registry;
       } catch (_error) {
@@ -55,9 +55,8 @@ export default function registryManager() {
     },
     async save(sourceFilePath: string, registry: Registry): Promise<void> {
       const registryPath = getRegistryPath(sourceFilePath);
-      const data = JSON.stringify(registry, null, 2);
 
-      await writeFile(registryPath, data);
+      await outputJson(registryPath, registry, { spaces: 2 });
     },
     async updateFileRegistry(
       file: TranslationFileMetadata,
@@ -66,7 +65,7 @@ export default function registryManager() {
       const { frontmatterExcludedKeys } = options || {};
       const oldRegistryData = await this.load(file.source.path);
 
-      const sourceContent = await readFile(file.source.path);
+      const sourceContent = await fs.readFile(file.source.path, 'utf8');
       const { content, data: sourceFrontmatter } = grayMatter(sourceContent);
 
       // Get source frontmatter without excluded keys because we don't want to consider them for translation

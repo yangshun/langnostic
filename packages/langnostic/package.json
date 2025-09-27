@@ -30,6 +30,7 @@
     "chalk": "^5.6.2",
     "cosmiconfig": "^9.0.0",
     "dotenv": "^17.2.2",
+    "fs-extra": "catalog:",
     "globby": "^14.1.0",
     "json5": "^2.2.3",
     "lodash-es": "catalog:",
@@ -38,6 +39,7 @@
     "zod": "^4.1.11"
   },
   "devDependencies": {
+    "@types/fs-extra": "catalog:",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
     "@types/yargs": "^17.0.33",

@@ -1,5 +1,6 @@
+import fs from 'node:fs/promises';
+import { outputJson, pathExists } from 'fs-extra/esm';
 import type { TranslationFileMetadata, TranslationLocale } from 'langnostic';
-import { fileExists, readFile, writeFile } from 'langnostic';
 
 function compareJsonData(
   sourceJson: Record<string, string>,
@@ -26,14 +27,16 @@ function compareJsonData(
 export async function processFileForChanges(
   file: TranslationFileMetadata,
 ): Promise<Record<TranslationLocale, Array<string>>> {
-  const sourceContent = await readFile(file.source.path);
-  const sourceJson = JSON.parse(sourceContent);
+  const sourceContent = await fs.readFile(file.source.path, 'utf8');
+  const sourceJson = JSON.parse(String(sourceContent));
   const result: Record<TranslationLocale, Array<string>> = {};
 
   // Process each target file
   for (const target of file.targets) {
-    const isFileExists = await fileExists(target.path);
-    const targetContent = isFileExists ? await readFile(target.path) : null;
+    const isFileExists = await pathExists(target.path);
+    const targetContent = isFileExists
+      ? await fs.readFile(target.path, 'utf8')
+      : null;
     const targetJson = targetContent ? JSON.parse(targetContent) : null;
     const { keysToTranslate, removedKeys } = compareJsonData(
       sourceJson,
@@ -47,7 +50,7 @@ export async function processFileForChanges(
       removedKeys.forEach((key) => {
         delete targetJson[key];
       });
-      await writeFile(target.path, JSON.stringify(targetJson, null, 2));
+      await outputJson(target.path, targetJson || {}, { spaces: 2 });
     }
   }
 

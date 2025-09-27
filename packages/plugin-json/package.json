@@ -26,7 +26,11 @@
   "peerDependencies": {
     "langnostic": "workspace:*"
   },
+  "dependencies": {
+    "fs-extra": "catalog:"
+  },
   "devDependencies": {
+    "@types/fs-extra": "catalog:",
     "@types/node": "catalog:",
     "langnostic": "workspace:*",
     "rimraf": "catalog:",

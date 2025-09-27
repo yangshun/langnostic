@@ -1,18 +1,12 @@
+import fs from 'node:fs/promises';
+import { ensureFile, outputFile } from 'fs-extra/esm';
 import grayMatter from 'gray-matter';
-
 import type {
   LangnosticPlugin,
   TranslationFileMetadata,
   TranslationStringArg,
 } from 'langnostic';
-import {
-  buildTranslatedContentMap,
-  buildTranslationStrings,
-  ensureFileAndDirExists,
-  readFile,
-  writeFile,
-} from 'langnostic';
-
+import { buildTranslatedContentMap, buildTranslationStrings } from 'langnostic';
 import { processFileForChanges } from './mdx-change-detector';
 import { buildTargetMDX, generateSourceMDXContentHashMap } from './mdx-file';
 import registryManager from './registry-manager';
@@ -46,7 +40,7 @@ export default function mdxPlugin(options?: PluginOptions): LangnosticPlugin {
         // Process file for changes
         const changes = await processFileForChanges(file, options);
 
-        const sourceContent = await readFile(file.source.path);
+        const sourceContent = await fs.readFile(file.source.path, 'utf8');
         const { content, data: sourceFrontmatter } = grayMatter(sourceContent);
         const sourceHashMap = generateSourceMDXContentHashMap(content);
 
@@ -82,16 +76,16 @@ export default function mdxPlugin(options?: PluginOptions): LangnosticPlugin {
       }
 
       const translatedContentMap = buildTranslatedContentMap(translatedStrings);
-      const sourceContent = await readFile(file.source.path);
+      const sourceContent = await fs.readFile(file.source.path, 'utf8');
       const registryData = await registry.load(file.source.path);
 
       // Write to each target file concurrently
       await Promise.all(
         file.targets.map(async (target) => {
           // Ensure target file and its directory exist
-          await ensureFileAndDirExists(target.path);
+          await ensureFile(target.path);
 
-          const targetContent = await readFile(target.path);
+          const targetContent = await fs.readFile(target.path, 'utf8');
           const translatedContent =
             translatedContentMap.get(target.locale) || {};
 
@@ -106,7 +100,7 @@ export default function mdxPlugin(options?: PluginOptions): LangnosticPlugin {
             translatedContent,
           );
 
-          await writeFile(target.path, targetFileContent);
+          await outputFile(target.path, targetFileContent);
         }),
       );
 

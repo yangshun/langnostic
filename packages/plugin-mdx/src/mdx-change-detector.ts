@@ -1,11 +1,11 @@
+import fs from 'node:fs/promises';
+import fse from 'fs-extra';
 import grayMatter from 'gray-matter';
-
 import type {
   TranslationFileItem,
   TranslationFileMetadata,
   TranslationLocale,
 } from 'langnostic';
-import { fileExists, readFile, writeFile } from 'langnostic';
 import type { PluginOptions } from '.';
 import {
   buildTargetMDXContent,
@@ -30,6 +30,7 @@ function isSubset(
   return source.every((item) => targetSet.has(item));
 }
 
+// TODO: Remove this function and use lodash isEqual
 function areArraysEqual(
   arr1: ReadonlyArray<string>,
   arr2: ReadonlyArray<string>,
@@ -153,7 +154,7 @@ export async function processFileForChanges(
   > = {};
   let registryUpdatedFrontmatter: Record<string, string> | null = null;
 
-  const sourceContent = await readFile(file.source.path);
+  const sourceContent = await fs.readFile(file.source.path, 'utf8');
   const { content: sourceMDXContent, data: sourceFrontmatter } =
     grayMatter(sourceContent);
   const sourceHashList = generateMDXContentHashList(sourceMDXContent);
@@ -168,8 +169,10 @@ export async function processFileForChanges(
   await Promise.all(
     file.targets.map(async (target) => {
       {
-        const targetExists = await fileExists(target.path);
-        const targetContent = targetExists ? await readFile(target.path) : null;
+        const targetExists = await fse.pathExists(target.path);
+        const targetContent = targetExists
+          ? await fs.readFile(target.path, 'utf8')
+          : null;
 
         const { content: targetMDXContent, data: targetFrontmatter } =
           targetContent ? grayMatter(targetContent) : { content: '', data: {} };
@@ -319,7 +322,7 @@ async function rebuildTargetContent({
     updatedTargetFrontmatter,
   );
 
-  await writeFile(target.path, updatedTargetContent);
+  await fse.outputFile(target.path, `${updatedTargetContent.trim()}\n`, 'utf8');
 }
 
 // Test exports
