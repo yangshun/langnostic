@@ -15,18 +15,6 @@ describe('isSubset()', () => {
   });
 });
 
-describe('areArraysEqual()', () => {
-  const { areArraysEqual } = __test__;
-
-  test('should return true when arrays are equal', () => {
-    expect(areArraysEqual(['a', 'b'], ['a', 'b'])).toBe(true);
-  });
-
-  test('should return false when arrays are not equal', () => {
-    expect(areArraysEqual(['a', 'b'], ['a', 'c'])).toBe(false);
-  });
-});
-
 describe('findMissingOrUpdatedFrontmatterKeys', () => {
   const { findMissingOrUpdatedFrontmatterKeys } = __test__;
 

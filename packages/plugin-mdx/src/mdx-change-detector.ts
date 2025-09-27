@@ -6,6 +6,7 @@ import type {
   TranslationFileMetadata,
   TranslationLocale,
 } from 'langnostic';
+import { isEqual } from 'lodash-es';
 import type { PluginOptions } from '.';
 import {
   buildTargetMDXContent,
@@ -21,6 +22,7 @@ type DiffResult = Readonly<{
   keysToTranslate: ReadonlyArray<string>;
 }>;
 
+// Checks if all elements in source are present in target
 function isSubset(
   source: ReadonlyArray<string>,
   target: ReadonlyArray<string>,
@@ -28,14 +30,6 @@ function isSubset(
   const targetSet = new Set(target);
 
   return source.every((item) => targetSet.has(item));
-}
-
-// TODO: Remove this function and use lodash isEqual
-function areArraysEqual(
-  arr1: ReadonlyArray<string>,
-  arr2: ReadonlyArray<string>,
-): boolean {
-  return JSON.stringify(arr1) === JSON.stringify(arr2);
 }
 
 function findMissingOrUpdatedFrontmatterKeys(
@@ -127,7 +121,7 @@ function detectContentDiff(
 
   const isSourceSubset = isSubset(sourceHashList, registryHashList);
   const isReorderOrRemoval =
-    isSourceSubset && !areArraysEqual(sourceHashList, registryHashList);
+    isSourceSubset && !isEqual(sourceHashList, registryHashList);
 
   return { isReorderOrRemoval, keysToTranslate };
 }
@@ -327,7 +321,6 @@ async function rebuildTargetContent({
 
 // Test exports
 export const __test__ = {
-  areArraysEqual,
   detectContentDiff,
   detectFrontmatterDiff,
   findFrontmatterExcludedKeysToUpdate,
