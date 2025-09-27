@@ -13,7 +13,11 @@ import type {
 import { writeFile } from '@/lib/file-service';
 import { getPromptTemplate } from './prompt';
 
-function hashStringItem(batchId: TranslationGroupBatchId, id: string): string {
+type BatchStringItemHash = string;
+function hashStringItem(
+  batchId: TranslationGroupBatchId,
+  id: string,
+): BatchStringItemHash {
   return `${batchId}#${id}`;
 }
 
@@ -36,7 +40,7 @@ export async function generate(
       return [];
     }
 
-    const { model } = ai;
+    const { model, ...aiOptions } = ai;
     const prompt = getPromptTemplate(
       instructions || '',
       JSON.stringify(strings),
@@ -49,6 +53,7 @@ export async function generate(
     const result = await generateObject({
       model,
       prompt,
+      // TODO: Add system prompt
       schema: z.object({
         data: z.array(
           z.object({
@@ -63,8 +68,7 @@ export async function generate(
           }),
         ),
       }),
-      // TODO: Allow more configuration
-      temperature: 0,
+      ...aiOptions,
     });
 
     if (debug) {
@@ -75,7 +79,7 @@ export async function generate(
     }
 
     const translationStringsMap = new Map<
-      string,
+      BatchStringItemHash,
       Record<TranslationLocale, string>
     >();
 
@@ -83,7 +87,7 @@ export async function generate(
       translationStringsMap.set(
         hashStringItem(r.batchId, r.id),
         r.translations.reduce(
-          (acc: Record<string, string>, { locale, string }) => {
+          (acc: Record<TranslationLocale, string>, { locale, string }) => {
             acc[locale] = string;
             return acc;
           },
@@ -110,6 +114,7 @@ export async function generate(
         (err as Error).toString(),
       );
     }
+
     throw err;
   }
 }
