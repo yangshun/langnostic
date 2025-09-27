@@ -8,7 +8,8 @@
     "format": "biome format --write",
     "lint": "turbo run lint",
     "tc": "turbo run tc",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "publish-all": "pnpm -r publish --access public"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.4",
