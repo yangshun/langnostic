@@ -3,7 +3,11 @@ packages:
   - "examples/*"
   - "packages/*"
 catalog:
+  lodash-es: ^4.17.21
+  "@types/lodash-es": ^4.17.12
+  rimraf: ^6.0.1
   tsdown: ^0.15.5
   typescript: 5.9.2
   '@types/node': 22.15.3
   vitest: 3.2.4
+  vite-tsconfig-paths: ^5.1.4

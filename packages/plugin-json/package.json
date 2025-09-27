@@ -27,13 +27,12 @@
     "langnostic": "workspace:*"
   },
   "devDependencies": {
-    "@types/lodash-es": "^4.17.6",
     "@types/node": "catalog:",
     "langnostic": "workspace:*",
-    "rimraf": "^6.0.1",
+    "rimraf": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:",
-    "vite-tsconfig-paths": "^5.1.4",
+    "vite-tsconfig-paths": "catalog:",
     "vitest": "catalog:"
   }
 }
