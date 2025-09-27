@@ -3,7 +3,7 @@ import type {
   TranslationGroupBatchStatus,
   TranslationStringArg,
   TranslationStringResult,
-} from '../types';
+} from '@/core/types';
 
 export class TranslationGroupBatch {
   #batchId: TranslationGroupBatchId;

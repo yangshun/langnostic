@@ -1,4 +1,4 @@
-import type { TranslationAI } from '../translation/providers';
+import type { TranslationAI } from '@/translation/providers';
 
 export type ConfigType = {
   ai: TranslationAI;

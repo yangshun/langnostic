@@ -4,7 +4,7 @@ import type {
   TranslationFileMetadata,
   TranslationStringArg,
   TranslationStringResult,
-} from '../core/types';
+} from '@/core/types';
 
 /**
  * Build a map of translated content for each target locale.

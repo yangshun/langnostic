@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 
-import type { TranslationGroupBatchStatus } from '../types';
+import type { TranslationGroupBatchStatus } from '@/core/types';
 
 const spinnerFrames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 

@@ -1,5 +1,5 @@
-import type { TranslationFileMetadata } from '../../core/types';
-import { fileExists, readFile, writeFile } from '../../lib/file-service';
+import type { TranslationFileMetadata } from '@/core/types';
+import { fileExists, readFile, writeFile } from '@/lib/file-service';
 
 function compareJsonData(
   sourceJson: Record<string, string>,

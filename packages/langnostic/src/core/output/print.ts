@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import logUpdate from 'log-update';
 
-import type { TranslationGroupId, TranslationGroups } from '../types';
+import type { TranslationGroupId, TranslationGroups } from '@/core/types';
 import { batchStatusSymbol } from './spinner-frames';
 
 const timeStart = Date.now();

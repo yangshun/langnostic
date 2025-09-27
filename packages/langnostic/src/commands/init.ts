@@ -2,7 +2,7 @@ import path from 'node:path';
 import { intro, outro, spinner } from '@clack/prompts';
 import chalk from 'chalk';
 
-import Config from '../config';
+import Config from '@/config';
 
 export async function init() {
   intro(`${chalk.blue.bold('Langnostic Config Setup')}`);

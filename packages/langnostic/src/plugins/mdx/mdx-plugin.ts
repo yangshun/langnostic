@@ -4,21 +4,21 @@ import type {
   Plugin,
   TranslationFileMetadata,
   TranslationStringArg,
-} from '../../core/types';
+} from '@/core/types';
 import {
   ensureFileAndDirExists,
   readFile,
   writeFile,
-} from '../../lib/file-service';
+} from '@/lib/file-service';
 import {
   buildTargetMDX,
   generateSourceMDXContentHashMap,
-} from '../../lib/mdx-file';
+} from '@/lib/mdx-file';
 import {
   buildTranslatedContentMap,
   buildTranslationStrings,
-} from '../../lib/plugins';
-import registryManager from '../registry-manager';
+} from '@/lib/plugins';
+import registryManager from '@/plugins/registry-manager';
 import { processFileForChanges } from './mdx-change-detector';
 
 export type PluginOptions = Readonly<{

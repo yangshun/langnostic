@@ -1,4 +1,4 @@
-import { generateHash } from '../../lib/mdx-file';
+import { generateHash } from '@/lib/mdx-file';
 import { __test__ } from './mdx-change-detector';
 
 describe('isSubset()', () => {

@@ -1,19 +1,19 @@
 import { chunk, groupBy } from 'lodash-es';
 
-import Config from '../config';
-import { expandTargetPaths } from '../core';
-import { printGroupStatus } from '../core/output/print';
-import { TranslationGroupBatch } from '../core/runner/translation-group-batch';
+import Config from '@/config';
+import { expandTargetPaths } from '@/core';
+import { printGroupStatus } from '@/core/output/print';
+import { TranslationGroupBatch } from '@/core/runner/translation-group-batch';
 import type {
   Plugin,
   TranslationGroup,
   TranslationGroupId,
   TranslationRequestJob,
-} from '../core/types';
-import jsonPlugin from '../plugins/json/json-plugin';
-import mdxPlugin from '../plugins/mdx/mdx-plugin';
-import { generate } from '../translation/generate';
-import mapAsync from '../utils/map-async';
+} from '@/core/types';
+import jsonPlugin from '@/plugins/json/json-plugin';
+import mdxPlugin from '@/plugins/mdx/mdx-plugin';
+import { generate } from '@/translation/generate';
+import mapAsync from '@/utils/map-async';
 
 // biome-ignore lint/suspicious/noExplicitAny: Each plugin can have its own options
 const DEFAULTS_PLUGINS: Record<string, (options?: any) => Plugin> = {

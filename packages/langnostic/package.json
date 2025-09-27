@@ -13,6 +13,7 @@
   "sideEffects": false,
   "scripts": {
     "clean": "rimraf dist",
+    "check": "pnpm run tc && pnpm run lint",
     "dev": "tsup --watch",
     "build": "tsup",
     "lint": "biome check --write --unsafe",
@@ -52,6 +53,7 @@
     "rimraf": "^6.0.1",
     "tsup": "^8.3.6",
     "typescript": "catalog:",
+    "vite-tsconfig-paths": "^5.1.4",
     "vitest": "catalog:"
   }
 }

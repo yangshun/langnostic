@@ -4,16 +4,16 @@ import type {
   Registry,
   TranslationFileItem,
   TranslationFileMetadata,
-} from '../../core/types';
-import { fileExists, readFile, writeFile } from '../../lib/file-service';
+} from '@/core/types';
+import { fileExists, readFile, writeFile } from '@/lib/file-service';
 import {
   buildTargetMDXContent,
   buildTargetMDXFrontmatter,
   generateHash,
   generateMDXContentHashList,
   getFrontmatterWithoutExcludedKeys,
-} from '../../lib/mdx-file';
-import registryManager from '../registry-manager';
+} from '@/lib/mdx-file';
+import registryManager from '@/plugins/registry-manager';
 import type { PluginOptions } from './mdx-plugin';
 
 type DiffResult = Readonly<{

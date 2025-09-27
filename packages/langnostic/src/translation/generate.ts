@@ -2,13 +2,13 @@ import path from 'node:path';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 
-import { RUNS_PATH } from '../core/constants';
+import { RUNS_PATH } from '@/core/constants';
 import type {
   TranslationGroupBatchId,
   TranslationRequestJob,
   TranslationStringResult,
-} from '../core/types';
-import { writeFile } from '../lib/file-service';
+} from '@/core/types';
+import { writeFile } from '@/lib/file-service';
 import { getPromptTemplate } from './prompt';
 import type { TranslationAI } from './providers';
 import { providerModel } from './providers';

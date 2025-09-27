@@ -1,13 +1,13 @@
 import path from 'node:path';
 import grayMatter from 'gray-matter';
 
-import type { Registry, TranslationFileMetadata } from '../core/types';
-import { readFile, writeFile } from '../lib/file-service';
+import type { Registry, TranslationFileMetadata } from '@/core/types';
+import { readFile, writeFile } from '@/lib/file-service';
 import {
   generateHash,
   generateMDXContentHashList,
   getFrontmatterWithoutExcludedKeys,
-} from '../lib/mdx-file';
+} from '@/lib/mdx-file';
 import type { PluginOptions } from './mdx/mdx-plugin';
 
 export default function registryManager() {

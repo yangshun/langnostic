@@ -2,16 +2,16 @@ import type {
   Plugin,
   TranslationFileMetadata,
   TranslationStringArg,
-} from '../../core/types';
+} from '@/core/types';
 import {
   ensureFileAndDirExists,
   readFile,
   writeFile,
-} from '../../lib/file-service';
+} from '@/lib/file-service';
 import {
   buildTranslatedContentMap,
   buildTranslationStrings,
-} from '../../lib/plugins';
+} from '@/lib/plugins';
 import { processFileForChanges } from './json-change-detector';
 
 type TranslationEntry =
