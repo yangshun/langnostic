@@ -5,21 +5,13 @@ import { expandTargetPaths } from '@/core';
 import { printGroupStatus } from '@/core/output/print';
 import { TranslationGroupBatch } from '@/core/runner/translation-group-batch';
 import type {
-  LangnosticPlugin,
   TranslationGroup,
   TranslationGroupId,
   TranslationRequestJob,
 } from '@/core/types';
-import jsonPlugin from '@/plugins/json/json-plugin';
-import mdxPlugin from '@/plugins/mdx/mdx-plugin';
 import { generate } from '@/translation/generate';
 import mapAsync from '@/utils/map-async';
 
-// biome-ignore lint/suspicious/noExplicitAny: Each plugin can have its own options
-const DEFAULTS_PLUGINS: Record<string, (options?: any) => LangnosticPlugin> = {
-  json: jsonPlugin,
-  mdx: mdxPlugin,
-};
 const DEFAULT_CONCURRENCY_LIMIT = 5;
 const REFRESH_INTERVAL = 1000 / 16;
 
@@ -48,19 +40,12 @@ export async function translate({
       );
 
       const { plugin } = group;
-      const pluginInstance =
-        typeof plugin === 'string'
-          ? DEFAULTS_PLUGINS[plugin]()
-          : DEFAULTS_PLUGINS[plugin[0]](plugin[1]);
-
-      await pluginInstance.trackFiles(groupFiles.flat());
-
+      await plugin.trackFiles(groupFiles.flat());
       groups.set(group.name, {
         batches: new Map(),
         groupId: group.name,
-        plugin: pluginInstance,
-        stringsPerRequest:
-          group.stringsPerRequest ?? pluginInstance.stringsPerRequest,
+        plugin,
+        stringsPerRequest: group.stringsPerRequest ?? plugin.stringsPerRequest,
       });
     }),
   );

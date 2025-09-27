@@ -10,6 +10,8 @@
   },
   "keywords": [],
   "devDependencies": {
-    "langnostic": "workspace:^"
+    "langnostic": "workspace:^",
+    "@langnostic/plugin-json": "workspace:^",
+    "@langnostic/plugin-mdx": "workspace:^"
   }
 }

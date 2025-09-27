@@ -1,5 +1,7 @@
-import { generateHash } from '@/plugins/mdx/mdx-file';
+import { describe, expect, test } from 'vitest';
+
 import { __test__ } from './mdx-change-detector';
+import { generateHash } from './mdx-file';
 
 describe('isSubset()', () => {
   const { isSubset } = __test__;

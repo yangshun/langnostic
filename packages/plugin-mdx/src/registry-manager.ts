@@ -1,14 +1,14 @@
 import path from 'node:path';
 import grayMatter from 'gray-matter';
 
-import type { TranslationFileMetadata, TranslationLocale } from '@/core/types';
-import { readFile, writeFile } from '@/lib/file-service';
+import type { TranslationFileMetadata, TranslationLocale } from 'langnostic';
+import { readFile, writeFile } from 'langnostic';
+import type { PluginOptions } from '.';
 import {
   generateHash,
   generateMDXContentHashList,
   getFrontmatterWithoutExcludedKeys,
 } from './mdx-file';
-import type { PluginOptions } from './mdx-plugin';
 
 export type Registry = {
   content: {

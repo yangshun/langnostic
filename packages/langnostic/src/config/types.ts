@@ -1,3 +1,4 @@
+import type { LangnosticPlugin } from '@/core/types';
 import type { TranslationAI } from '@/translation/providers';
 
 export type ConfigType = {
@@ -17,17 +18,10 @@ export type ConfigGroupPathItem = {
   target: string; // Target paths for translated locale file
 };
 
-type ConfigPluginType = 'json' | 'mdx' | 'string';
-type ConfigPluginOptions = Record<string, unknown>;
-type ConfigPlugin =
-  | ConfigPluginType
-  | [ConfigPluginType, ConfigPluginOptions]
-  | [ConfigPluginType]; // Either just the type or the type and options
-
 export type ConfigGroup = {
   localeConfig?: LocaleConfig; // Optional, group-specific locale config
   name: string; // Unique identifier for a group
   paths: Array<ConfigGroupPathItem>;
-  plugin: ConfigPlugin; // Plugin to use for the group
+  plugin: LangnosticPlugin; // Plugin to use for the group
   stringsPerRequest?: number; // Optional, maximum number of strings per request
 };

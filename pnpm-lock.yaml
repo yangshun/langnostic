@@ -30,6 +30,18 @@ importers:
         specifier: 5.9.2
         version: 5.9.2
 
+  apps/test-fixtures:
+    devDependencies:
+      '@langnostic/plugin-json':
+        specifier: workspace:^
+        version: link:../../packages/plugin-json
+      '@langnostic/plugin-mdx':
+        specifier: workspace:^
+        version: link:../../packages/plugin-mdx
+      langnostic:
+        specifier: workspace:^
+        version: link:../../packages/langnostic
+
   examples/basic:
     dependencies:
       next:
@@ -57,12 +69,6 @@ importers:
       typescript:
         specifier: 5.9.2
         version: 5.9.2
-
-  packages/common:
-    dependencies:
-      langnostic:
-        specifier: ^0.0.8
-        version: 0.0.8(react@19.1.1)(typescript@5.9.2)
 
   packages/langnostic:
     dependencies:
@@ -93,9 +99,6 @@ importers:
       globby:
         specifier: ^13.2.2
         version: 13.2.2
-      gray-matter:
-        specifier: ^4.0.3
-        version: 4.0.3
       json5:
         specifier: ^2.2.3
         version: 2.2.3
@@ -105,21 +108,6 @@ importers:
       log-update:
         specifier: ^6.1.0
         version: 6.1.0
-      murmurhash:
-        specifier: ^2.0.1
-        version: 2.0.1
-      remark-mdx:
-        specifier: ^3.1.0
-        version: 3.1.1
-      remark-parse:
-        specifier: ^11.0.0
-        version: 11.0.0
-      remark-stringify:
-        specifier: ^11.0.0
-        version: 11.0.0
-      unified:
-        specifier: ^11.0.5
-        version: 11.0.5
       yargs:
         specifier: ^17.7.2
         version: 17.7.2
@@ -136,6 +124,82 @@ importers:
       '@types/yargs':
         specifier: ^17.0.33
         version: 17.0.33
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.0.1
+      tsup:
+        specifier: ^8.3.6
+        version: 8.5.0(postcss@8.5.6)(typescript@5.9.2)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.2
+      vite-tsconfig-paths:
+        specifier: ^5.1.4
+        version: 5.1.4(typescript@5.9.2)(vite@7.1.7(@types/node@22.15.3))
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.15.3)
+
+  packages/plugin-json:
+    devDependencies:
+      '@types/lodash-es':
+        specifier: ^4.17.6
+        version: 4.17.12
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.15.3
+      langnostic:
+        specifier: workspace:*
+        version: link:../langnostic
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.0.1
+      tsup:
+        specifier: ^8.3.6
+        version: 8.5.0(postcss@8.5.6)(typescript@5.9.2)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.2
+      vite-tsconfig-paths:
+        specifier: ^5.1.4
+        version: 5.1.4(typescript@5.9.2)(vite@7.1.7(@types/node@22.15.3))
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.15.3)
+
+  packages/plugin-mdx:
+    dependencies:
+      gray-matter:
+        specifier: ^4.0.3
+        version: 4.0.3
+      lodash-es:
+        specifier: ^4.17.21
+        version: 4.17.21
+      murmurhash:
+        specifier: ^2.0.1
+        version: 2.0.1
+      remark-mdx:
+        specifier: ^3.1.0
+        version: 3.1.1
+      remark-parse:
+        specifier: ^11.0.0
+        version: 11.0.0
+      remark-stringify:
+        specifier: ^11.0.0
+        version: 11.0.0
+      unified:
+        specifier: ^11.0.5
+        version: 11.0.5
+    devDependencies:
+      '@types/lodash-es':
+        specifier: ^4.17.6
+        version: 4.17.12
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.15.3
+      langnostic:
+        specifier: workspace:*
+        version: link:../langnostic
       rimraf:
         specifier: ^6.0.1
         version: 6.0.1
@@ -1274,11 +1338,6 @@ packages:
   kind-of@6.0.3:
     resolution: {integrity: sha512-dcS1ul+9tmeD95T+x28/ehLgd9mENa3LsvDTtzm3vyBEO7RPptvAD+t44WVXaUjTBRcrpFeFlC8WCruUR456hw==}
     engines: {node: '>=0.10.0'}
-
-  langnostic@0.0.8:
-    resolution: {integrity: sha512-9NoH9izsMWP6ok4CxFSJcgFm8rIi5vA6f3CZgH6v/L1iHz0oFNYfkQ8SOJpYUq6cyg7dGXieD2/alHIKh0k3Fg==}
-    engines: {node: 18.18.2, pnpm: 8.15.8}
-    hasBin: true
 
   lilconfig@3.1.3:
     resolution: {integrity: sha512-/vlFKAoH5Cgt3Ie+JLhRbwOsCQePABiU3tJ1egGvyQ+33R/vcwM2Zl2QR/LzjsBeItPt3oSVXapn+m4nQDvpzw==}
@@ -2951,33 +3010,6 @@ snapshots:
       diff-match-patch: 1.0.5
 
   kind-of@6.0.3: {}
-
-  langnostic@0.0.8(react@19.1.1)(typescript@5.9.2):
-    dependencies:
-      '@ai-sdk/deepseek': 0.2.16(zod@3.25.76)
-      '@ai-sdk/google': 1.2.22(zod@3.25.76)
-      '@ai-sdk/openai': 1.3.24(zod@3.25.76)
-      '@clack/prompts': 0.9.1
-      ai: 4.3.19(react@19.1.1)(zod@3.25.76)
-      chalk: 5.6.2
-      cosmiconfig: 9.0.0(typescript@5.9.2)
-      dotenv: 16.6.1
-      globby: 13.2.2
-      gray-matter: 4.0.3
-      json5: 2.2.3
-      lodash-es: 4.17.21
-      log-update: 6.1.0
-      murmurhash: 2.0.1
-      remark-mdx: 3.1.1
-      remark-parse: 11.0.0
-      remark-stringify: 11.0.0
-      unified: 11.0.5
-      yargs: 17.7.2
-      zod: 3.25.76
-    transitivePeerDependencies:
-      - react
-      - supports-color
-      - typescript
 
   lilconfig@3.1.3: {}
 

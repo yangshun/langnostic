@@ -4,8 +4,9 @@ import type {
   TranslationFileItem,
   TranslationFileMetadata,
   TranslationLocale,
-} from '@/core/types';
-import { fileExists, readFile, writeFile } from '@/lib/file-service';
+} from 'langnostic';
+import { fileExists, readFile, writeFile } from 'langnostic';
+import type { PluginOptions } from '.';
 import {
   buildTargetMDXContent,
   buildTargetMDXFrontmatter,
@@ -13,7 +14,6 @@ import {
   generateMDXContentHashList,
   getFrontmatterWithoutExcludedKeys,
 } from './mdx-file';
-import type { PluginOptions } from './mdx-plugin';
 import registryManager, { type Registry } from './registry-manager';
 
 type DiffResult = Readonly<{

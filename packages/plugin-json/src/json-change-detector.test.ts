@@ -1,3 +1,4 @@
+import { describe, expect, test } from 'vitest';
 import { __test__ } from './json-change-detector';
 
 describe('jsonChangeDetector', () => {

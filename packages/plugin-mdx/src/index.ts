@@ -4,16 +4,15 @@ import type {
   LangnosticPlugin,
   TranslationFileMetadata,
   TranslationStringArg,
-} from '@/core/types';
-import {
-  ensureFileAndDirExists,
-  readFile,
-  writeFile,
-} from '@/lib/file-service';
+} from 'langnostic';
 import {
   buildTranslatedContentMap,
   buildTranslationStrings,
-} from '@/lib/plugins';
+  ensureFileAndDirExists,
+  readFile,
+  writeFile,
+} from 'langnostic';
+
 import { processFileForChanges } from './mdx-change-detector';
 import { buildTargetMDX, generateSourceMDXContentHashMap } from './mdx-file';
 import registryManager from './registry-manager';
@@ -22,7 +21,7 @@ export type PluginOptions = Readonly<{
   frontmatterExcludedKeys?: Array<string>;
 }>;
 
-export default function mdxPlugin(options: PluginOptions): LangnosticPlugin {
+export default function mdxPlugin(options?: PluginOptions): LangnosticPlugin {
   const files: Array<TranslationFileMetadata> = [];
   const registry = registryManager();
 

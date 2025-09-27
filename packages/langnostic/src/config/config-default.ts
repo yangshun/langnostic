@@ -1,6 +1,9 @@
-import type { ConfigType } from './types';
+// TODO: Define as a `.ts` file and bundle into the package as a string during build time
+export const configFileDefault = `
+import JsonPlugin from '@langnostic/plugin-json';
+import type { ConfigType } from 'langnostic';
 
-export const configDefault: ConfigType = {
+export default {
   ai: {
     provider: 'openai',
   },
@@ -13,11 +16,12 @@ export const configDefault: ConfigType = {
           target: './src/locales/{locale}.json',
         },
       ],
-      plugin: 'json',
+      plugin: JsonPlugin(),
     },
   ],
   localeConfig: {
     source: 'en-US',
     target: ['zh-CN'],
   },
-};
+} satisfies ConfigType;
+`;

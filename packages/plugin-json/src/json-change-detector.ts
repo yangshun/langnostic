@@ -1,5 +1,5 @@
-import type { TranslationFileMetadata, TranslationLocale } from '@/core/types';
-import { fileExists, readFile, writeFile } from '@/lib/file-service';
+import type { TranslationFileMetadata, TranslationLocale } from 'langnostic';
+import { fileExists, readFile, writeFile } from 'langnostic';
 
 function compareJsonData(
   sourceJson: Record<string, string>,

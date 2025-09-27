@@ -1,0 +1,39 @@
+{
+  "name": "@langnostic/plugin-json",
+  "version": "0.0.8",
+  "description": "JSON plugin for Langnostic",
+  "license": "MIT",
+  "type": "module",
+  "exports": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "clean": "rimraf dist",
+    "check": "pnpm run tc && pnpm run lint",
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "lint": "biome check --write --unsafe",
+    "format": "biome format --write",
+    "tc": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verify": "npm run tc && npm run test && npm run build",
+    "prepublishOnly": "npm run verify"
+  },
+  "peerDependencies": {
+    "langnostic": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/lodash-es": "^4.17.6",
+    "@types/node": "catalog:",
+    "langnostic": "workspace:*",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.3.6",
+    "typescript": "catalog:",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "catalog:"
+  }
+}

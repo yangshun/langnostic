@@ -1,18 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { cosmiconfigSync } from 'cosmiconfig';
-
-import { configDefault } from './config-default';
+import { configFileDefault } from './config-default';
 import type { ConfigType } from './types';
 
 const moduleName = 'langnostic';
 const configExplorerSync = cosmiconfigSync(moduleName, {
-  searchPlaces: [
-    `${moduleName}.config.json`,
-    `${moduleName}.config.ts`,
-    `${moduleName}.config.cjs`,
-    `${moduleName}.config.js`,
-  ],
+  searchPlaces: [`${moduleName}.config.ts`, `${moduleName}.config.js`],
   searchStrategy: 'project',
 });
 
@@ -51,13 +45,10 @@ export default class Config {
     try {
       const configPath = path.join(
         searchPath ?? process.cwd(),
-        'langnostic.config.cjs',
+        'langnostic.config.ts',
       );
 
-      fs.writeFileSync(
-        configPath,
-        `module.exports = ${JSON.stringify(configDefault, null, 2)}`,
-      );
+      fs.writeFileSync(configPath, `${configFileDefault.trim()}\n`);
 
       return { filepath: configPath, result: 'created' };
     } catch (error) {

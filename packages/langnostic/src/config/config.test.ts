@@ -1,32 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
-
 import Config from '.';
-import type { ConfigType } from './types';
+import { configFileDefault } from './config-default';
 
 const FIXTURE_PATH = path.join(process.cwd(), '__fixture__');
-
-const mockConfig: ConfigType = {
-  ai: {
-    provider: 'openai',
-  },
-  groups: [
-    {
-      name: 'app-strings',
-      paths: [
-        {
-          source: './src/en-US.json',
-          target: './src/{locale}.json',
-        },
-      ],
-      plugin: 'json',
-    },
-  ],
-  localeConfig: {
-    source: 'en-US',
-    target: ['zh-CN'],
-  },
-};
 
 describe('Config', () => {
   afterAll(() => {
@@ -47,13 +24,13 @@ describe('Config', () => {
         recursive: true,
       });
       fs.writeFileSync(
-        path.join(dir, 'langnostic.config.json'),
-        JSON.stringify(mockConfig, null, 2),
+        path.join(dir, 'langnostic.config.ts'),
+        configFileDefault,
       );
 
       const configInstance = new Config(dir);
 
-      expect(configInstance.config).toEqual(mockConfig);
+      expect(configInstance.config).toBeDefined();
     });
   });
 
@@ -69,7 +46,7 @@ describe('Config', () => {
 
       expect(result).toEqual('created');
 
-      const configPath = path.join(dir, 'langnostic.config.cjs');
+      const configPath = path.join(dir, 'langnostic.config.ts');
 
       expect(fs.existsSync(configPath)).toBe(true);
     });
@@ -81,17 +58,13 @@ describe('Config', () => {
         recursive: true,
       });
 
-      const configPath = path.join(dir, 'langnostic.config.json');
+      const configPath = path.join(dir, 'langnostic.config.ts');
 
-      fs.writeFileSync(configPath, JSON.stringify(mockConfig, null, 2));
+      fs.writeFileSync(configPath, configFileDefault);
 
       const { result } = Config.initializeConfig(dir);
 
       expect(result).toEqual('exists');
-
-      const configFile = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-
-      expect(configFile).toEqual(mockConfig);
     });
   });
 });

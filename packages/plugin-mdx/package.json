@@ -1,0 +1,48 @@
+{
+  "name": "@langnostic/plugin-mdx",
+  "version": "0.0.8",
+  "description": "MDX plugin for Langnostic",
+  "license": "MIT",
+  "type": "module",
+  "exports": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "clean": "rimraf dist",
+    "check": "pnpm run tc && pnpm run lint",
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "lint": "biome check --write --unsafe",
+    "format": "biome format --write",
+    "tc": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verify": "npm run tc && npm run test && npm run build",
+    "prepublishOnly": "npm run verify"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "lodash-es": "^4.17.21",
+    "murmurhash": "^2.0.1",
+    "remark-mdx": "^3.1.0",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "unified": "^11.0.5"
+  },
+  "peerDependencies": {
+    "langnostic": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/lodash-es": "^4.17.6",
+    "@types/node": "catalog:",
+    "langnostic": "workspace:*",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.3.6",
+    "typescript": "catalog:",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "catalog:"
+  }
+}

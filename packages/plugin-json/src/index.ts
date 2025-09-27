@@ -2,16 +2,14 @@ import type {
   LangnosticPlugin,
   TranslationFileMetadata,
   TranslationStringArg,
-} from '@/core/types';
-import {
-  ensureFileAndDirExists,
-  readFile,
-  writeFile,
-} from '@/lib/file-service';
+} from 'langnostic';
 import {
   buildTranslatedContentMap,
   buildTranslationStrings,
-} from '@/lib/plugins';
+  ensureFileAndDirExists,
+  readFile,
+  writeFile,
+} from 'langnostic';
 import { processFileForChanges } from './json-change-detector';
 
 type TranslationEntry =

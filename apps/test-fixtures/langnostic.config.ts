@@ -1,4 +1,6 @@
-import { ConfigType } from 'langnostic';
+import JsonPlugin from '@langnostic/plugin-json';
+import MdxPlugin from '@langnostic/plugin-mdx';
+import type { ConfigType } from 'langnostic';
 
 export default {
   ai: {
@@ -11,7 +13,7 @@ export default {
   groups: [
     {
       name: 'app',
-      plugin: 'json',
+      plugin: JsonPlugin(),
       paths: [
         {
           source: './src/locales/en-US.json',
@@ -21,7 +23,7 @@ export default {
     },
     {
       name: 'blog',
-      plugin: 'mdx',
+      plugin: MdxPlugin(),
       paths: [
         {
           source: './src/blog/**/en-US.mdx',
@@ -31,7 +33,7 @@ export default {
     },
     {
       name: 'questions',
-      plugin: 'mdx',
+      plugin: MdxPlugin(),
       paths: [
         {
           source: './src/questions/*/writeups/en-US/**/*.mdx',
