@@ -14,8 +14,8 @@
   "scripts": {
     "clean": "rimraf dist",
     "check": "pnpm run tc && pnpm run lint",
-    "dev": "tsup --watch",
-    "build": "tsup",
+    "dev": "tsdown --watch",
+    "build": "tsdown",
     "lint": "biome check --write --unsafe",
     "format": "biome format --write",
     "tc": "tsc",
@@ -45,7 +45,7 @@
     "@types/node": "catalog:",
     "@types/yargs": "^17.0.33",
     "rimraf": "^6.0.1",
-    "tsup": "^8.3.6",
+    "tsdown": "catalog:",
     "typescript": "catalog:",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "catalog:"
