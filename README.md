@@ -1,135 +1,305 @@
-# Turborepo starter
+# Langnostic
 
-This Turborepo starter is maintained by the Turborepo core team.
+Fast, scalable, and efficient translation system to continuously translate strings within React components + Markdown documents using AI.
 
-## Using this example
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-Run the following command:
+## ✨ Features
 
-```sh
-npx create-turbo@latest
+- 🤖 **AI-Powered translation** - Powered by AI with support for any model (OpenAI, Google, Anthropic, and more)
+- 🔌 **Plugin architecture** - Extensible system supporting multiple file formats
+- 📦 **Smart change detection** - Only translates new or modified content
+- ⚡ **Batch processing** - Efficiently processes multiple strings per request
+- 🎯 **Format preservation** - Maintains code syntax, HTML tags, and template variables
+- 🔄 **Concurrent processing** - Configurable parallel translation for faster results
+- 🛠️ **Simple CLI** - Easy-to-use command-line interface
+
+## 📦 Supported file formats
+
+- **JSON** - Locale files with ICU message format support
+- **MDX** - Documentation files with frontmatter and content translation
+
+## 🚀 Quick start
+
+### Installation
+
+```bash
+npm install langnostic
+# or
+pnpm add langnostic
+# or
+yarn add langnostic
 ```
 
-## What's inside?
+### Initialize configuration
 
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@langnostic/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@langnostic/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@langnostic/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+```bash
+npx langnostic init
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+This creates a `langnostic.config.ts` file with default settings:
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+```typescript
+import { openai } from '@ai-sdk/openai';
+import JsonPlugin from '@langnostic/plugin-json';
+import type { ConfigType } from 'langnostic';
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+export default {
+  ai: {
+    model: openai('gpt-4'),
+  },
+  groups: [
+    {
+      name: 'app-strings',
+      paths: [
+        {
+          source: './src/locales/en-US.json',
+          target: './src/locales/{locale}.json',
+        },
+      ],
+      plugin: JsonPlugin(),
+    },
+  ],
+  localeConfig: {
+    source: 'en-US',
+    target: ['zh-CN', 'es-ES', 'fr-FR'],
+  },
+} satisfies ConfigType;
 ```
 
-### Remote Caching
+### Set up AI provider
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+Add your AI provider API key to your environment:
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+```bash
+# For OpenAI
+export OPENAI_API_KEY="your-api-key"
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+# For Google AI
+export GOOGLE_GENERATIVE_AI_API_KEY="your-api-key"
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+### Run translation
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+```bash
+# Translate all untranslated content
+npx langnostic translate
 
+# Preview what would be translated (dry run)
+npx langnostic translate --dry-run
+
+# Enable debug mode to see prompts and responses
+npx langnostic translate --debug
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
+## 🎯 Use cases
+
+### JSON locale files
+
+Perfect for translating application strings with support for:
+- ICU message format
+- HTML/XML tags
+- Template variables
+- Pluralization rules
+
+```json
+{
+  "welcome": {
+    "defaultMessage": "Welcome, {username}!",
+    "description": "Greeting message for logged-in users"
+  },
+  "itemCount": {
+    "defaultMessage": "{count, plural, =0 {no items} =1 {1 item} other {# items}}",
+    "description": "Display count of items"
+  }
+}
 ```
 
-## Useful Links
+### MDX files
 
-Learn more about the power of Turborepo:
+Ideal for translating documentation sites while preserving:
+- Frontmatter metadata
+- Code blocks
+- JSX components
+- Markdown formatting
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+```mdx
+---
+title: Getting Started
+description: Learn how to use our platform
+---
+
+# Getting Started
+
+Welcome to our platform! Here's how to get started:
+
+<CustomComponent prop="value" />
+```
+
+## 🏗️ Repository structure
+
+This monorepo contains:
+
+### Core packages
+
+- **`packages/langnostic`** - Main CLI tool and core functionality
+- **`packages/plugin-json`** - JSON file format plugin
+- **`packages/plugin-mdx`** - MDX file format plugin
+- **`packages/typescript-config`** - Shared TypeScript configurations
+
+### Examples & testing
+
+- **`examples/basic`** - Next.js example integration
+- **`apps/test-fixtures`** - Test files and example configurations
+
+## 🔧 Configuration
+
+Langnostic uses a flexible configuration system supporting:
+
+- Multiple AI providers (OpenAI, Google, Anthropic, etc.)
+- Custom translation groups
+- Plugin-specific options
+- Concurrency controls
+- Path pattern matching
+
+Example with multiple file types:
+
+```typescript
+export default {
+  ai: {
+    model: google('gemini-1.5-pro'),
+  },
+  localeConfig: {
+    source: 'en-US',
+    target: ['zh-CN', 'pt-BR', 'es-ES'],
+  },
+  groups: [
+    {
+      name: 'app',
+      plugin: JsonPlugin(),
+      paths: [
+        {
+          source: './src/locales/en-US.json',
+          target: './src/locales/{locale}.json',
+        },
+      ],
+    },
+    {
+      name: 'docs',
+      plugin: MdxPlugin(),
+      paths: [
+        {
+          source: './docs/**/**/en-US.mdx',
+          target: './docs/**/**/{locale}.mdx',
+        },
+      ],
+    },
+  ],
+} satisfies ConfigType;
+```
+
+## 🛠️ Development
+
+### Prerequisites
+
+- Node.js >= 22
+- pnpm >= 10.15.1
+
+### Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/greatfrontend/langnostic.git
+cd langnostic
+
+# Install dependencies
+pnpm install
+
+# Build all packages
+pnpm build
+
+# Run tests
+pnpm test
+
+# Start development mode
+pnpm dev
+```
+
+### Building
+
+```bash
+# Build all packages
+pnpm build
+
+# Build specific package
+pnpm --filter langnostic build
+```
+
+### Testing
+
+```bash
+# Run all tests
+pnpm test
+
+# Run tests in watch mode
+pnpm test:watch
+
+# Run tests for specific package
+pnpm --filter langnostic test
+```
+
+## 📋 Available scripts
+
+- `pnpm build` - Build all packages
+- `pnpm dev` - Start development mode
+- `pnpm test` - Run all tests
+- `pnpm lint` - Lint all packages
+- `pnpm format` - Format code with Biome
+- `pnpm clean` - Clean all build artifacts
+
+## 🔌 Plugin development
+
+Create custom plugins to support additional file formats:
+
+```typescript
+import type { LangnosticPlugin } from 'langnostic';
+
+export default function MyPlugin(): LangnosticPlugin {
+  return {
+    type: 'my-format',
+    stringsPerRequest: 50,
+    
+    async trackFiles(filesMetadata) {
+      // Track files for translation
+    },
+    
+    async getTranslationStrings() {
+      // Return strings that need translation
+      return translationStrings;
+    },
+    
+    async onTranslationBatchComplete(translatedStrings) {
+      // Handle completed translations
+    },
+    
+    async getInstructions() {
+      // Return AI-specific instructions for this format
+      return 'Custom instructions for translating this format...';
+    },
+  };
+}
+```
+
+### Development workflow
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes and add tests
+4. Run the test suite: `pnpm test`
+5. Commit your changes: `git commit -m 'Add amazing feature'`
+6. Push to the branch: `git push origin feature/amazing-feature`
+7. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](packages/langnostic/LICENSE) file for details.
