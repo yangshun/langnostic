@@ -1,0 +1,7 @@
+{
+  "title": "Documentation",
+  "description": "langnostic docs",
+  "icon": "Building",
+  "root": true,
+  "pages": ["---Introduction---", "index", "what-is-langnostic", "how-it-works"]
+}
