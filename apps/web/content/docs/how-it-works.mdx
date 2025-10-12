@@ -1,0 +1,303 @@
+---
+title: How it works
+description: Understand the architecture and workflow of Langnostic's translation system
+icon: Wrench
+---
+
+Langnostic's architecture is built around two core components: the **Runner** and the **Plugin System**. The Runner orchestrates the translation workflow, while Plugins handle the specifics of different file formats.
+
+## Architecture Overview
+
+Langnostic separates concerns into two main components:
+
+### The Runner
+
+The Runner is the orchestration engine that manages the entire translation lifecycle:
+
+- **Initialization** - Loads configuration and sets up translation groups
+- **Discovery** - Resolves file paths and initializes plugins with source/target files
+- **Translation** - Creates job queues and manages concurrent AI translation requests
+- **Shutdown** - Completes all jobs and reports results
+
+### The Plugin System
+
+Plugins handle format-specific operations for different file types (JSON, MDX, etc.):
+
+- **Loading** - Reads and parses files in their specific format
+- **Change Detection** - Determines what content needs translation
+- **Generation** - Writes translated content back to files while preserving format
+
+## The Translation Flow
+
+Here's how the Runner and Plugins work together when you run `npx langnostic translate`:
+
+### Phase 1: Initialization
+
+**Runner responsibilities:**
+- Loads your `langnostic.config.ts`
+- Creates translation groups based on configuration
+- Initializes AI provider settings
+
+```typescript
+// langnostic.config.ts
+export default {
+  ai: {
+    model: openai('gpt-4'),
+  },
+  localeConfig: {
+    source: 'en-US',
+    target: ['zh-CN', 'es-ES'],
+  },
+  groups: [
+    {
+      name: 'app',
+      plugin: JsonPlugin(),
+      paths: [
+        {
+          source: './src/locales/en-US.json',
+          target: './src/locales/{locale}.json',
+        },
+      ],
+    },
+  ],
+} satisfies ConfigType;
+```
+
+**Example configuration:**
+
+The configuration tells the Runner which AI model to use, what languages to translate between, and which plugins to use for different file types.
+
+### Phase 2: Discovery
+
+**Runner responsibilities:**
+- Expands path patterns (e.g., `./locales/{locale}.json` → `./locales/zh-CN.json`, `./locales/es-ES.json`)
+- Resolves source and target file pairs
+- Passes file metadata to plugins
+
+**Plugin responsibilities:**
+- Receives file paths and locale information via `trackFiles()`
+- Prepares internal state for tracking these files
+
+**Example:**
+
+```typescript
+// Runner expands this:
+{
+  source: './src/locales/en-US.json',
+  target: './src/locales/{locale}.json',
+}
+
+// Into actual file pairs:
+Source: ./src/locales/en-US.json
+Targets: [
+  { locale: 'zh-CN', path: './src/locales/zh-CN.json' },
+  { locale: 'es-ES', path: './src/locales/es-ES.json' }
+]
+```
+
+### Phase 3: Plugin loading & change detection
+
+**Plugin responsibilities:**
+- **Read files** - Parse source and target files in format-specific ways
+- **Detect changes** - Determine what content needs translation
+- **Return translation strings** - Provide the Runner with strings to translate via `getTranslationStrings()`
+
+Each plugin implements its own change detection strategy:
+
+**JSON Plugin:**
+```typescript
+// Compares object keys
+Source (en-US.json): { "welcome": "Hello", "new": "New key" }
+Target (zh-CN.json): { "welcome": "你好" }
+
+// Returns: "new" needs translation for zh-CN
+```
+
+**MDX Plugin:**
+```typescript
+// Uses hash-based detection
+Source hash: "abc123" (changed from "abc122")
+Registry hash: "abc122"
+
+// Returns: Content needs retranslation
+```
+
+The plugin returns data in a standard format:
+
+```typescript
+{
+  batchId: './src/locales/en-US.json',  // Groups related strings
+  id: 'welcomeMessage',                  // Unique identifier
+  source: {
+    locale: 'en-US',
+    string: 'Welcome, {username}!',
+    description: 'Greeting for logged-in users'
+  },
+  targets: ['zh-CN', 'es-ES']            // Which locales need this
+}
+```
+
+### Phase 4: Translation (Runner orchestration)
+
+**Runner responsibilities:**
+- **Create job queue** - Batches strings into jobs based on `stringsPerRequest`
+- **Execute jobs concurrently** - Runs multiple translation requests in parallel
+- **Call AI provider** - Sends structured prompts with plugin-specific instructions
+- **Collect results** - Gathers translated strings from AI responses
+
+**How batching works:**
+
+```typescript
+// Plugin says: "Process 50 strings per request"
+Total strings: 120
+
+// Runner creates jobs:
+Job 1: Strings 1-50
+Job 2: Strings 51-100
+Job 3: Strings 101-120
+
+// Executes with concurrency limit (default: 5 concurrent jobs)
+```
+
+**AI Translation request:**
+
+```typescript
+// Runner sends to AI:
+{
+  prompt: `Translate these strings to zh-CN and es-ES.
+  
+  ${pluginInstructions} // From plugin.getInstructions()
+  
+  Strings: [
+    { id: "welcome", source: { locale: "en-US", string: "Hello" }, targets: ["zh-CN", "es-ES"] }
+  ]`
+}
+
+// AI responds:
+{
+  data: [
+    {
+      id: "welcome",
+      translations: [
+        { locale: "zh-CN", string: "你好" },
+        { locale: "es-ES", string: "Hola" }
+      ]
+    }
+  ]
+}
+```
+
+### Phase 5: Generation (Plugin writes files)
+
+**Runner responsibilities:**
+- Receives completed translation results from AI
+- Calls plugin's `onTranslationBatchComplete()` with results
+- Provides status updates
+
+**Plugin responsibilities:**
+- **Receive translated strings** - Gets results for a batch of completed translations
+- **Merge with existing content** - Combines new translations with existing files
+- **Write files** - Updates target files while preserving format and structure
+
+**Example (JSON Plugin):**
+
+```typescript
+// Receives from Runner:
+{
+  id: 'greeting',
+  translations: [
+    { locale: 'zh-CN', string: '你好，{name}！' }
+  ]
+}
+
+// Plugin merges into existing file:
+Existing (zh-CN.json): { "welcome": "欢迎！" }
+New translation: { "greeting": "你好，{name}！" }
+
+// Writes:
+{
+  "welcome": "欢迎！",
+  "greeting": "你好，{name}！"
+}
+```
+
+**Example (MDX Plugin):**
+
+```typescript
+// Plugin also updates its registry
+.langnostic/registry-abc123.json:
+{
+  "content": {
+    "source": ["hash1", "hash2"],
+    "targets": {
+      "zh-CN": ["hash1", "hash2"]  // Tracks what's been translated
+    }
+  }
+}
+```
+
+### Phase 6: Shutdown
+
+**Runner responsibilities:**
+- Waits for all jobs to complete
+- Reports translation statistics
+- Reports any errors
+
+## Runner-Plugin communication
+
+The Runner and Plugins communicate through a well-defined interface:
+
+```typescript
+interface LangnosticPlugin {
+  type: string;                    // Plugin identifier (e.g., 'json', 'mdx')
+  stringsPerRequest: number;       // How many strings to batch per AI request
+  
+  // Runner calls these methods in sequence:
+  trackFiles(files: TranslationFileMetadata[]): Promise<void>;
+  getTranslationStrings(): Promise<TranslationStringArg[]>;
+  onTranslationBatchComplete(results: TranslationStringResult[]): Promise<void>;
+  getInstructions?(): Promise<string>;  // Optional AI-specific guidance
+}
+```
+
+### Data flow
+
+```
+Runner → Plugin: trackFiles()
+  Passes: File paths and locale information
+  
+Plugin → Runner: getTranslationStrings()
+  Returns: Array of strings needing translation
+  
+Runner → AI Provider: Translate request
+  Sends: Batched strings + plugin instructions
+  
+AI Provider → Runner: Translation results
+  Returns: Translated strings
+  
+Runner → Plugin: onTranslationBatchComplete()
+  Passes: Completed translations
+  
+Plugin: Writes files
+  Updates: Target locale files
+```
+
+## Why this architecture?
+
+This separation of concerns provides several benefits:
+
+**Flexibility**: New file formats can be added by creating plugins without modifying the Runner
+
+**Optimization**: Each plugin can optimize for its format (e.g., hash-based detection for MDX, key comparison for JSON)
+
+**Reusability**: The Runner handles all the complex orchestration (concurrency, batching, AI calls) once
+
+**Extensibility**: Plugin-specific instructions allow format-specific AI guidance
+
+## What's next?
+
+Now that you understand how Langnostic works:
+
+- [Getting Started](/docs/getting-started/installation) - Install and configure Langnostic
+- [Core Concepts](/docs/core-concepts) - Dive deeper into key concepts
+- [Plugins](/docs/plugins) - Learn about available plugins and creating custom ones
