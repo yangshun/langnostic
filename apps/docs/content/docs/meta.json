@@ -3,5 +3,18 @@
   "description": "langnostic docs",
   "icon": "Building",
   "root": true,
-  "pages": ["---Introduction---", "index", "what-is-langnostic", "how-it-works"]
+  "pages": [
+    "---Introduction---",
+    "index",
+    "philosophy",
+    "why",
+    "---Guide---",
+    "features",
+    "cli",
+    "workflows",
+    "using-plugins",
+    "comparisons",
+    "---Advanced---",
+    "architecture"
+  ]
 }

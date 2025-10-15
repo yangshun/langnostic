@@ -1,7 +1,6 @@
 ---
-title: How it works
+title: Architecture
 description: Understand the architecture and workflow of Langnostic's translation system
-icon: Wrench
 ---
 
 Langnostic's architecture is built around two core components: the **Runner** and the **Plugin System**. The Runner orchestrates the translation workflow, while Plugins handle the specifics of different file formats.
@@ -14,18 +13,18 @@ Langnostic separates concerns into two main components:
 
 The Runner is the orchestration engine that manages the entire translation lifecycle:
 
-- **Initialization** - Loads configuration and sets up translation groups
-- **Discovery** - Resolves file paths and initializes plugins with source/target files
-- **Translation** - Creates job queues and manages concurrent AI translation requests
-- **Shutdown** - Completes all jobs and reports results
+- **Initialization**: Loads configuration and sets up translation groups
+- **Discovery**: Resolves file paths and initializes plugins with source/target files
+- **Translation**: Creates job queues and manages concurrent AI translation requests
+- **Shutdown**: Completes all jobs and reports results
 
 ### The Plugin System
 
 Plugins handle format-specific operations for different file types (JSON, MDX, etc.):
 
-- **Loading** - Reads and parses files in their specific format
-- **Change Detection** - Determines what content needs translation
-- **Generation** - Writes translated content back to files while preserving format
+- **Loading**: Reads and parses files in their specific format
+- **Change Detection**: Determines what content needs translation
+- **Generation**: Writes translated content back to files while preserving format
 
 ## The Translation Flow
 
@@ -98,9 +97,9 @@ Targets: [
 ### Phase 3: Plugin loading & change detection
 
 **Plugin responsibilities:**
-- **Read files** - Parse source and target files in format-specific ways
-- **Detect changes** - Determine what content needs translation
-- **Return translation strings** - Provide the Runner with strings to translate via `getTranslationStrings()`
+- **Read files**: Parse source and target files in format-specific ways
+- **Detect changes**: Determine what content needs translation
+- **Return translation strings**: Provide the Runner with strings to translate via `getTranslationStrings()`
 
 Each plugin implements its own change detection strategy:
 
@@ -140,10 +139,10 @@ The plugin returns data in a standard format:
 ### Phase 4: Translation (Runner orchestration)
 
 **Runner responsibilities:**
-- **Create job queue** - Batches strings into jobs based on `stringsPerRequest`
-- **Execute jobs concurrently** - Runs multiple translation requests in parallel
-- **Call AI provider** - Sends structured prompts with plugin-specific instructions
-- **Collect results** - Gathers translated strings from AI responses
+- **Create job queue**: Batches strings into jobs based on `stringsPerRequest`
+- **Execute jobs concurrently**: Runs multiple translation requests in parallel
+- **Call AI provider**: Sends structured prompts with plugin-specific instructions
+- **Collect results**: Gathers translated strings from AI responses
 
 **How batching works:**
 
@@ -195,9 +194,9 @@ Job 3: Strings 101-120
 - Provides status updates
 
 **Plugin responsibilities:**
-- **Receive translated strings** - Gets results for a batch of completed translations
-- **Merge with existing content** - Combines new translations with existing files
-- **Write files** - Updates target files while preserving format and structure
+- **Receive translated strings**: Gets results for a batch of completed translations
+- **Merge with existing content**: Combines new translations with existing files
+- **Write files**: Updates target files while preserving format and structure
 
 **Example (JSON Plugin):**
 
@@ -286,18 +285,15 @@ Plugin: Writes files
 
 This separation of concerns provides several benefits:
 
-**Flexibility**: New file formats can be added by creating plugins without modifying the Runner
-
-**Optimization**: Each plugin can optimize for its format (e.g., hash-based detection for MDX, key comparison for JSON)
-
-**Reusability**: The Runner handles all the complex orchestration (concurrency, batching, AI calls) once
-
-**Extensibility**: Plugin-specific instructions allow format-specific AI guidance
+- **Flexibility**: New file formats can be added by creating plugins without modifying the Runner
+- **Optimization**: Each plugin can optimize for its format (e.g., hash-based detection for MDX, key comparison for JSON)
+- **Reusability**: The Runner handles all the complex orchestration (concurrency, batching, AI calls) once
+- **Extensibility**: Plugin-specific instructions allow format-specific AI guidance
 
 ## What's next?
 
 Now that you understand how Langnostic works:
 
-- [Getting Started](/docs/getting-started/installation) - Install and configure Langnostic
-- [Core Concepts](/docs/core-concepts) - Dive deeper into key concepts
-- [Plugins](/docs/plugins) - Learn about available plugins and creating custom ones
+- [Getting started](/docs/) - Install and configure Langnostic
+- [Core concepts](/docs/core-concepts) - Dive deeper into key concepts
+- [Plugins](/docs/using-plugins) - Learn about available plugins and creating custom ones
