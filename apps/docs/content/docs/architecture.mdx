@@ -5,30 +5,39 @@ description: Understand the architecture and workflow of Langnostic's translatio
 
 Langnostic's architecture is built around two core components: the **Runner** and the **Plugin System**. The Runner orchestrates the translation workflow, while Plugins handle the specifics of different file formats.
 
-## Architecture Overview
+## Architecture overview
 
-Langnostic separates concerns into two main components:
+Langnostic separates concerns into two main components — (1) runner and (2) plugins
 
-### The Runner
+### Runner
 
-The Runner is the orchestration engine that manages the entire translation lifecycle:
+The runner is the orchestration engine that manages the entire translation lifecycle:
 
 - **Initialization**: Loads configuration and sets up translation groups
 - **Discovery**: Resolves file paths and initializes plugins with source/target files
 - **Translation**: Creates job queues and manages concurrent AI translation requests
 - **Shutdown**: Completes all jobs and reports results
 
-### The Plugin System
+### Plugins
 
 Plugins handle format-specific operations for different file types (JSON, MDX, etc.):
 
 - **Loading**: Reads and parses files in their specific format
 - **Change Detection**: Determines what content needs translation
-- **Generation**: Writes translated content back to files while preserving format
+- **Writing**: Writes translated content back to files while preserving format
 
-## The Translation Flow
+## Why this architecture?
 
-Here's how the Runner and Plugins work together when you run `npx langnostic translate`:
+This separation of concerns provides several benefits:
+
+- **Flexibility**: New file formats can be added by creating plugins without modifying the runner
+- **Optimization**: Each plugin can optimize for its format (e.g., hash-based detection for MDX, key comparison for JSON)
+- **Reusability**: The runner handles all the complex orchestration (concurrency, batching, AI calls) once
+- **Extensibility**: Plugin-specific instructions allow format-specific AI guidance
+
+## Translation flow
+
+Here's how the runner and plugins work together when you run `npx langnostic translate`:
 
 ### Phase 1: Initialization
 
@@ -36,6 +45,10 @@ Here's how the Runner and Plugins work together when you run `npx langnostic tra
 - Loads your `langnostic.config.ts`
 - Creates translation groups based on configuration
 - Initializes AI provider settings
+
+**Example configuration:**
+
+The configuration tells the runner which AI model to use, what languages to translate between, and which plugins to use for each file types.
 
 ```typescript
 // langnostic.config.ts
@@ -61,10 +74,6 @@ export default {
   ],
 } satisfies ConfigType;
 ```
-
-**Example configuration:**
-
-The configuration tells the Runner which AI model to use, what languages to translate between, and which plugins to use for different file types.
 
 ### Phase 2: Discovery
 
@@ -99,7 +108,7 @@ Targets: [
 **Plugin responsibilities:**
 - **Read files**: Parse source and target files in format-specific ways
 - **Detect changes**: Determine what content needs translation
-- **Return translation strings**: Provide the Runner with strings to translate via `getTranslationStrings()`
+- **Return translation strings**: Provide the runner with strings to translate via `getTranslationStrings()`
 
 Each plugin implements its own change detection strategy:
 
@@ -136,9 +145,10 @@ The plugin returns data in a standard format:
 }
 ```
 
-### Phase 4: Translation (Runner orchestration)
+### Phase 4: Translation (runner orchestration)
 
 **Runner responsibilities:**
+
 - **Create job queue**: Batches strings into jobs based on `stringsPerRequest`
 - **Execute jobs concurrently**: Runs multiple translation requests in parallel
 - **Call AI provider**: Sends structured prompts with plugin-specific instructions
@@ -186,14 +196,16 @@ Job 3: Strings 101-120
 }
 ```
 
-### Phase 5: Generation (Plugin writes files)
+### Phase 5: Generation (plugin writes files)
 
 **Runner responsibilities:**
+
 - Receives completed translation results from AI
 - Calls plugin's `onTranslationBatchComplete()` with results
 - Provides status updates
 
 **Plugin responsibilities:**
+
 - **Receive translated strings**: Gets results for a batch of completed translations
 - **Merge with existing content**: Combines new translations with existing files
 - **Write files**: Updates target files while preserving format and structure
@@ -201,7 +213,7 @@ Job 3: Strings 101-120
 **Example (JSON Plugin):**
 
 ```typescript
-// Receives from Runner:
+// Receives from runner:
 {
   id: 'greeting',
   translations: [
@@ -242,14 +254,14 @@ New translation: { "greeting": "你好，{name}！" }
 - Reports translation statistics
 - Reports any errors
 
-## Runner-Plugin communication
+## Runner-plugin communication
 
-The Runner and Plugins communicate through a well-defined interface:
+The runner and plugins communicate through a well-defined interface:
 
 ```typescript
 interface LangnosticPlugin {
   type: string;                    // Plugin identifier (e.g., 'json', 'mdx')
-  stringsPerRequest: number;       // How many strings to batch per AI request
+  stringsPerRequest: number;       // How many strings to translate per AI request
   
   // Runner calls these methods in sequence:
   trackFiles(files: TranslationFileMetadata[]): Promise<void>;
@@ -280,20 +292,3 @@ Runner → Plugin: onTranslationBatchComplete()
 Plugin: Writes files
   Updates: Target locale files
 ```
-
-## Why this architecture?
-
-This separation of concerns provides several benefits:
-
-- **Flexibility**: New file formats can be added by creating plugins without modifying the Runner
-- **Optimization**: Each plugin can optimize for its format (e.g., hash-based detection for MDX, key comparison for JSON)
-- **Reusability**: The Runner handles all the complex orchestration (concurrency, batching, AI calls) once
-- **Extensibility**: Plugin-specific instructions allow format-specific AI guidance
-
-## What's next?
-
-Now that you understand how Langnostic works:
-
-- [Getting started](/docs/) - Install and configure Langnostic
-- [Core concepts](/docs/core-concepts) - Dive deeper into key concepts
-- [Plugins](/docs/using-plugins) - Learn about available plugins and creating custom ones

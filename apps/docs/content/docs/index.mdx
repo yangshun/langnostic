@@ -1,245 +1,48 @@
 ---
-title: Getting started
-description: Get started with Langnostic in 5 minutes
+title: Introduction
 ---
 
-Get Langnostic up and running in your project in just a few minutes.
+At its core, Langnostic is a powerful CLI tool for translating files. It is packed with features to make the internationalization process simple, fast, and affordable.
 
-## Prerequisites
+Because it operates on files and does not require any directory structure, it works with various JavaScript frameworks and i18n runtime libraries. While we expect the majority of users to be using Langnostic to translate JavaScript applications, it can also be used to translate strings within web or mobile apps written in other languages like Python, Ruby, Java, Swift, Kotlin, etc., as long as the translation strings exist as text-based files (JSON, Markdown, XML, YAML, TOML, etc.).
 
-- Node.js 18 or higher
-- A project with JSON locale files or MDX files
+## Use cases
 
-## Installation
+Langnostic is perfect for:
 
-Install Langnostic in your project:
+- **SaaS/mobile applications**: Translate UI strings and notifications
+- **Documentation sites**: Localize your MDX files automatically
+- **Marketing content**: Keep marketing pages in sync across languages
 
-```bash
-npm install langnostic
-# or
-pnpm add langnostic
-# or
-yarn add langnostic
-```
+## When to use Langnostic
 
-## Initialize configuration
+Langnostic is ideal when you want/need:
 
-Create a configuration file with sensible defaults:
+- Fast iteration on internationalization
+- Automate translation workflows
+- Have frequently changing content
+- Support multiple languages quickly
+- Reduce manual translation management
+- Only want to pay for translation and not storage of translated content
 
-```bash
-npx langnostic init
-```
+## What Langnostic is not
 
-This creates a `langnostic.config.ts` file in your project root:
+TODO
 
-```typescript title="langnostic.config.ts"
-import { openai } from '@ai-sdk/openai';
-import JsonPlugin from '@langnostic/plugin-json';
-import type { ConfigType } from 'langnostic';
+## Comparison with traditional approaches
 
-export default {
-  ai: {
-    model: openai('gpt-4'),
-  },
-  groups: [
-    {
-      name: 'app-strings',
-      paths: [
-        {
-          source: './src/locales/en-US.json',
-          target: './src/locales/{locale}.json',
-        },
-      ],
-      plugin: JsonPlugin(),
-    },
-  ],
-  localeConfig: {
-    source: 'en-US',
-    target: ['zh-CN', 'es-ES', 'fr-FR'],
-  },
-} satisfies ConfigType;
-```
-
-## Set up your AI provider
-
-Add your AI provider API key to your environment:
-
-```bash title=".env"
-# For OpenAI
-OPENAI_API_KEY="your-api-key-here"
-
-# For Google AI
-GOOGLE_GENERATIVE_AI_API_KEY="your-api-key-here"
-
-# For Anthropic
-ANTHROPIC_API_KEY="your-api-key-here"
-```
-
-<Callout type="info">
-  Get your API key from:
-  - [OpenAI Platform](https://platform.openai.com/api-keys)
-  - [Google AI Studio](https://aistudio.google.com/app/apikey)
-  - [Anthropic Console](https://console.anthropic.com/)
-</Callout>
-
-## Configure for your project
-
-Update the configuration to match your project structure:
-
-```typescript title="langnostic.config.ts"
-export default {
-  ai: {
-    model: openai('gpt-4'), // or google('gemini-1.5-pro'), anthropic('claude-3-5-sonnet-20241022')
-  },
-  localeConfig: {
-    source: 'en-US',      // Your source language
-    target: ['zh-CN'],     // Languages to translate to
-  },
-  groups: [
-    {
-      name: 'app',
-      plugin: JsonPlugin(),
-      paths: [
-        {
-          source: './src/locales/en-US.json',     // Your source file
-          target: './src/locales/{locale}.json',  // {locale} will be replaced
-        },
-      ],
-    },
-  ],
-} satisfies ConfigType;
-```
-
-## Run your first translation
-
-Translate all new or modified content:
-
-```bash
-npx langnostic translate
-```
-
-<Callout type="success">
-  Langnostic will automatically detect what needs translation and update your target locale files!
-</Callout>
-
-### Preview changes first
-
-Want to see what would be translated without making changes?
-
-```bash
-npx langnostic translate --dry-run
-```
-
-### Debug mode
-
-See the prompts and responses from the AI:
-
-```bash
-npx langnostic translate --debug
-```
-
-## Example: JSON locale files
-
-Create a source locale file:
-
-```json title="src/locales/en-US.json"
-{
-  "welcome": {
-    "defaultMessage": "Welcome to our app!",
-    "description": "Main welcome message"
-  },
-  "greeting": {
-    "defaultMessage": "Hello, {username}!",
-    "description": "Personalized greeting"
-  }
-}
-```
-
-Run translation:
-
-```bash
-npx langnostic translate
-```
-
-Langnostic creates the translated file:
-
-```json title="src/locales/zh-CN.json"
-{
-  "welcome": {
-    "defaultMessage": "欢迎来到我们的应用！",
-    "description": "Main welcome message"
-  },
-  "greeting": {
-    "defaultMessage": "你好，{username}！",
-    "description": "Personalized greeting"
-  }
-}
-```
-
-## Example: MDX files
-
-For MDX files, use the MDX plugin:
-
-```typescript title="langnostic.config.ts"
-import MdxPlugin from '@langnostic/plugin-mdx';
-
-export default {
-  // ... ai and localeConfig
-  groups: [
-    {
-      name: 'docs',
-      plugin: MdxPlugin(),
-      paths: [
-        {
-          source: './docs/en-US/**/*.mdx',
-          target: './docs/{locale}/**/*.mdx',
-        },
-      ],
-    },
-  ],
-} satisfies ConfigType;
-```
-
-Create your source MDX file:
-
-```mdx title="docs/en-US/getting-started.mdx"
----
-title: Getting Started
-description: Learn how to get started
----
-
-# Getting Started
-
-Welcome to our documentation!
-
-<Alert>
-  This is an important note.
-</Alert>
-```
-
-Run translation and get:
-
-```mdx title="docs/zh-CN/getting-started.mdx"
----
-title: 入门指南
-description: 学习如何开始
----
-
-# 入门指南
-
-欢迎阅读我们的文档！
-
-<Alert>
-  这是一个重要的提示。
-</Alert>
-```
+| Feature | Langnostic | Traditional i18n | Translation services |
+|---------|------------|------------------|---------------------|
+| **Speed** | Instant | Manual | Days to weeks |
+| **Cost** | Pay per API call | Free (DIY) | $$$ per word |
+| **Change detection** | Automatic | Manual tracking | Manual tracking |
+| **Format preservation** | Automatic | Manual | Often requires fixes |
+| **Context awareness** | AI-powered | N/A | Depends on service |
+| **Technical setup** | Simple CLI | Library integration | Portal management |
 
 ## What's next?
 
-Now that you've got Langnostic running, learn more about:
+Now that you understand what Langnostic is, learn how it works under the hood:
 
-- [What is Langnostic?](/docs/what-is-langnostic) - Understand the features and use cases
-- [How it works](/docs/how-it-works) - Learn about the architecture
-- [Core Concepts](/docs/core-concepts) - Dive deeper into configuration, locales, and plugins
-- [Configuration](/docs/configuration) - Advanced configuration options
-- [Plugins](/docs/plugins) - Learn about available plugins and create custom ones
+- [Quick start](/docs/quick-start): Set up your first project
+- [Core Concepts](/docs/core-concepts): Learn the fundamental concepts
