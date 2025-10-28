@@ -1,6 +1,6 @@
 {
   "name": "@langnostic/plugin-json",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "JSON plugin for Langnostic",
   "license": "MIT",
   "type": "module",
