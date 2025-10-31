@@ -1,4 +1,29 @@
 ---
 title: Workflows
-description: TODO
+description: Integrate Langnostic into any development and release workflow
 ---
+
+Since there's only one main command for translating, Langnostic can be easily integrated into many common workflows:
+
+- **Precommit hook**: Run translation command before committing
+- **Post-PR**: Run translation command after PR is created. Can be done via CI hooks (e.g. GitHub actions)
+- **Post-merging**: Run translation command after PR is merged. Can be done via CI hooks (e.g. GitHub actions)
+- **Periodically**: Run translation command periodically (e.g. every 1 hour or 1 day)
+- **Before release**: Run translation command before deploying to staging and production
+- **Watch mode**: Background runner that watches file changes and runs translation after a file is saved. Can be overkill, but can be helpful if there's a need to see the translated result during development
+
+The translation command can be run anytime because it does the minimal work required to get the project into the fully-translated state.
+
+## Manual workflow
+
+1. Update strings in app
+1. Developer runs CLI command → `langnostic translate`
+2. Commit updated files and deploy
+
+## CI/CD workflow
+
+1. Update strings in app
+1. Commit source file changes and push to a branch
+2. CI pipeline runs `langnostic translate` upon code push or pull requests
+    - Commits the changes
+    - CI bot creates pull request with translated files. Human reviews the translation changes before merging

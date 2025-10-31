@@ -3,34 +3,34 @@ title: Quick start
 description: Get started with Langnostic in 5 minutes
 ---
 
+<Callout>
+  We're polishing up Langnostic for a public release and the code will be open sourced soon. Langnostic will be free for open source projects and commercial projects can purchase a business license for a reasonable one-time fee. If you're interested in using Langnostic, just [drop us an email](team@greatfrontend.com).
+</Callout>
+
 Get Langnostic up and running in your project in just a few minutes.
 
 ## Prerequisites
 
 - Node.js 18 or higher
-- A project with JSON locale files or MDX files
+- A project with source locale files in JSON or Markdown/MDX format
 
 ## Installation
 
 Install Langnostic in your project:
 
-```bash
-npm install langnostic
-# or
-pnpm add langnostic
-# or
-yarn add langnostic
+```npm
+npm install langnostic @langnostic/plugin-json --save-dev
 ```
 
 ## Initialize configuration
 
-Create a configuration file with sensible defaults:
+Initialize a default configuration file.
 
-```bash
+```npm
 npx langnostic init
 ```
 
-This creates a `langnostic.config.ts` file in your project root:
+This creates a `langnostic.config.ts` file in the root of the project:
 
 ```typescript title="langnostic.config.ts"
 import { openai } from '@ai-sdk/openai';
@@ -39,7 +39,7 @@ import type { ConfigType } from 'langnostic';
 
 export default {
   ai: {
-    model: openai('gpt-4'),
+    model: openai('gpt-5'),
   },
   groups: [
     {
@@ -60,49 +60,43 @@ export default {
 } satisfies ConfigType;
 ```
 
-## Set up your AI provider
+## Configure the localization groups
 
-Add your AI provider API key to your environment:
+Update the `groups` configuration to match your project structure.
 
-```bash title=".env"
-# For OpenAI
-OPENAI_API_KEY="your-api-key-here"
+For example, given a project with the following structure,
 
-# For Google AI
-GOOGLE_GENERATIVE_AI_API_KEY="your-api-key-here"
-
-# For Anthropic
-ANTHROPIC_API_KEY="your-api-key-here"
+```
+├── src
+│   └── locales
+│       └── en-US.json
+├── package.json
+└── langnostic.config.ts
 ```
 
-<Callout type="info">
-  Get your API key from:
-  - [OpenAI Platform](https://platform.openai.com/api-keys)
-  - [Google AI Studio](https://aistudio.google.com/app/apikey)
-  - [Anthropic Console](https://console.anthropic.com/)
-</Callout>
-
-## Configure for your project
-
-Update the configuration to match your project structure:
+Create a group that targets the source locale file at `src/locales/en-US.json`:
 
 ```typescript title="langnostic.config.ts"
+import { openai } from '@ai-sdk/openai';
+import JsonPlugin from '@langnostic/plugin-json';
+import type { ConfigType } from 'langnostic';
+
 export default {
   ai: {
-    model: openai('gpt-4'), // or google('gemini-1.5-pro'), anthropic('claude-3-5-sonnet-20241022')
+    model: openai('gpt-5'), // Other providers
   },
   localeConfig: {
-    source: 'en-US',      // Your source language
-    target: ['zh-CN'],     // Languages to translate to
+    source: 'en-US',      // Your source locale
+    target: ['zh-CN', 'pt-BR'],     // Locales to translate to
   },
   groups: [
     {
-      name: 'app',
+      name: 'app-strings',
       plugin: JsonPlugin(),
       paths: [
         {
-          source: './src/locales/en-US.json',     // Your source file
-          target: './src/locales/{locale}.json',  // {locale} will be replaced
+          source: './src/locales/en-US.json',     // Path to source file
+          target: './src/locales/{locale}.json',  // {locale} will be replaced with the target locales
         },
       ],
     },
@@ -110,85 +104,112 @@ export default {
 } satisfies ConfigType;
 ```
 
-## Run your first translation
+After translating, two new files `zh-CN.json` and `pt-BR.json` will be created:
 
-Translate all new or modified content:
+```
+├── src
+│   └── locales
+│       ├── en-US.json
+│       ├── pt-BR.json
+│       └── zh-CN.json
+├── package.json
+└── langnostic.config.ts
+```
 
-```bash
+## Set up your AI provider
+
+Langnostic uses AI models to translate content. Under the hood, it uses the [AI SDK](https://ai-sdk.dev/), which provides a common interface to access the major AI model providers and their latest models. AI SDK supports a huge list of [AI Providers](https://ai-sdk.dev/providers/ai-sdk-providers) and it's always growing.
+
+This allows you to have complete freedom over choice of AI model to use for the translation. You may change it anytime you want, without having to re-translate the entire project.
+
+The default config uses the OpenAI provider via `@ai-sdk/openai`. Install that package, or others if you want to use a different model:
+
+```npm
+npm install @ai-sdk/openai --save-dev
+```
+
+Initialize the AI provider instance and pass it to the `ai.model` field of `langnostic.config.ts`:
+
+```typescript title="langnostic.config.ts"
+import { openai } from '@ai-sdk/openai';
+
+export default {
+  ai: {
+    model: openai('gpt-5'),
+  },
+  // Other options omitted...
+};
+```
+
+Depending on your AI provider of choice, add the respective environment variable key and value to your `.env` file:
+
+```bash title=".env"
+# OpenAI
+OPENAI_API_KEY="your-api-key-here"
+
+# Or Google AI
+GOOGLE_GENERATIVE_AI_API_KEY="your-api-key-here"
+
+# Or Anthropic
+ANTHROPIC_API_KEY="your-api-key-here"
+```
+
+Refer to [AI SDK](https://ai-sdk.dev/providers/ai-sdk-providers) for more in-depth instructions on how to use the various AI providers (common ones listed here):
+
+- [OpenAI](https://ai-sdk.dev/providers/ai-sdk-providers/openai)
+- [Google Generative AI](https://ai-sdk.dev/providers/ai-sdk-providers/google-generative-ai)
+- [Anthropic](https://ai-sdk.dev/providers/ai-sdk-providers/anthropic)
+
+## Start translating
+
+Let's start translating content! 
+
+```npm
 npx langnostic translate
 ```
 
-<Callout type="success">
-  Langnostic will automatically detect what needs translation and update your target locale files!
-</Callout>
+The command will automatically detect which strings need translation and generate/update your target locale files.
 
-### Preview changes first
+Using the example project structure and config above that has a single source JSON file at `src/locales/en-US.json` targeting the locales `zh-CN.json` and `pt-BR.json`, the new translated files will be generated beside the source file.
 
-Want to see what would be translated without making changes?
-
-```bash
-npx langnostic translate --dry-run
+```
+├── src
+│   └── locales
+│       ├── en-US.json
+│       ├── pt-BR.json
+│       └── zh-CN.json
+├── package.json
+└── langnostic.config.ts
 ```
 
-### Debug mode
+## Markdown/MDX files
 
-See the prompts and responses from the AI:
+To translate Markdown/MDX files, you will need to use the MDX plugin.
 
-```bash
-npx langnostic translate --debug
+Firstly, install the MDX plugin:
+
+```npm
+npm install @langnostic/plugin-mdx --save-dev
 ```
 
-## Examples
+Configure the paths to your Markdown/MDX files. Assuming the following file directory structure:
 
-Let's take a look at some examples.
-
-### JSON files
-
-Create a source locale file:
-
-```json title="src/locales/en-US.json"
-{
-  "welcome": {
-    "defaultMessage": "Welcome to our app!",
-    "description": "Main welcome message"
-  },
-  "greeting": {
-    "defaultMessage": "Hello, {username}!",
-    "description": "Personalized greeting"
-  }
-}
+```
+├── docs
+│   └── en-US
+│       ├── getting-started.mdx
+│       └── introduction.mdx
+├── package.json
+└── langnostic.config.ts
 ```
 
-Run translation:
-
-```bash
-npx langnostic translate
-```
-
-Langnostic creates the translated file:
-
-```json title="src/locales/zh-CN.json"
-{
-  "welcome": {
-    "defaultMessage": "欢迎来到我们的应用！",
-    "description": "Main welcome message"
-  },
-  "greeting": {
-    "defaultMessage": "你好，{username}！",
-    "description": "Personalized greeting"
-  }
-}
-```
-
-### MDX files
-
-For MDX files, use the MDX plugin:
+The following configuration will translate all the `.mdx` files in the `docs/en-US/` directory.
 
 ```typescript title="langnostic.config.ts"
 import MdxPlugin from '@langnostic/plugin-mdx';
 
 export default {
-  // ... ai and localeConfig
+  // Other config omitted for brevity...
   groups: [
     {
       name: 'docs',
@@ -204,7 +225,7 @@ export default {
 } satisfies ConfigType;
 ```
 
-Create your source MDX file:
+Say we have the following source Markdown/MDX file:
 
 ```mdx title="docs/en-US/getting-started.mdx"
 ---
@@ -221,7 +242,7 @@ Welcome to our documentation!
 </Alert>
 ```
 
-Run translation and get:
+Run `langnostic translate` and the translated Markdown/MDX file will be created:
 
 ```mdx title="docs/zh-CN/getting-started.mdx"
 ---
@@ -238,12 +259,38 @@ description: 学习如何开始
 </Alert>
 ```
 
-## What's next?
+The translated file intelligently preserves the frontmatter, Markdown syntax, and any JSX syntax.
 
-Now that you've got Langnostic running, learn more about:
+In the above example, the final file directory looks like this:
 
-- [Features](/docs/features): Understand the features and use cases
-- [Architecture](/docs/architecture) - Learn about the architecture
-- [Core Concepts](/docs/core-concepts) - Dive deeper into configuration, locales, and plugins
-- [Configuration](/docs/configuration) - Advanced configuration options
-- [Plugins](/docs/plugins) - Learn about available plugins and create custom ones
+```
+├── docs
+│   ├── en-US
+│   │   ├── getting-started.mdx
+│   │   └── introduction.mdx
+│   └── zh-CN
+│       ├── getting-started.mdx
+│       └── introduction.mdx
+├── package.json
+└── langnostic.config.ts
+```
+
+## Other helpful tips
+
+The `langnostic translate` command comes with a few helpful flags for an improved developer experience:
+
+### Preview changes first
+
+Use the `--dry-run` flag to get a preview of the strings that will be translated.
+
+```npm
+npx langnostic translate --dry-run
+```
+
+### Debug mode
+
+Use the `--debug` flag to log the prompts and responses from the AI into the `.langnostic` folder.
+
+```npm
+npx langnostic translate --debug
+```

@@ -2,29 +2,47 @@ import { cn } from 'fumadocs-ui/utils/cn';
 import {
   Brain,
   ChevronRight,
-  CircleCheck,
-  CloudLightning,
   Github,
   LayoutTemplate,
+  LockOpen,
   SquareTerminal,
+  Zap,
 } from 'lucide-react';
 import Link from 'next/link';
 
 const features = [
   {
-    title: 'Lightning fast',
+    title: 'Use with any i18n library',
     description:
-      'Translate entire apps in seconds with smart batching and concurrent processing',
-    icon: CloudLightning,
+      'Langnostic operates on files, so you can use any i18n library you want — i18next, react-intl, or next-intl, you name it',
+    icon: SquareTerminal,
+    iconBg: 'bg-teal-100 dark:bg-teal-900/30',
+    iconColor: 'text-teal-600 dark:text-teal-400',
+    iconBorderColor: 'border-teal-600 dark:border-teal-400',
+  },
+  {
+    title: 'No lock-in',
+    description:
+      'Translated contents are yours to keep within your own repository, there are no ongoing costs or vendor lock-in',
+    icon: LockOpen,
     iconBg: 'bg-blue-100 dark:bg-blue-900/30',
     iconColor: 'text-blue-600 dark:text-blue-400',
     iconBorderColor: 'border-blue-600 dark:border-blue-400',
   },
   {
-    title: 'Do minimal work',
+    title: 'Bring your own AI',
     description:
-      'Only translates new or modified content, saving time and API costs',
-    icon: CircleCheck,
+      'Use your own AI — OpenAI, Google AI, Anthropic, or any others supported by AI SDK',
+    icon: Brain,
+    iconBg: 'bg-red-100 dark:bg-red-900/30',
+    iconColor: 'text-red-600 dark:text-red-400',
+    iconBorderColor: 'border-red-600 dark:border-red-400',
+  },
+  {
+    title: 'Does minimal work',
+    description:
+      'Langnostic only translates new or modified content, saving time and money',
+    icon: Zap,
     iconBg: 'bg-green-100 dark:bg-green-900/30',
     iconColor: 'text-green-600 dark:text-green-400',
     iconBorderColor: 'border-green-600 dark:border-green-400',
@@ -32,7 +50,7 @@ const features = [
   {
     title: 'Extensible architecture',
     description:
-      'Extensible system supporting JSON, MDX, and custom file formats',
+      'Designed for extensibility, supporting JSON, MDX, and custom file formats',
     icon: LayoutTemplate,
     iconBg: 'bg-purple-100 dark:bg-purple-900/30',
     iconColor: 'text-purple-600 dark:text-purple-400',
@@ -63,24 +81,6 @@ const features = [
     iconColor: 'text-orange-600 dark:text-orange-400',
     iconBorderColor: 'border-orange-600 dark:border-orange-400',
   },
-  {
-    title: 'Bring your own AI',
-    description:
-      'Works with OpenAI, Google AI, Anthropic, and any Vercel AI SDK provider',
-    icon: Brain,
-    iconBg: 'bg-red-100 dark:bg-red-900/30',
-    iconColor: 'text-red-600 dark:text-red-400',
-    iconBorderColor: 'border-red-600 dark:border-red-400',
-  },
-  {
-    title: 'i18n library agnostic',
-    description:
-      'Langnostic operates on files, so you can use any i18n library you want — i18next, react-intl, or next-intl, you name it',
-    icon: SquareTerminal,
-    iconBg: 'bg-teal-100 dark:bg-teal-900/30',
-    iconColor: 'text-teal-600 dark:text-teal-400',
-    iconBorderColor: 'border-teal-600 dark:border-teal-400',
-  },
 ];
 
 export default function HomePage() {
@@ -97,14 +97,14 @@ export default function HomePage() {
             AI-powered translation for modern websites
           </div>
           <h1 className="max-w-4xl text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-            Translate your website in{' '}
+            Translate your website{' '}
             <span className="bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">
-              seconds
+              using AI
             </span>
           </h1>
           <p className="max-w-2xl text-lg text-fd-muted-foreground md:text-xl">
-            Efficient and affordable translation toolchain for websites using
-            AI.
+            Langnostic is an efficient and affordable translation toolchain for
+            websites using AI.
           </p>
         </div>
         <div className="flex flex-col gap-4 sm:flex-row">
@@ -115,7 +115,7 @@ export default function HomePage() {
             Get started
             <ChevronRight className="ml-2" size={16} />
           </Link>
-          <Link
+          {/* <Link
             href="https://github.com/greatfrontend/langnostic"
             target="_blank"
             rel="noopener noreferrer"
@@ -123,7 +123,7 @@ export default function HomePage() {
           >
             <Github className="mr-2 size-5" />
             View on GitHub
-          </Link>
+          </Link> */}
         </div>
         {/* Quick Install */}
         <div className="mt-8 w-full max-w-xs">

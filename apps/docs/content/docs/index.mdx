@@ -2,9 +2,13 @@
 title: Introduction
 ---
 
+<Callout>
+  We're polishing up Langnostic for a public release and the code will be open sourced soon. Langnostic will be free for open source projects and commercial projects can purchase a business license for a reasonable one-time fee. If you're interested in using Langnostic, just [drop us an email](team@greatfrontend.com).
+</Callout>
+
 At its core, Langnostic is a powerful CLI tool for translating files. It is packed with features to make the internationalization process simple, fast, and affordable.
 
-Because it operates on files and does not require any directory structure, it works with various JavaScript frameworks and i18n runtime libraries. While we expect the majority of users to be using Langnostic to translate JavaScript applications, it can also be used to translate strings within web or mobile apps written in other languages like Python, Ruby, Java, Swift, Kotlin, etc., as long as the translation strings exist as text-based files (JSON, Markdown, XML, YAML, TOML, etc.).
+Because Langnostic operates on files and does not enforce any directory structure, it works with any JavaScript framework and i18n runtime library. While we expect the majority of users to be using Langnostic to translate JavaScript applications, it can also be used to translate strings within web or mobile apps written in other languages like Python, Ruby, Java, Swift, Kotlin, etc., as long as the translation strings exist as text-based files (JSON, Markdown, XML, YAML, TOML, etc.).
 
 ## Use cases
 
@@ -16,33 +20,31 @@ Langnostic is perfect for:
 
 ## When to use Langnostic
 
-Langnostic is ideal when you want/need:
+Langnostic is ideal when you:
 
-- Fast iteration on internationalization
-- Automate translation workflows
+- Want fast iteration on internationalization
+- Desire translation workflows to be automated
+- Do not want to pay for storage of translated content
 - Have frequently changing content
 - Support multiple languages quickly
 - Reduce manual translation management
-- Only want to pay for translation and not storage of translated content
 
-## What Langnostic is not
+## What Langnostic isn't
 
-TODO
+- **Not an i18n library**: An i18n library provide tools and APIs to localize strings in your software, loads translation files, and displays the relevant translated strings. Your translation strings are typically defined in a central file or can be extracted out from your source code into a central file. Common i18n libraries in the JavaScript ecosystem include [i18next](https://www.i18next.com/), [React Intl](https://formatjs.github.io/docs/react-intl), [Polyglot.js](https://github.com/airbnb/polyglot.js), [Lingui](https://lingui.dev/). Langnostic is not an i18n library, it is a tool to translate these central files that contain source locale strings into the desired target locales. You would usually by using an i18n library along with Langnostic.
+- **Not to be used for on-demand translation**: Some translation tools allow users to convert a website into another language **after** the page has loaded, in an on-demand fashion. Langnostic is meant to translate the strings in your application **before** it is built or rendered to screen, and not after.
 
 ## Comparison with traditional approaches
 
-| Feature | Langnostic | Traditional i18n | Translation services |
-|---------|------------|------------------|---------------------|
-| **Speed** | Instant | Manual | Days to weeks |
-| **Cost** | Pay per API call | Free (DIY) | $$$ per word |
-| **Change detection** | Automatic | Manual tracking | Manual tracking |
-| **Format preservation** | Automatic | Manual | Often requires fixes |
-| **Context awareness** | AI-powered | N/A | Depends on service |
-| **Technical setup** | Simple CLI | Library integration | Portal management |
+| Feature | Langnostic | Translation platforms (e.g. Crowdin) |
+|---------|------------|---------------------|
+| **Steps** | Just one command  | A few — upload, wait for translations, download |
+| **Cost** | None, but you provide your own API key | Recurring charges per translated word (both new and existing) in the project |
+| **Format preservation** | Very good | Poor, often requires fixes |
 
 ## What's next?
 
-Now that you understand what Langnostic is, learn how it works under the hood:
+Now that you understand what Langnostic does, start using and exploring:
 
 - [Quick start](/docs/quick-start): Set up your first project
-- [Core Concepts](/docs/core-concepts): Learn the fundamental concepts
+- [Features](/docs/features): View the full feature set

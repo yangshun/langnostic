@@ -1,6 +1,6 @@
 ---
 title: Features
-description: Learn about Langnostic, an AI-powered translation toolchain for modern applications
+description: Learn about all the features that goes into Langnostic
 ---
 
 {/* Reference: https://vite.dev/guide/features.html */}
@@ -9,19 +9,20 @@ Langnostic is a modern translation toolchain that uses AI to continuously transl
 
 ## AI-powered translation
 
-Leverage the latest AI models from OpenAI, Google AI, Anthropic, and more. Langnostic uses the [AI SDK by Vercel](https://ai-sdk.dev/), giving you access to powerful models by these providers:
+Leverage the latest AI models from OpenAI, Google AI, Anthropic, and more. Langnostic uses the [AI SDK](https://ai-sdk.dev/) by Vercel, giving you access to powerful models by these providers:
 
-- **OpenAI**: GPT-4, GPT-4 Turbo, GPT-3.5 Turbo
-- **Google AI**: Gemini Pro, Gemini Flash
-- **Anthropic**: Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Haiku
-- **And others**: Any provider supported by the [AI SDK](https://ai-sdk.dev/)
+- **OpenAI**: GPT-5, GPT-4, GPT-4 Turbo
+- **Google AI**: Gemini 2.5 Pro, Gemini 2.5 Flash
+- **Anthropic**: Claude Sonnet 4.5, Claude Haiku 4.5, Claude Opus 4.1
+
+And any provider supported by the [AI SDK](https://ai-sdk.dev/).
 
 ## Supported file formats
 
 Langostic's extensible system supporting multiple file formats:
 
-- **Built-in plugins** for JSON and MDX
-- **Custom plugin API** for any file format
+- Built-in plugins for JSON and Markdown/MDX
+- Flexible plugin API that allows adding support for for any file format
 - Plugin-specific optimization settings
 
 Langnostic comes with official plugins for:
@@ -67,6 +68,7 @@ Welcome to our platform! Here's how to get started:
 ```
 
 Supports:
+
 - Frontmatter translation
 - Markdown content translation
 - JSX component preservation
@@ -74,7 +76,7 @@ Supports:
 
 ### Custom plugins
 
-You can create plugins for any file format. See [Plugin Development](/docs/plugins/custom) for more details.
+You can create plugins for any file format. We will create documentation for this soon.
 
 ## Format preservation
 
@@ -105,7 +107,7 @@ Configurable parallel translation for faster results:
 
 ## Smart change detection
 
-Only translate what's changed. Langnostic intelligently tracks:
+Only translate what's changed. Langnostic's built-in plugins intelligently tracks:
 
 - New strings that haven't been translated
 - Modified source strings that need retranslation

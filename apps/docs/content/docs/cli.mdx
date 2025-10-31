@@ -1,24 +1,42 @@
 ---
 title: CLI
-description: TODO
+description: Commands available on Langnostic
 ---
 
-Reference: https://vite.dev/guide/cli.html
+{/* Reference: https://vite.dev/guide/cli.html */}
 
-### Simple CLI
+There are the following commands on Langnostic:
 
-Easy-to-use command-line interface:
+## `init`
 
-```bash
+```npm
 # Initialize configuration
 npx langnostic init
+```
 
+Initializes a configuration file in your current directory. You should customize it according to your files structure and use the necessary plugins.
+
+## `translate`
+
+Translates the files that match the config file.
+
+```npm
 # Run translations
 npx langnostic translate
+```
 
-# Preview changes without translating
+### `--dry-run`
+
+Preview changes without translating. Prints out the strings that will be translated.
+
+```npm
 npx langnostic translate --dry-run
+```
 
-# Debug mode to see prompts and responses
+### `--debug`
+
+Debug mode to see the prompts and responses of each call to the AI model. Logs are written into `.langnostic` directory.
+
+```npm
 npx langnostic translate --debug
 ```

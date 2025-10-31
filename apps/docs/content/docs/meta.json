@@ -7,15 +7,11 @@
     "---Getting started---",
     "index",
     "quick-start",
-    "philosophy",
-    "why",
     "---Guide---",
     "features",
     "cli",
-    "configuration",
     "workflows",
     "plugins",
-    "comparisons",
     "---Advanced---",
     "architecture"
   ]

@@ -1,6 +1,7 @@
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import { Inter } from 'next/font/google';
 import '@/app/global.css';
+import { Banner } from 'fumadocs-ui/components/banner';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
@@ -37,6 +38,27 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={inter.className} suppressHydrationWarning>
       <body className="flex flex-col min-h-screen">
+        <Banner>
+          We are preparing to open source Langnostic for public use. Follow{' '}
+          <a
+            className="mx-1 underline"
+            href="https://www.linkedin.com/company/greatfrontend"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            GreatFrontEnd on LinkedIn
+          </a>{' '}
+          for updates or{' '}
+          <a
+            className="ms-1 underline"
+            href="mailto:team@greatfrontend.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            shoot us an email
+          </a>
+          .
+        </Banner>
         <RootProvider>{children}</RootProvider>
       </body>
     </html>
