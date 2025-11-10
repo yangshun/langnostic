@@ -4,7 +4,7 @@ description: Get started with Langnostic in 5 minutes
 ---
 
 <Callout>
-  We're polishing up Langnostic for a public release and the code will be open sourced soon. Langnostic will be free for open source projects and commercial projects can purchase a business license for a reasonable one-time fee. If you're interested in using Langnostic, just [drop us an email](team@greatfrontend.com).
+  We're polishing up Langnostic for a public release and the code will be open sourced soon. Langnostic will be free for open source projects and commercial projects can purchase a business license for a reasonable one-time fee. If you're interested in using Langnostic, just [send us an email](mailto:team@greatfrontend.com).
 </Callout>
 
 Get Langnostic up and running in your project in just a few minutes.
@@ -20,6 +20,14 @@ Install Langnostic in your project:
 
 ```npm
 npm install langnostic @langnostic/plugin-json --save-dev
+```
+
+## Ignore the `.langnostic` directory
+
+Add the `.langnostic` directory into your `.gitignore` file. This directory is used for any intermediate data or debug output.
+
+```diff title=".gitignore"
+.langnostic
 ```
 
 ## Initialize configuration
@@ -168,9 +176,22 @@ Let's start translating content!
 npx langnostic translate
 ```
 
+<Callout>
+We recommend adding `langnostic translate` into the `scripts` field of your `package.json`.
+
+```json title="package.json"
+"scripts": {
+  // ...other scripts
+  "translate": "langnostic translate"
+}
+```
+
+And you'll be able to translate via the command `npm run translate`.
+</Callout>
+
 The command will automatically detect which strings need translation and generate/update your target locale files.
 
-Using the example project structure and config above that has a single source JSON file at `src/locales/en-US.json` targeting the locales `zh-CN.json` and `pt-BR.json`, the new translated files will be generated beside the source file.
+Using the example project structure and config above that has a single source JSON file at `src/locales/en-US.json` targeting the locales `zh-CN.json` and `pt-BR.json`, the translated files will be generated beside the source file.
 
 ```
 ├── src
@@ -266,7 +287,9 @@ In the above example, the final file directory looks like this:
 ```
 ├── docs
 │   ├── en-US
+│   │   ├── getting-started.langnostic.json
 │   │   ├── getting-started.mdx
+│   │   ├── introduction.langnostic.json
 │   │   └── introduction.mdx
 │   └── zh-CN
 │       ├── getting-started.mdx
@@ -274,6 +297,8 @@ In the above example, the final file directory looks like this:
 ├── package.json
 └── langnostic.config.ts
 ```
+
+`*.langnostic.json` files will be created for each source file and they are meant to be committed into the repository. These files track the translation status of the source file and target files so that any changes made to the source file can be compared against its last translated version. This is necessary so that Langnostic translates only the changes made to the source file and not the entire file. You can think of that file as a `.git` directory for each source file.
 
 ## Other helpful tips
 
