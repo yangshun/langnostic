@@ -39,25 +39,27 @@ export default function Layout({ children }: { children: ReactNode }) {
     <html lang="en" className={inter.className} suppressHydrationWarning>
       <body className="flex flex-col min-h-screen">
         <Banner>
-          We are preparing to open source Langnostic for public use. Follow{' '}
-          <a
-            className="mx-1 underline"
-            href="https://www.linkedin.com/company/greatfrontend"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            GreatFrontEnd on LinkedIn
-          </a>{' '}
-          for updates or{' '}
-          <a
-            className="ms-1 underline"
-            href="mailto:team@greatfrontend.com"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            shoot us an email
-          </a>
-          .
+          <p className="text-xs md:text-sm">
+            We are preparing to open source Langnostic for public use. Follow{' '}
+            <a
+              className="underline"
+              href="https://www.linkedin.com/company/greatfrontend"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              GreatFrontEnd on LinkedIn
+            </a>{' '}
+            for updates or{' '}
+            <a
+              className="underline"
+              href="mailto:team@greatfrontend.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              shoot us an email
+            </a>
+            .
+          </p>
         </Banner>
         <RootProvider>{children}</RootProvider>
       </body>
