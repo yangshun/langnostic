@@ -3,28 +3,25 @@
   "version": "0.0.10",
   "description": "JSON plugin for Langnostic",
   "license": "MIT",
-  "type": "module",
-  "exports": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
+  "type": "module",
   "sideEffects": false,
+  "types": "./dist/index.d.ts",
+  "exports": "./dist/index.js",
   "scripts": {
     "clean": "rimraf dist",
     "check": "pnpm run tc && pnpm run lint",
     "dev": "tsdown --watch",
     "build": "tsdown",
-    "lint": "biome check --write --unsafe",
-    "format": "biome format --write",
+    "lint": "oxlint --fix",
+    "format": "oxfmt --write",
     "tc": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
     "verify": "npm run tc && npm run test && npm run build",
     "prepublishOnly": "npm run verify"
-  },
-  "peerDependencies": {
-    "langnostic": "workspace:*"
   },
   "dependencies": {
     "fs-extra": "catalog:"
@@ -38,5 +35,8 @@
     "typescript": "catalog:",
     "vite-tsconfig-paths": "catalog:",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "langnostic": "workspace:*"
   }
 }

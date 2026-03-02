@@ -1,7 +1,9 @@
 import path from 'node:path';
+
 import { generateObject } from 'ai';
 import { outputFile, outputJson } from 'fs-extra/esm';
 import { z } from 'zod';
+
 import { RUNS_PATH } from '@/core/constants';
 import type {
   TranslationAI,
@@ -10,6 +12,7 @@ import type {
   TranslationRequestJob,
   TranslationStringResult,
 } from '@/core/types';
+
 import { getPromptTemplate } from './prompt';
 
 type BatchStringItemHash = string;
@@ -98,7 +101,7 @@ export async function generate(
       ...string,
       targets: Object.entries(
         // TODO: report if there are missing results from the LLM
-        // biome-ignore lint/style/noNonNullAssertion: TODO
+        // oxlint-ignore typescript/no-non-null-assertion -- TODO
         translationStringsMap.get(hashStringItem(string.batchId, string.id))!,
       ).map(([locale, translation]) => ({
         locale,

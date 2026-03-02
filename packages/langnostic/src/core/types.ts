@@ -1,4 +1,5 @@
 import type { generateObject, LanguageModel } from 'ai';
+
 import type { TranslationGroupBatch } from './runner/translation-group-batch';
 
 export type TranslationAI = Readonly<{

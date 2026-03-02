@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+
 import { outputJson, pathExists } from 'fs-extra/esm';
 import type { TranslationFileMetadata, TranslationLocale } from 'langnostic';
 

@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+
 import fse from 'fs-extra';
 import grayMatter from 'gray-matter';
 import type {
@@ -7,6 +8,7 @@ import type {
   TranslationLocale,
 } from 'langnostic';
 import { isEqual } from 'lodash-es';
+
 import type { PluginOptions } from '.';
 import {
   buildTargetMDXContent,

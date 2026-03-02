@@ -1,6 +1,7 @@
 import { globby } from 'globby';
 
 import type { ConfigGroupPathItem, LocaleConfig } from '@/config/types';
+
 import type { TranslationFileItem, TranslationFileMetadata } from './types';
 
 // Helper: escape RegExp special characters in a literal string.

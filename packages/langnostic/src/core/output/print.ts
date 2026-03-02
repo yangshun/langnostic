@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import logUpdate from 'log-update';
 
 import type { TranslationGroupId, TranslationGroups } from '@/core/types';
+
 import { batchStatusSymbol } from './spinner-frames';
 
 const timeStart = Date.now();
@@ -42,9 +43,7 @@ export function printGroupStatus(
           batchStatusSymbol(batch.status),
           batchPrefix,
           chalk.dim(
-            `(${batch.strings.length} ${
-              batch.strings.length === 1 ? 'string' : 'strings'
-            })`,
+            `(${batch.strings.length} ${batch.strings.length === 1 ? 'string' : 'strings'})`,
           ),
           chalk.dim(formatDuration(batch.duration)),
         ].join(' '),

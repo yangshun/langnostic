@@ -29,19 +29,19 @@ function Counter() {
 }
 ```
 
-| 特性     | 支持  |
-| -------- | ----- |
-| SSR      | 是    |
-| TypeScript | 部分  |
+| 特性       | 支持 |
+| ---------- | ---- |
+| SSR        | 是   |
+| TypeScript | 部分 |
 
 > 重要提示：这是一个 Beta 功能
 
 <ul>
   {readySystemDesignQuestions.map((question) => (
-      <li key={question.href}>
-        <a href={question.href}>{question.title} system design</a>
-      </li>
-    ))}
+    <li key={question.href}>
+      <a href={question.href}>{question.title} system design</a>
+    </li>
+  ))}
 </ul>
 
 <div className="legacy-wrapper">
@@ -53,11 +53,11 @@ function Counter() {
 
 [在此处阅读更多信息](/questions/quiz/what-is-react-describe-the-benefits-of-react)
 
- `useCallback` 钩子函数会记忆函数，以防止它们在每次渲染时重新创建。当将回调传递给依赖于引用相等性的已优化子组件以避免不必要的渲染时，这尤其有益。当函数作为 prop 传递给子组件时使用它。
+`useCallback` 钩子函数会记忆函数，以防止它们在每次渲染时重新创建。当将回调传递给依赖于引用相等性的已优化子组件以避免不必要的渲染时，这尤其有益。当函数作为 prop 传递给子组件时使用它。
 
-* 如果它为空，则效果仅在初始渲染后运行一次。
-* 如果它包含变量，则每次这些变量中的任何一个发生更改时，效果都会重新运行。
-* 如果省略，则效果在每次渲染后运行。
+- 如果它为空，则效果仅在初始渲染后运行一次。
+- 如果它包含变量，则每次这些变量中的任何一个发生更改时，效果都会重新运行。
+- 如果省略，则效果在每次渲染后运行。
 
 1. 重新计算组件返回的 JSX。
 2. 将新的 JSX 与之前的 JSX 进行比较（使用虚拟 DOM）。

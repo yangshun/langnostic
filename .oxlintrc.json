@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "nextjs", "jsx-a11y"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "pedantic": "off",
+    "nursery": "off"
+  },
+  "rules": {
+    "nextjs/no-img-element": "off",
+    "react/react-in-jsx-scope": "off"
+  },
+  "ignorePatterns": [
+    "node_modules",
+    ".next",
+    "dist",
+    "build",
+    "**/*.langnostic.json"
+  ]
+}

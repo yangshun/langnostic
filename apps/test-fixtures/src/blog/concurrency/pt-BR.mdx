@@ -38,10 +38,10 @@ function Counter() {
 
 <ul>
   {readySystemDesignQuestions.map((question) => (
-      <li key={question.href}>
-        <a href={question.href}>{question.title} system design</a>
-      </li>
-    ))}
+    <li key={question.href}>
+      <a href={question.href}>{question.title} system design</a>
+    </li>
+  ))}
 </ul>
 
 <div className="legacy-wrapper">
@@ -55,9 +55,9 @@ function Counter() {
 
 O hook `useCallback` memoriza funções para evitar sua recriação a cada renderização. Isso é especialmente benéfico ao passar callbacks para componentes filhos otimizados que dependem da igualdade de referência para evitar renderizações desnecessárias. Use-o quando uma função for passada como uma prop para um componente filho.
 
-* Se estiver vazio, o efeito é executado apenas uma vez após a renderização inicial.
-* Se contiver variáveis, o efeito é executado novamente sempre que alguma dessas variáveis mudar.
-* Se omitido, o efeito é executado após cada renderização.
+- Se estiver vazio, o efeito é executado apenas uma vez após a renderização inicial.
+- Se contiver variáveis, o efeito é executado novamente sempre que alguma dessas variáveis mudar.
+- Se omitido, o efeito é executado após cada renderização.
 
 1. Recalcular o JSX retornado pelo componente.
 2. Comparar o novo JSX com o anterior (usando o DOM Virtual).

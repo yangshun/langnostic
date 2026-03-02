@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+
 import { ensureFile, outputFile } from 'fs-extra/esm';
 import grayMatter from 'gray-matter';
 import type {
@@ -7,6 +8,7 @@ import type {
   TranslationStringArg,
 } from 'langnostic';
 import { buildTranslatedContentMap, buildTranslationStrings } from 'langnostic';
+
 import { processFileForChanges } from './mdx-change-detector';
 import { buildTargetMDX, generateSourceMDXContentHashMap } from './mdx-file';
 import registryManager from './registry-manager';

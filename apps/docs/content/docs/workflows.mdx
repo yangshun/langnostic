@@ -18,12 +18,12 @@ The translation command can be run anytime because it does the minimal work requ
 
 1. Update strings in app
 1. Developer runs CLI command → `langnostic translate`
-2. Commit updated files and deploy
+1. Commit updated files and deploy
 
 ## CI/CD workflow
 
 1. Update strings in app
 1. Commit source file changes and push to a branch
-2. CI pipeline runs `langnostic translate` upon code push or pull requests
-    - Commits the changes
-    - CI bot creates pull request with translated files. Human reviews the translation changes before merging
+1. CI pipeline runs `langnostic translate` upon code push or pull requests
+   - Commits the changes
+   - CI bot creates pull request with translated files. Human reviews the translation changes before merging

@@ -97,6 +97,7 @@ npx langnostic translate --debug
 ### JSON locale files
 
 Perfect for translating application strings with support for:
+
 - ICU message format
 - HTML/XML tags
 - Template variables
@@ -118,6 +119,7 @@ Perfect for translating application strings with support for:
 ### MDX files
 
 Ideal for translating documentation sites while preserving:
+
 - Frontmatter metadata
 - Code blocks
 - JSX components
@@ -253,8 +255,8 @@ pnpm --filter langnostic test
 - `pnpm build` - Build all packages
 - `pnpm dev` - Start development mode
 - `pnpm test` - Run all tests
-- `pnpm lint` - Lint all packages
-- `pnpm format` - Format code with Biome
+- `pnpm lint` - Lint all packages with Oxlint
+- `pnpm format` - Format code with Oxfmt
 - `pnpm clean` - Clean all build artifacts
 
 ## 🔌 Plugin development
@@ -268,20 +270,20 @@ export default function MyPlugin(): LangnosticPlugin {
   return {
     type: 'my-format',
     stringsPerRequest: 50,
-    
+
     async trackFiles(filesMetadata) {
       // Track files for translation
     },
-    
+
     async getTranslationStrings() {
       // Return strings that need translation
       return translationStrings;
     },
-    
+
     async onTranslationBatchComplete(translatedStrings) {
       // Handle completed translations
     },
-    
+
     async getInstructions() {
       // Return AI-specific instructions for this format
       return 'Custom instructions for translating this format...';

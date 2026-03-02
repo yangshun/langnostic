@@ -1,14 +1,14 @@
 {
   "name": "@langnostic/test-fixtures",
   "version": "0.0.0",
-  "description": "",
   "private": true,
+  "description": "",
+  "keywords": [],
   "main": "index.js",
   "scripts": {
     "i18n": "langnostic translate",
     "langnostic": "langnostic"
   },
-  "keywords": [],
   "devDependencies": {
     "@ai-sdk/google": "^2.0.17",
     "@langnostic/plugin-json": "workspace:^",

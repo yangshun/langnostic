@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "singleQuote": true,
+  "tabWidth": 2,
+  "printWidth": 80,
+  "sortImports": {},
+  "ignorePatterns": [
+    "node_modules",
+    ".next",
+    "dist",
+    "build",
+    "**/*.langnostic.json"
+  ]
+}

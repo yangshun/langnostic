@@ -42,6 +42,7 @@ Here's how the runner and plugins work together when you run `npx langnostic tra
 ### Phase 1: Initialization
 
 **Runner responsibilities:**
+
 - Loads your `langnostic.config.ts`
 - Creates translation groups based on configuration
 - Initializes AI provider settings
@@ -78,11 +79,13 @@ export default {
 ### Phase 2: Discovery
 
 **Runner responsibilities:**
+
 - Expands path patterns (e.g., `./locales/{locale}.json` → `./locales/zh-CN.json`, `./locales/es-ES.json`)
 - Resolves source and target file pairs
 - Passes file metadata to plugins
 
 **Plugin responsibilities:**
+
 - Receives file paths and locale information via `trackFiles()`
 - Prepares internal state for tracking these files
 
@@ -106,6 +109,7 @@ Targets: [
 ### Phase 3: Plugin loading & change detection
 
 **Plugin responsibilities:**
+
 - **Read files**: Parse source and target files in format-specific ways
 - **Detect changes**: Determine what content needs translation
 - **Return translation strings**: Provide the runner with strings to translate via `getTranslationStrings()`
@@ -113,6 +117,7 @@ Targets: [
 Each plugin implements its own change detection strategy:
 
 **JSON Plugin:**
+
 ```typescript
 // Compares object keys
 Source (en-US.json): { "welcome": "Hello", "new": "New key" }
@@ -122,6 +127,7 @@ Target (zh-CN.json): { "welcome": "你好" }
 ```
 
 **MDX Plugin:**
+
 ```typescript
 // Uses hash-based detection
 Source hash: "abc123" (changed from "abc122")
@@ -179,20 +185,20 @@ Job 3: Strings 101-120
   
   Strings: [
     { id: "welcome", source: { locale: "en-US", string: "Hello" }, targets: ["zh-CN", "es-ES"] }
-  ]`
+  ]`;
 }
 
 // AI responds:
 {
   data: [
     {
-      id: "welcome",
+      id: 'welcome',
       translations: [
-        { locale: "zh-CN", string: "你好" },
-        { locale: "es-ES", string: "Hola" }
-      ]
-    }
-  ]
+        { locale: 'zh-CN', string: '你好' },
+        { locale: 'es-ES', string: 'Hola' },
+      ],
+    },
+  ];
 }
 ```
 
@@ -250,6 +256,7 @@ New translation: { "greeting": "你好，{name}！" }
 ### Phase 6: Shutdown
 
 **Runner responsibilities:**
+
 - Waits for all jobs to complete
 - Reports translation statistics
 - Reports any errors
@@ -260,14 +267,14 @@ The runner and plugins communicate through a well-defined interface:
 
 ```typescript
 interface LangnosticPlugin {
-  type: string;                    // Plugin identifier (e.g., 'json', 'mdx')
-  stringsPerRequest: number;       // How many strings to translate per AI request
-  
+  type: string; // Plugin identifier (e.g., 'json', 'mdx')
+  stringsPerRequest: number; // How many strings to translate per AI request
+
   // Runner calls these methods in sequence:
   trackFiles(files: TranslationFileMetadata[]): Promise<void>;
   getTranslationStrings(): Promise<TranslationStringArg[]>;
   onTranslationBatchComplete(results: TranslationStringResult[]): Promise<void>;
-  getInstructions?(): Promise<string>;  // Optional AI-specific guidance
+  getInstructions?(): Promise<string>; // Optional AI-specific guidance
 }
 ```
 
@@ -276,19 +283,19 @@ interface LangnosticPlugin {
 ```
 Runner → Plugin: trackFiles()
   Passes: File paths and locale information
-  
+
 Plugin → Runner: getTranslationStrings()
   Returns: Array of strings needing translation
-  
+
 Runner → AI Provider: Translate request
   Sends: Batched strings + plugin instructions
-  
+
 AI Provider → Runner: Translation results
   Returns: Translated strings
-  
+
 Runner → Plugin: onTranslationBatchComplete()
   Passes: Completed translations
-  
+
 Plugin: Writes files
   Updates: Target locale files
 ```

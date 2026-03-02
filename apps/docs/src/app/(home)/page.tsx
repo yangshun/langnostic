@@ -2,7 +2,6 @@ import { cn } from 'fumadocs-ui/utils/cn';
 import {
   Brain,
   ChevronRight,
-  Github,
   LayoutTemplate,
   LockOpen,
   SquareTerminal,

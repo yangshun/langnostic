@@ -4,7 +4,11 @@ description: Get started with Langnostic in 5 minutes
 ---
 
 <Callout>
-  We're polishing up Langnostic for a public release and the code will be open sourced soon. Langnostic will be free for open source projects and commercial projects can purchase a business license for a reasonable one-time fee. If you're interested in using Langnostic, just [send us an email](mailto:team@greatfrontend.com).
+  We're polishing up Langnostic for a public release and the code will be open
+  sourced soon. Langnostic will be free for open source projects and commercial
+  projects can purchase a business license for a reasonable one-time fee. If
+  you're interested in using Langnostic, just [send us an
+  email](mailto:team@greatfrontend.com).
 </Callout>
 
 Get Langnostic up and running in your project in just a few minutes.
@@ -94,8 +98,8 @@ export default {
     model: openai('gpt-5'), // Other providers
   },
   localeConfig: {
-    source: 'en-US',      // Your source locale
-    target: ['zh-CN', 'pt-BR'],     // Locales to translate to
+    source: 'en-US', // Your source locale
+    target: ['zh-CN', 'pt-BR'], // Locales to translate to
   },
   groups: [
     {
@@ -103,8 +107,8 @@ export default {
       plugin: JsonPlugin(),
       paths: [
         {
-          source: './src/locales/en-US.json',     // Path to source file
-          target: './src/locales/{locale}.json',  // {locale} will be replaced with the target locales
+          source: './src/locales/en-US.json', // Path to source file
+          target: './src/locales/{locale}.json', // {locale} will be replaced with the target locales
         },
       ],
     },
@@ -170,7 +174,7 @@ Refer to [AI SDK](https://ai-sdk.dev/providers/ai-sdk-providers) for more in-dep
 
 ## Start translating
 
-Let's start translating content! 
+Let's start translating content!
 
 ```npm
 npx langnostic translate
@@ -187,6 +191,7 @@ We recommend adding `langnostic translate` into the `scripts` field of your `pac
 ```
 
 And you'll be able to translate via the command `npm run translate`.
+
 </Callout>
 
 The command will automatically detect which strings need translation and generate/update your target locale files.
@@ -258,9 +263,7 @@ description: Learn how to get started
 
 Welcome to our documentation!
 
-<Alert>
-  This is an important note.
-</Alert>
+<Alert>This is an important note.</Alert>
 ```
 
 Run `langnostic translate` and the translated Markdown/MDX file will be created:
@@ -275,9 +278,7 @@ description: 学习如何开始
 
 欢迎阅读我们的文档！
 
-<Alert>
-  这是一个重要的提示。
-</Alert>
+<Alert>这是一个重要的提示。</Alert>
 ```
 
 The translated file intelligently preserves the frontmatter, Markdown syntax, and any JSX syntax.

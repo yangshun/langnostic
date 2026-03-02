@@ -1,8 +1,10 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+
 import { outputJson } from 'fs-extra/esm';
 import grayMatter from 'gray-matter';
 import type { TranslationFileMetadata, TranslationLocale } from 'langnostic';
+
 import type { PluginOptions } from '.';
 import {
   generateHash,
@@ -39,7 +41,7 @@ export default function registryManager() {
         const data = await fs.readFile(registryPath, 'utf8');
 
         return JSON.parse(data) as Registry;
-      } catch (_error) {
+      } catch {
         // If file doesn't exist, return empty registry
         return {
           content: {

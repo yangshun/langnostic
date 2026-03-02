@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+
 import { pathExists, writeJson } from 'fs-extra/esm';
 import type {
   LangnosticPlugin,
@@ -6,6 +7,7 @@ import type {
   TranslationStringArg,
 } from 'langnostic';
 import { buildTranslatedContentMap, buildTranslationStrings } from 'langnostic';
+
 import { processFileForChanges } from './json-change-detector';
 
 type TranslationEntry =

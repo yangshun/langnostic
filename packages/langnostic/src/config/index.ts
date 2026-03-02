@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
+
 import { cosmiconfigSync } from 'cosmiconfig';
+
 import { configFileDefault } from './config-default';
 import type { ConfigType } from './types';
 

@@ -4,6 +4,7 @@ const isDev = process.env.npm_lifecycle_event === 'dev';
 
 export default defineConfig({
   entry: ['./src/cli.ts', './src/index.ts'],
+  hash: false,
   ignoreWatch: ['.turbo'],
   minify: !isDev,
 });

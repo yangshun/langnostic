@@ -1,8 +1,9 @@
-import { RootProvider } from 'fumadocs-ui/provider/next';
-import { Inter } from 'next/font/google';
-import '@/app/global.css';
 import { Banner } from 'fumadocs-ui/components/banner';
+import { RootProvider } from 'fumadocs-ui/provider/next';
+
+import '@/app/global.css';
 import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import type { ReactNode } from 'react';
 
 const inter = Inter({

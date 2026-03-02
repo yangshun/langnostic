@@ -1,4 +1,5 @@
 import path from 'node:path';
+
 import { intro, outro, spinner } from '@clack/prompts';
 import chalk from 'chalk';
 
