@@ -67,7 +67,12 @@ export async function translate({
   );
 
   // Convert strings into job queue
-  const jobQueue: Array<TranslationRequestJob> = [];
+  // Keep each job with its batch and group so execution needs no ID lookups.
+  const jobQueue: Array<{
+    batch: TranslationGroupBatch;
+    group: TranslationGroup;
+    job: TranslationRequestJob;
+  }> = [];
 
   for (const group of groups.values()) {
     for (const batch of group.batches.values()) {
@@ -76,15 +81,19 @@ export async function translate({
 
       chunks.forEach((ch, chunkIndex) => {
         jobQueue.push({
-          batch: batch.batchId,
-          group: group.groupId,
-          jobId: [
-            group.groupId,
-            batch.batchId.replace(/^\.\//, '').replace(/\//g, '#'),
-            chunkIndex,
-          ].join('-'),
-          runId,
-          strings: ch,
+          batch,
+          group,
+          job: {
+            batch: batch.batchId,
+            group: group.groupId,
+            jobId: [
+              group.groupId,
+              batch.batchId.replace(/^\.\//, '').replace(/\//g, '#'),
+              chunkIndex,
+            ].join('-'),
+            runId,
+            strings: ch,
+          },
         });
       });
     }
@@ -110,26 +119,7 @@ export async function translate({
   // Translate the strings
   await mapAsync(
     jobQueue,
-    async (job) => {
-      const group = groups.get(job.group);
-
-      if (!group) {
-        throw Error(`Group ${job.group} not found.`);
-      }
-
-      // Not possible to be empty, but just in case
-      if (job.strings.length === 0) {
-        return;
-      }
-
-      const batch = groups.get(job.group)?.batches.get(job.batch);
-      if (batch == null) {
-        console.warn(
-          `Batch ${job.batch} in group ${job.group} not found. Skipping...`,
-        );
-        return;
-      }
-
+    async ({ batch, group, job }) => {
       try {
         batch.startTranslating();
         const instructions = (await group.plugin.getInstructions?.()) || '';

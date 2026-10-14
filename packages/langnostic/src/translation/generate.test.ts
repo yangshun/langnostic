@@ -177,6 +177,10 @@ describe('generate', () => {
         'utf8',
       ),
     ).toContain('No object generated');
+
+    await expect(generate({ model }, invalidJob, {})).rejects.toThrowError(
+      NoObjectGeneratedError,
+    );
   });
 
   test('skips generation for an empty batch', async () => {

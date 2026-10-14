@@ -34,11 +34,6 @@ export async function init() {
       s.stop('Error occurred');
       break;
     }
-    default: {
-      const _: never = initResult;
-
-      break;
-    }
   }
 
   process.exit(0);

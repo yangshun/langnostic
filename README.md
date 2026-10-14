@@ -261,6 +261,9 @@ See [the docs README](apps/docs/README.md) for content and static hosting detail
 # Run all tests
 pnpm test
 
+# Measure coverage and enforce 100% for every package source file
+vp run test:coverage
+
 # Run tests in watch mode
 pnpm --filter langnostic test:watch
 
@@ -268,11 +271,17 @@ pnpm --filter langnostic test:watch
 pnpm --filter langnostic test
 ```
 
+Coverage includes all `packages/*/src/**/*.ts` files except tests. Each file must
+have 100% statement, branch, function, and line coverage. The HTML report is
+generated at `coverage/index.html`. AI generation tests use a mock model and
+do not require provider API keys.
+
 ## 📋 Available scripts
 
 - `pnpm build` - Build all packages
 - `pnpm dev` - Start development mode
 - `pnpm test` - Run all tests
+- `vp run test:coverage` - Run tests with coverage and enforce 100% per file
 - `pnpm tc` - Type check all libraries
 - `pnpm exec vp check` - Check formatting, lint, and types with Vite+
 - `pnpm lint` - Lint all packages with Vite+

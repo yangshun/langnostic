@@ -70,7 +70,7 @@ export class TranslationGroupBatch {
 
   addError(error: Error) {
     this.#errors.push(error);
-    if (this.#status !== 'queued') {
+    if (this.#status === 'success' || this.#status === 'error') {
       return;
     }
 

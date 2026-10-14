@@ -3,6 +3,19 @@ import { defineConfig } from 'vite-plus';
 export default defineConfig({
   test: {
     projects: ['packages/*/vite.config.ts'],
+    coverage: {
+      provider: 'v8',
+      include: ['packages/*/src/**/*.ts'],
+      exclude: ['**/*.test.ts'],
+      reporter: ['text', 'html', 'json-summary', 'json'],
+      thresholds: {
+        perFile: true,
+        lines: 100,
+        statements: 100,
+        functions: 100,
+        branches: 100,
+      },
+    },
   },
   staged: {
     '*': 'vp check --fix',

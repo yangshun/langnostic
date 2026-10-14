@@ -9,10 +9,12 @@
     "lint": "vp run -r --cache lint",
     "tc": "vp run -r typecheck",
     "test": "vp run -r test:unit",
+    "test:coverage": "vp test run --coverage",
     "publish-all": "pnpm -r publish --access public",
     "prepare": "vp config"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "5.0.4",
     "typescript": "7.0.2",
     "vite": "catalog:",
     "vite-plus": "catalog:"

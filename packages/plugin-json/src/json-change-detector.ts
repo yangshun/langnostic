@@ -51,7 +51,7 @@ export async function processFileForChanges(
       removedKeys.forEach((key) => {
         delete targetJson[key];
       });
-      await outputJson(target.path, targetJson || {}, { spaces: 2 });
+      await outputJson(target.path, targetJson, { spaces: 2 });
     }
   }
 

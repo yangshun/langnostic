@@ -205,9 +205,8 @@ export async function processFileForChanges(
             cleanSourceFrontmatter,
           ).reduce(
             (acc, key) => {
-              if (registryData.frontmatter[key]) {
-                acc[key] = registryData.frontmatter[key];
-              }
+              // A removal-only diff has already verified these source hashes.
+              acc[key] = registryData.frontmatter[key];
 
               return acc;
             },
