@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "vp run build:package",
+    "deploy": "vp run build && wrangler deploy",
     "dev": "blume dev",
     "start": "blume preview",
     "typecheck": "blume check --strict",
@@ -20,7 +21,8 @@
     "astro": "^7.3.8",
     "typescript": "^7.0.2",
     "vite": "catalog:",
-    "vite-plus": "catalog:"
+    "vite-plus": "catalog:",
+    "wrangler": "4.150.0"
   },
   "engines": {
     "node": ">=22.19.0"

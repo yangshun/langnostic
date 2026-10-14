@@ -5,6 +5,7 @@ packages:
 
 allowBuilds:
   esbuild: true
+  workerd: true
 catalog:
   '@types/fs-extra': ^11.0.4
   '@types/lodash-es': ^4.17.12

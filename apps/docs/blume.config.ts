@@ -6,6 +6,7 @@ export default defineConfig({
   description:
     'Fast, scalable, and efficient translation system to continuously translate strings within React components + Markdown documents using AI.',
   basePath: '/docs',
+  deployment: { site: 'https://langnostic.com' },
   content: { root: 'content/docs' },
   logo: { text: 'Langnostic', href: '/' },
   theme: { accent: 'blue', mode: 'system' },

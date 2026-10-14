@@ -5,6 +5,7 @@
 .blume*/
 # Left over from the previous docs generator.
 .source
+.wrangler/
 
 # test & build
 /coverage
