@@ -24,7 +24,7 @@ export default class Config {
       );
     }
 
-    this.#config = result.config as ConfigType;
+    this.#config = (result.config?.default ?? result.config) as ConfigType;
   }
 
   get config(): ConfigType {

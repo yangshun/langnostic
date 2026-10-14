@@ -1,4 +1,3 @@
-import { cn } from 'fumadocs-ui/utils/cn';
 import {
   Brain,
   ChevronRight,
@@ -152,15 +151,11 @@ export default function HomePage() {
                 className="rounded-lg border bg-fd-background p-6 shadow-sm transition-all hover:shadow-md"
               >
                 <div
-                  className={cn(
-                    'mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg',
-                    ['border', feature.iconBorderColor],
-                    feature.iconBg,
-                  )}
+                  className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg border ${feature.iconBorderColor} ${feature.iconBg}`}
                 >
                   <feature.icon
                     aria-hidden="true"
-                    className={cn('size-6', feature.iconColor)}
+                    className={`size-6 ${feature.iconColor}`}
                   />
                 </div>
                 <h3 className="mb-2 text-xl font-semibold">{feature.title}</h3>

@@ -42,7 +42,11 @@ describe('Config', () => {
 
       const configInstance = new Config(dir);
 
-      expect(configInstance.config).toBeDefined();
+      expect(configInstance.config).toMatchObject({
+        ai: { model: 'openai/gpt-5' },
+        groups: [],
+        localeConfig: { source: 'en-US', target: ['zh-CN'] },
+      });
     });
   });
 

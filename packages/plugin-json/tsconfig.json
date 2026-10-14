@@ -10,7 +10,8 @@
     "noEmit": true,
     "noUnusedLocals": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node"]
   },
   "include": ["src", "vite.config.ts"]
 }

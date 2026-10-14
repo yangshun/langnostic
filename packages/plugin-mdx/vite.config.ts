@@ -1,10 +1,28 @@
 import { defineConfig } from 'vite-plus';
-import tsconfigPaths from 'vite-tsconfig-paths';
-
-const isDev = process.env.npm_lifecycle_event === 'dev';
 
 export default defineConfig({
-  plugins: [tsconfigPaths()],
+  run: {
+    tasks: {
+      'build:package': {
+        command: 'vp pack',
+        dependsOn: ['langnostic#build:package'],
+        cache: false,
+      },
+      typecheck: {
+        command: 'tsc',
+        dependsOn: ['langnostic#build:package'],
+        cache: false,
+      },
+      'test:unit': {
+        command: 'vp test run',
+        dependsOn: ['langnostic#build:package'],
+        cache: false,
+      },
+    },
+  },
+  resolve: {
+    tsconfigPaths: true,
+  },
   test: {
     globals: true,
   },
@@ -17,7 +35,6 @@ export default defineConfig({
     },
     entry: ['./src/index.ts'],
     hash: false,
-    ignoreWatch: ['.turbo'],
-    minify: !isDev,
+    minify: true,
   },
 });

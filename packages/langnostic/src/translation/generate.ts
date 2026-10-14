@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { generateObject } from 'ai';
+import { generateText, Output } from 'ai';
 import { outputFile, outputJson } from 'fs-extra/esm';
 import { z } from 'zod';
 
@@ -52,31 +52,46 @@ export async function generate(
       await outputFile(path.join(...filePathPrefix, 'prompt.txt'), prompt);
     }
 
-    const result = await generateObject({
+    const result = await generateText({
       model,
       prompt,
       // TODO: Add system prompt
-      schema: z.object({
-        data: z.array(
-          z.object({
-            batchId: z.string(),
-            id: z.string(),
-            translations: z.array(
-              z.object({
-                locale: z.string(),
-                string: z.string(),
-              }),
-            ),
-          }),
-        ),
+      output: Output.object({
+        schema: z.object({
+          data: z.array(
+            z.object({
+              batchId: z.string(),
+              id: z.string(),
+              translations: z.array(
+                z.object({
+                  locale: z.string(),
+                  string: z.string(),
+                }),
+              ),
+            }),
+          ),
+        }),
       }),
+      include: debug ? { requestBody: true, responseBody: true } : undefined,
       ...aiOptions,
     });
+    const object = result.output;
 
     if (debug) {
-      await outputJson(path.join(...filePathPrefix, 'response.json'), result, {
-        spaces: 2,
-      });
+      await outputJson(
+        path.join(...filePathPrefix, 'response.json'),
+        {
+          object,
+          finishReason: result.finishReason,
+          usage: result.usage,
+          warnings: result.warnings,
+          providerMetadata: result.finalStep.providerMetadata,
+          response: result.finalStep.response,
+          request: result.finalStep.request,
+          reasoning: result.finalStep.reasoningText,
+        },
+        { spaces: 2 },
+      );
     }
 
     const translationStringsMap = new Map<
@@ -84,7 +99,7 @@ export async function generate(
       Record<TranslationLocale, string>
     >();
 
-    result.object.data.forEach((r) => {
+    object.data.forEach((r) => {
       translationStringsMap.set(
         hashStringItem(r.batchId, r.id),
         r.translations.reduce(

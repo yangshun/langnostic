@@ -205,7 +205,7 @@ export default {
 ### Prerequisites
 
 - Node.js `^22.18.0`, `^24.11.0`, or `>=26.0.0` (Node 24.14.0 is pinned for development)
-- pnpm >= 10.15.1
+- pnpm >= 12.11.2
 
 ### Setup
 
@@ -228,6 +228,9 @@ pnpm dev
 ```
 
 ### Building
+
+Vite+ runs workspace tasks and caches builds. Plugin builds, tests, and type checks
+build `langnostic` first.
 
 ```bash
 # Build all packages
@@ -255,6 +258,7 @@ pnpm --filter langnostic test
 - `pnpm build` - Build all packages
 - `pnpm dev` - Start development mode
 - `pnpm test` - Run all tests
+- `pnpm tc` - Type check all libraries
 - `pnpm exec vp check` - Check formatting, lint, and types with Vite+
 - `pnpm lint` - Lint all packages with Vite+
 - `pnpm format` - Format code with Vite+
