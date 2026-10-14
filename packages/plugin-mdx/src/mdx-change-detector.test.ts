@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vite-plus/test';
 
 import { __test__ } from './mdx-change-detector';
 import { generateHash } from './mdx-file';

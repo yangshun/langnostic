@@ -13,13 +13,13 @@
   "scripts": {
     "clean": "rimraf dist",
     "check": "pnpm run tc && pnpm run lint",
-    "dev": "tsdown --watch",
-    "build": "tsdown",
-    "lint": "oxlint --fix",
-    "format": "oxfmt --write",
+    "dev": "vp pack --watch",
+    "build": "vp pack",
+    "lint": "vp lint --fix",
+    "format": "vp fmt --write",
     "tc": "tsc",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "vp test run",
+    "test:watch": "vp test watch",
     "verify": "npm run tc && npm run test && npm run build",
     "prepublishOnly": "npm run verify"
   },
@@ -39,10 +39,10 @@
     "@types/node": "catalog:",
     "langnostic": "workspace:*",
     "rimraf": "catalog:",
-    "tsdown": "catalog:",
     "typescript": "catalog:",
-    "vite-tsconfig-paths": "catalog:",
-    "vitest": "catalog:"
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
+    "vite-tsconfig-paths": "catalog:"
   },
   "peerDependencies": {
     "langnostic": "workspace:*"

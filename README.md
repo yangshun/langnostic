@@ -204,7 +204,7 @@ export default {
 
 ### Prerequisites
 
-- Node.js >= 22
+- Node.js `^22.18.0`, `^24.11.0`, or `>=26.0.0` (Node 24.14.0 is pinned for development)
 - pnpm >= 10.15.1
 
 ### Setup
@@ -244,7 +244,7 @@ pnpm --filter langnostic build
 pnpm test
 
 # Run tests in watch mode
-pnpm test:watch
+pnpm --filter langnostic test:watch
 
 # Run tests for specific package
 pnpm --filter langnostic test
@@ -255,8 +255,9 @@ pnpm --filter langnostic test
 - `pnpm build` - Build all packages
 - `pnpm dev` - Start development mode
 - `pnpm test` - Run all tests
-- `pnpm lint` - Lint all packages with Oxlint
-- `pnpm format` - Format code with Oxfmt
+- `pnpm exec vp check` - Check formatting, lint, and types with Vite+
+- `pnpm lint` - Lint all packages with Vite+
+- `pnpm format` - Format code with Vite+
 - `pnpm clean` - Clean all build artifacts
 
 ## 🔌 Plugin development
