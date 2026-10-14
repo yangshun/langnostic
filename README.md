@@ -240,6 +240,21 @@ pnpm build
 pnpm --filter langnostic build
 ```
 
+### Documentation
+
+The documentation site uses Blume and requires Node.js 22.19 or newer.
+
+```bash
+vp run docs#dev
+vp run docs#typecheck
+vp run docs#validate
+vp run docs#build
+vp run docs#start
+```
+
+The homepage is at http://localhost:4321 and documentation is under `/docs`.
+See [the docs README](apps/docs/README.md) for content and static hosting details.
+
 ### Testing
 
 ```bash

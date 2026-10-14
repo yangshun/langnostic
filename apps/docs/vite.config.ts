@@ -4,16 +4,25 @@ export default defineConfig({
   run: {
     tasks: {
       'build:package': {
-        command: 'next build',
+        command: 'blume build',
         cache: {
-          env: ['NODE_ENV', 'NEXT_PUBLIC_*'],
+          env: [
+            'NODE_ENV',
+            'VERCEL',
+            'VERCEL_PROJECT_PRODUCTION_URL',
+            'VERCEL_URL',
+            'NETLIFY',
+            'URL',
+            'DEPLOY_PRIME_URL',
+            'DEPLOY_URL',
+          ],
           input: [
-            'src/**',
+            'components/**',
             'content/**',
+            'pages/**',
             'public/**',
-            '.source/**',
             '.env*',
-            '*.{ts,tsx,mjs,cjs,js,json}',
+            '*.{ts,tsx,mjs,cjs,js,json,css}',
             {
               pattern: 'pnpm-lock.yaml',
               base: 'workspace',
@@ -22,12 +31,8 @@ export default defineConfig({
               pattern: 'pnpm-workspace.yaml',
               base: 'workspace',
             },
-            {
-              pattern: 'packages/typescript-config/**',
-              base: 'workspace',
-            },
           ],
-          output: ['.next/**', '!.next/cache/**'],
+          output: ['dist/**'],
         },
       },
     },

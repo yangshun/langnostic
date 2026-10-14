@@ -9,7 +9,7 @@ There are the following commands on Langnostic:
 
 ## `init`
 
-```npm
+```bash
 # Initialize configuration
 npx langnostic init
 ```
@@ -20,7 +20,7 @@ Initializes a configuration file in your current directory. You should customize
 
 Translates the files that match the config file.
 
-```npm
+```bash
 # Run translations
 npx langnostic translate
 ```
@@ -29,7 +29,7 @@ npx langnostic translate
 
 Preview changes without translating. Prints out the strings that will be translated.
 
-```npm
+```bash
 npx langnostic translate --dry-run
 ```
 
@@ -37,6 +37,6 @@ npx langnostic translate --dry-run
 
 Debug mode to see the prompts and responses of each call to the AI model. Logs are written into `.langnostic` directory.
 
-```npm
+```bash
 npx langnostic translate --debug
 ```

@@ -29,9 +29,7 @@ minimumReleaseAgeExclude:
   - '@voidzero-dev/vite-plus-win32-arm64-msvc@1.2.0'
   - '@voidzero-dev/vite-plus-win32-x64-msvc@1.2.0'
   - ai@7.0.140
-  - fumadocs-core@16.17.3
-  - fumadocs-ui@16.17.3
-  - lucide-react@1.57.0
+  - blume@2.2.3
   - vite-plus@1.2.0
 overrides:
   vite@*: 'catalog:'

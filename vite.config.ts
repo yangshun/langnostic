@@ -15,13 +15,14 @@ export default defineConfig({
     ignorePatterns: [
       'node_modules',
       '.next',
+      '**/.blume*/**',
       'dist',
       'build',
       '**/*.langnostic.json',
     ],
   },
   lint: {
-    plugins: ['react', 'nextjs', 'jsx-a11y'],
+    plugins: ['react', 'jsx-a11y'],
     categories: {
       correctness: 'error',
       suspicious: 'warn',
@@ -29,13 +30,13 @@ export default defineConfig({
       nursery: 'off',
     },
     rules: {
-      'nextjs/no-img-element': 'off',
       'react/react-in-jsx-scope': 'off',
       'vite-plus/prefer-vite-plus-imports': 'error',
     },
     ignorePatterns: [
       'node_modules',
       '.next',
+      '**/.blume*/**',
       'dist',
       'build',
       '**/*.langnostic.json',

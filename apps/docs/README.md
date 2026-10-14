@@ -1,45 +1,57 @@
-# docs
+# Langnostic documentation
 
-This is a Next.js application generated with
-[Create Fumadocs](https://github.com/fuma-nama/fumadocs).
-
-Run development server:
+The documentation site uses [Blume](https://useblume.dev/) and the workspace's
+Vite+ toolchain. Use Node.js 22.19 or newer; the repository pins Node.js 24.14.0.
+Run these commands from the repository root.
 
 ```bash
-npm run dev
-# or
-pnpm dev
-# or
-yarn dev
+CI=true vp install
+vp run docs#dev
 ```
 
-Open http://localhost:3000 with your browser to see the result.
+Open http://localhost:4321 for the homepage and http://localhost:4321/docs for
+the documentation.
 
-## Explore
+## Content and navigation
 
-In the project, you can see:
+- `content/docs/` contains the documentation pages. `index.mdx` serves `/docs`;
+  every other filename serves `/docs/<filename>`.
+- `blume.config.ts` sets the site metadata, `/docs` prefix, search, theme, and
+  sidebar groups. Pages omitted from the sidebar remain available at their URLs.
+- `pages/index.astro` is the homepage, using Blume's full-width `PageLayout`.
+- `components/Announcement.astro` is shared by the homepage and documentation
+  header. The header override is registered in `components.ts`.
 
-- `lib/source.ts`: Code for content source adapter, [`loader()`](https://fumadocs.dev/docs/headless/source-api) provides the interface to access your content.
-- `lib/layout.shared.tsx`: Shared options for layouts, optional but preferred to keep.
+Use Blume's native `:::info` callouts and `package-install` code fences in MDX.
+Keep JSX examples inside fenced code blocks.
 
-| Route                     | Description                                            |
-| ------------------------- | ------------------------------------------------------ |
-| `app/(home)`              | The route group for your landing page and other pages. |
-| `app/docs`                | The documentation layout and pages.                    |
-| `app/api/search/route.ts` | The Route Handler for search.                          |
+## Build and validate
 
-### Fumadocs MDX
+```bash
+vp run docs#typecheck
+vp run docs#validate
+vp run docs#build
+vp run docs#start
+```
 
-A `source.config.ts` config file has been included, you can customise different options like frontmatter schema.
+The build runs through the cached Vite+ `build:package` task and writes the static
+site to `apps/docs/dist/`. `start` previews that production output. Search and the
+`/llms.txt` and `/llms-full.txt` exports are generated during the build.
 
-Read the [Introduction](https://fumadocs.dev/docs/mdx) for further details.
+Stop the dev server before a normal build or type check. To check compilation
+while keeping it running, use `vp run docs#typecheck --isolated` or
+`vp run docs#build --isolated`. Isolated builds write to `.blume-verify/dist/`
+and skip production post-processing such as the search index and LLM exports;
+run a normal build before testing or publishing those features.
 
-## Learn More
+## Static hosting
 
-To learn more about Next.js and Fumadocs, take a look at the following
-resources:
+Set the host's project root to `apps/docs`, install dependencies from the
+repository root with `CI=true vp install --frozen-lockfile`, run
+`vp run build`, and publish `dist/`. Select a static site or Other
+framework preset and Node.js 22.19 or newer.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js
-  features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [Fumadocs](https://fumadocs.dev) - learn about Fumadocs
+Blume detects the site origin on Vercel and Netlify. For another host, set
+`deployment: { site: 'https://your-domain.example' }` in `blume.config.ts` to
+generate canonical URLs, a sitemap, and Open Graph images for the correct origin.
+No production domain is hardcoded in this repository.

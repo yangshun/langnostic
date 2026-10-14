@@ -1,0 +1,10 @@
+---
+import type { ComponentProps } from 'astro/types';
+import Header from 'blume/components/layout/Header.astro';
+import Announcement from './Announcement.astro';
+
+type Props = ComponentProps<typeof Header>;
+---
+
+<Header {...Astro.props} />
+<Announcement />

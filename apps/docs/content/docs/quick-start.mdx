@@ -3,13 +3,13 @@ title: Quick start
 description: Get started with Langnostic in 5 minutes
 ---
 
-<Callout>
-  We're polishing up Langnostic for a public release and the code will be open
-  sourced soon. Langnostic will be free for open source projects and commercial
-  projects can purchase a business license for a reasonable one-time fee. If
-  you're interested in using Langnostic, just [send us an
-  email](mailto:team@greatfrontend.com).
-</Callout>
+:::info
+We're polishing up Langnostic for a public release and the code will be open
+sourced soon. Langnostic will be free for open source projects and commercial
+projects can purchase a business license for a reasonable one-time fee. If
+you're interested in using Langnostic, just [send us an
+email](mailto:team@greatfrontend.com).
+:::
 
 Get Langnostic up and running in your project in just a few minutes.
 
@@ -22,7 +22,7 @@ Get Langnostic up and running in your project in just a few minutes.
 
 Install Langnostic in your project:
 
-```npm
+```package-install
 npm install langnostic @langnostic/plugin-json --save-dev
 ```
 
@@ -38,7 +38,7 @@ Add the `.langnostic` directory into your `.gitignore` file. This directory is u
 
 Initialize a default configuration file.
 
-```npm
+```package-install
 npx langnostic init
 ```
 
@@ -136,7 +136,7 @@ This allows you to have complete freedom over choice of AI model to use for the 
 
 The default config uses the OpenAI provider via `@ai-sdk/openai`. Install that package, or others if you want to use a different model:
 
-```npm
+```package-install
 npm install @ai-sdk/openai --save-dev
 ```
 
@@ -176,11 +176,11 @@ Refer to [AI SDK](https://ai-sdk.dev/providers/ai-sdk-providers) for more in-dep
 
 Let's start translating content!
 
-```npm
+```package-install
 npx langnostic translate
 ```
 
-<Callout>
+:::info
 We recommend adding `langnostic translate` into the `scripts` field of your `package.json`.
 
 ```json title="package.json"
@@ -192,7 +192,7 @@ We recommend adding `langnostic translate` into the `scripts` field of your `pac
 
 And you'll be able to translate via the command `npm run translate`.
 
-</Callout>
+:::
 
 The command will automatically detect which strings need translation and generate/update your target locale files.
 
@@ -214,7 +214,7 @@ To translate Markdown/MDX files, you will need to use the MDX plugin.
 
 Firstly, install the MDX plugin:
 
-```npm
+```package-install
 npm install @langnostic/plugin-mdx --save-dev
 ```
 
@@ -309,7 +309,7 @@ The `langnostic translate` command comes with a few helpful flags for an improve
 
 Use the `--dry-run` flag to get a preview of the strings that will be translated.
 
-```npm
+```package-install
 npx langnostic translate --dry-run
 ```
 
@@ -317,6 +317,6 @@ npx langnostic translate --dry-run
 
 Use the `--debug` flag to log the prompts and responses from the AI into the `.langnostic` folder.
 
-```npm
+```package-install
 npx langnostic translate --debug
 ```

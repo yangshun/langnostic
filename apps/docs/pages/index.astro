@@ -1,0 +1,118 @@
+---
+import data from 'blume:data';
+import Card from 'blume/components/content/Card.astro';
+import Icon from 'blume/components/Icon.astro';
+import PageLayout from 'blume/components/layout/PageLayout.astro';
+import Announcement from '../components/Announcement.astro';
+
+const { config } = data;
+const features = [
+  {
+    title: 'Use with any i18n library',
+    description:
+      'Langnostic operates on files, so you can use any i18n library you want — i18next, react-intl, or next-intl, you name it',
+    icon: 'square-terminal',
+  },
+  {
+    title: 'No lock-in',
+    description:
+      'Translated contents are yours to keep within your own repository, there are no ongoing costs or vendor lock-in',
+    icon: 'lock-open',
+  },
+  {
+    title: 'Bring your own AI',
+    description:
+      'Use your own AI — OpenAI, Google AI, Anthropic, or any others supported by AI SDK',
+    icon: 'brain',
+  },
+  {
+    title: 'Does minimal work',
+    description:
+      'Langnostic only translates new or modified content, saving time and money',
+    icon: 'zap',
+  },
+  {
+    title: 'Extensible architecture',
+    description:
+      'Designed for extensibility, supporting JSON, MDX, and custom file formats',
+    icon: 'layout-template',
+  },
+  {
+    title: 'Format preservation',
+    description:
+      'Maintains code syntax, HTML tags, JSX components, and template variables',
+    icon: 'palette',
+  },
+];
+---
+
+<PageLayout
+  site={{ title: config.title, description: config.description }}
+  logo={config.logo}
+  navigation={data.navigation}
+  themeMode={config.theme.mode}
+  fontCssVars={data.fontCssVars}
+  favicon={config.favicon}
+  searchEnabled={config.search.enabled}
+  siteUrl={config.site}
+  ogEnabled={config.og.enabled}
+  page={{
+    title: 'Langnostic - AI-Powered Translation for Modern Apps',
+    description: config.description,
+  }}
+>
+  <Announcement />
+
+  <section class="mx-auto flex max-w-5xl flex-col items-center gap-8 px-6 py-20 text-center sm:py-28">
+    <p class="rounded-full border border-border bg-muted px-4 py-1.5 text-sm text-muted-foreground">
+      AI-powered translation for modern websites
+    </p>
+    <div class="space-y-6">
+      <h1 class="text-balance text-4xl font-semibold tracking-tight sm:text-6xl lg:text-7xl">
+        Translate your website <span class="whitespace-nowrap text-accent">using AI</span>
+      </h1>
+      <p class="mx-auto max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
+        Langnostic is an efficient and affordable translation toolchain for
+        websites using AI.
+      </p>
+    </div>
+    <a
+      class="inline-flex items-center justify-center gap-2 rounded-blume bg-action px-6 py-3 text-sm font-medium text-action-foreground transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+      href="/docs"
+    >
+      Get started <Icon name="arrow-right" size={16} />
+    </a>
+    <div class="max-w-full rounded-blume border border-border bg-code px-5 py-4">
+      <code class="text-sm"><span class="text-muted-foreground">$</span> npm install langnostic</code>
+    </div>
+  </section>
+
+  <section class="border-y border-border bg-muted/30 px-6 py-16 sm:py-20">
+    <div class="mx-auto max-w-6xl">
+      <div class="mb-10 space-y-3 text-center">
+        <h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">Why Langnostic?</h2>
+        <p class="text-lg text-muted-foreground">
+          Built for developers who need fast, reliable translations
+        </p>
+      </div>
+      <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        {features.map((feature) => (
+          <Card title={feature.title} icon={feature.icon}>
+            <p class="leading-relaxed">{feature.description}</p>
+          </Card>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-3xl space-y-6 px-6 py-20 text-center">
+    <h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">Ready to translate your app?</h2>
+    <p class="text-lg text-muted-foreground">Get started with Langnostic in less than 5 minutes</p>
+    <a
+      class="inline-flex items-center justify-center gap-2 rounded-blume bg-action px-6 py-3 text-sm font-medium text-action-foreground transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+      href="/docs"
+    >
+      Read the documentation <Icon name="arrow-right" size={16} />
+    </a>
+  </section>
+</PageLayout>

@@ -1,16 +1,14 @@
 # deps
 /node_modules
 
-# generated content
-.contentlayer
-.content-collections
+# generated runtimes
+.blume*/
+# Left over from the previous docs generator.
 .source
 
 # test & build
 /coverage
-/.next/
-/out/
-/build
+/dist/
 *.tsbuildinfo
 
 # misc
@@ -25,4 +23,3 @@ yarn-error.log*
 # others
 .env*.local
 .vercel
-next-env.d.ts
