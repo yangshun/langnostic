@@ -1,13 +1,16 @@
 import fs from 'node:fs/promises';
 
-import { ensureFile, outputFile } from 'fs-extra/esm';
 import grayMatter from 'gray-matter';
 import type {
   LangnosticPlugin,
   TranslationFileMetadata,
   TranslationStringArg,
 } from 'langnostic';
-import { buildTranslatedContentMap, buildTranslationStrings } from 'langnostic';
+import {
+  buildTranslatedContentMap,
+  buildTranslationStrings,
+  writeFileAtomic,
+} from 'langnostic';
 
 import { processFileForChanges } from './mdx-change-detector';
 import { buildTargetMDX, generateSourceMDXContentHashMap } from './mdx-file';
@@ -93,12 +96,16 @@ export default function mdxPlugin(options?: PluginOptions): LangnosticPlugin {
       const registryData = await registry.load(file.source.path);
 
       // Write to each target file concurrently
-      await Promise.all(
+      const writes = await Promise.allSettled(
         file.targets.map(async (target) => {
-          // Ensure target file and its directory exist
-          await ensureFile(target.path);
-
-          const targetContent = await fs.readFile(target.path, 'utf8');
+          const targetContent = await fs
+            .readFile(target.path, 'utf8')
+            .catch((error: NodeJS.ErrnoException) => {
+              if (error.code !== 'ENOENT') {
+                throw error;
+              }
+              return '';
+            });
           const translatedContent =
             translatedContentMap.get(target.locale) || {};
 
@@ -113,9 +120,14 @@ export default function mdxPlugin(options?: PluginOptions): LangnosticPlugin {
             translatedContent,
           );
 
-          await outputFile(target.path, targetFileContent);
+          await writeFileAtomic(target.path, targetFileContent);
         }),
       );
+      for (const write of writes) {
+        if (write.status === 'rejected') {
+          throw write.reason;
+        }
+      }
 
       await registry.updateFileRegistry(file, options);
     },

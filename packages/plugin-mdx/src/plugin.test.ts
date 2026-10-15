@@ -1,10 +1,10 @@
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import fs, { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
 import matter from 'gray-matter';
 import type { TranslationFileMetadata, LangnosticPlugin } from 'langnostic';
-import { afterEach, beforeEach, expect, test } from 'vite-plus/test';
+import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
 
 import mdxPlugin, { type PluginOptions } from './index';
 import { processFileForChanges } from './mdx-change-detector';
@@ -28,6 +28,7 @@ beforeEach(async () => {
   };
 });
 afterEach(async () => {
+  vi.restoreAllMocks();
   await rm(dir, { recursive: true, force: true });
 });
 const doc = (
@@ -35,6 +36,57 @@ const doc = (
   data: Record<string, string> = { title: 'Hello', slug: 'hello' },
 ) => matter.stringify(content, data);
 
+test('keeps the registry and target intact when persisting translations fails', async () => {
+  const metadata = { ...file, targets: [file.targets[0]] };
+  await writeFile(file.source.path, doc('Hello'));
+  await registryManager().updateFileRegistry(metadata);
+  await writeFile(file.targets[0].path, doc('Bonjour'));
+  const registryPath = path.join(dir, 'en.langnostic.json');
+  const registryBefore = await readFile(registryPath, 'utf8');
+  const targetBefore = await readFile(file.targets[0].path, 'utf8');
+  const plugin = mdxPlugin();
+  await plugin.trackFiles([metadata]);
+  vi.spyOn(fs, 'rename').mockRejectedValueOnce(Error('disk full'));
+  await expect(
+    plugin.onTranslationBatchComplete([
+      {
+        batchId: file.source.path,
+        id: generateMDXContentHashList('Hello')[0],
+        source: { locale: 'en', string: 'Hello' },
+        targets: [{ locale: 'fr', string: 'Salut' }],
+      },
+    ]),
+  ).rejects.toThrow('disk full');
+  expect(await readFile(registryPath, 'utf8')).toBe(registryBefore);
+  expect(await readFile(file.targets[0].path, 'utf8')).toBe(targetBefore);
+  expect((await fs.readdir(dir)).some((name) => name.endsWith('.tmp'))).toBe(
+    false,
+  );
+});
+
+test('reports target read errors without updating the registry', async () => {
+  const metadata = { ...file, targets: [file.targets[0]] };
+  await writeFile(file.source.path, doc('Hello'));
+  const plugin = mdxPlugin();
+  await plugin.trackFiles([metadata]);
+  vi.spyOn(fs, 'readFile')
+    .mockResolvedValueOnce(doc('Hello'))
+    .mockRejectedValueOnce(Error('missing registry'))
+    .mockRejectedValueOnce(
+      Object.assign(Error('access denied'), { code: 'EACCES' }),
+    );
+  await expect(
+    plugin.onTranslationBatchComplete([
+      {
+        batchId: file.source.path,
+        id: 'title',
+        source: { locale: 'en', string: 'Hello' },
+        targets: [{ locale: 'fr', string: 'Bonjour' }],
+      },
+    ]),
+  ).rejects.toThrow('access denied');
+  expect(await fs.readdir(dir)).toEqual(['en.mdx']);
+});
 async function applyFileChanges(
   metadata: TranslationFileMetadata,
   options?: PluginOptions,

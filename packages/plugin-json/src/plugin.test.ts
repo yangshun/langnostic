@@ -6,12 +6,6 @@ import path from 'node:path';
 import type { TranslationFileMetadata, LangnosticPlugin } from 'langnostic';
 import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
 
-vi.mock('fs-extra/esm', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('fs-extra/esm')>();
-  return { ...actual, pathExists: vi.fn(actual.pathExists) };
-});
-import { pathExists } from 'fs-extra/esm';
-
 import JsonPlugin from './index';
 import { processFileForChanges } from './json-change-detector';
 
@@ -115,21 +109,27 @@ test('plans removal-only changes without writing until a real run starts', async
   await plugin.onTranslationStart?.();
 });
 
-test('ignores empty, unrelated and unreadable source batches', async () => {
+test('ignores empty and unrelated batches but reports unreadable sources', async () => {
   const plugin = JsonPlugin();
   await plugin.trackFiles([file]);
   await plugin.onTranslationBatchComplete([]);
   await plugin.onTranslationBatchComplete([
     { ...result('hello', 'Bonjour'), batchId: 'other.json' },
   ]);
-  await plugin.onTranslationBatchComplete([result('hello', 'Bonjour')]);
+  await expect(
+    plugin.onTranslationBatchComplete([result('hello', 'Bonjour')]),
+  ).rejects.toMatchObject({ code: 'ENOENT' });
   await writeFile(file.source.path, 'invalid json');
-  await plugin.onTranslationBatchComplete([result('hello', 'Bonjour')]);
+  await expect(
+    plugin.onTranslationBatchComplete([result('hello', 'Bonjour')]),
+  ).rejects.toBeInstanceOf(SyntaxError);
   await writeFile(file.source.path, '{"hello":"Hello"}');
   vi.spyOn(fs, 'readFile')
     .mockResolvedValueOnce('{"hello":"Hello"}')
     .mockRejectedValueOnce(Error('source removed'));
-  expect(await plugin.getTranslationStrings()).toEqual([]);
+  await expect(plugin.getTranslationStrings()).rejects.toThrow(
+    'source removed',
+  );
 });
 
 test('handles empty and missing targets when detecting changes', async () => {
@@ -141,18 +141,36 @@ test('handles empty and missing targets when detecting changes', async () => {
   });
 });
 
-test('rebuilds unreadable target JSON and tolerates an existence check failure', async () => {
+test('preserves unreadable target JSON and reports target read failures', async () => {
   await writeFile(file.source.path, '{"hello":"Hello"}');
   await writeFile(file.targets[0].path, 'invalid');
   const plugin = JsonPlugin();
-  await plugin.trackFiles([file]);
+  await plugin.trackFiles([{ ...file, targets: [file.targets[0]] }]);
+  await expect(
+    plugin.onTranslationBatchComplete([result('hello', 'Bonjour')]),
+  ).rejects.toBeInstanceOf(SyntaxError);
+  expect(await readFile(file.targets[0].path, 'utf8')).toBe('invalid');
+  vi.spyOn(fs, 'readFile')
+    .mockResolvedValueOnce('{"hello":"Hello"}')
+    .mockRejectedValueOnce(
+      Object.assign(Error('access denied'), { code: 'EACCES' }),
+    );
+  await expect(
+    plugin.onTranslationBatchComplete([result('hello', 'Salut')]),
+  ).rejects.toThrow('access denied');
+});
+
+test('creates missing destination directories and leaves no temporary files', async () => {
+  await writeFile(file.source.path, '{"hello":"Hello"}');
+  const target = {
+    locale: 'fr',
+    path: path.join(dir, 'new-directory/fr.json'),
+  };
+  const plugin = JsonPlugin();
+  await plugin.trackFiles([{ ...file, targets: [target] }]);
   await plugin.onTranslationBatchComplete([result('hello', 'Bonjour')]);
-  expect(JSON.parse(await readFile(file.targets[0].path, 'utf8'))).toEqual({
+  expect(JSON.parse(await readFile(target.path, 'utf8'))).toEqual({
     hello: 'Bonjour',
   });
-  vi.mocked(pathExists).mockRejectedValueOnce(Error('unavailable'));
-  await plugin.onTranslationBatchComplete([result('hello', 'Salut')]);
-  expect(JSON.parse(await readFile(file.targets[0].path, 'utf8'))).toEqual({
-    hello: 'Salut',
-  });
+  expect(await fs.readdir(path.dirname(target.path))).toEqual(['fr.json']);
 });

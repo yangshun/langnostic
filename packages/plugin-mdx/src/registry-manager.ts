@@ -1,9 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { outputJson } from 'fs-extra/esm';
 import grayMatter from 'gray-matter';
 import type { TranslationFileMetadata, TranslationLocale } from 'langnostic';
+import { writeJsonAtomic } from 'langnostic';
 
 import type { PluginOptions } from '.';
 import {
@@ -58,7 +58,7 @@ export default function registryManager() {
     async save(sourceFilePath: string, registry: Registry): Promise<void> {
       const registryPath = getRegistryPath(sourceFilePath);
 
-      await outputJson(registryPath, registry, { spaces: 2 });
+      await writeJsonAtomic(registryPath, registry);
     },
     async updateFileRegistry(
       file: TranslationFileMetadata,

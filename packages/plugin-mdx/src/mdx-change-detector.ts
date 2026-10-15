@@ -7,6 +7,7 @@ import type {
   TranslationFileMetadata,
   TranslationLocale,
 } from 'langnostic';
+import { writeFileAtomic } from 'langnostic';
 import { isEqual } from 'lodash-es';
 
 import type { PluginOptions } from '.';
@@ -201,7 +202,7 @@ export async function processFileForChanges(
         });
         if (rebuiltContent !== undefined) {
           pendingUpdates.push(() =>
-            fse.outputFile(target.path, rebuiltContent, 'utf8'),
+            writeFileAtomic(target.path, rebuiltContent),
           );
         }
 

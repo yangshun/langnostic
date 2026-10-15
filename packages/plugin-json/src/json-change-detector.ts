@@ -1,7 +1,8 @@
 import fs from 'node:fs/promises';
 
-import { outputJson, pathExists } from 'fs-extra/esm';
+import { pathExists } from 'fs-extra/esm';
 import type { TranslationFileMetadata, TranslationLocale } from 'langnostic';
+import { writeJsonAtomic } from 'langnostic';
 
 function compareJsonData(
   sourceJson: Record<string, string>,
@@ -52,9 +53,7 @@ export async function processFileForChanges(
       removedKeys.forEach((key) => {
         delete targetJson[key];
       });
-      pendingUpdates.push(() =>
-        outputJson(target.path, targetJson, { spaces: 2 }),
-      );
+      pendingUpdates.push(() => writeJsonAtomic(target.path, targetJson));
     }
   }
 

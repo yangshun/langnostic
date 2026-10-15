@@ -1,12 +1,15 @@
 import fs from 'node:fs/promises';
 
-import { pathExists, writeJson } from 'fs-extra/esm';
 import type {
   LangnosticPlugin,
   TranslationFileMetadata,
   TranslationStringArg,
 } from 'langnostic';
-import { buildTranslatedContentMap, buildTranslationStrings } from 'langnostic';
+import {
+  buildTranslatedContentMap,
+  buildTranslationStrings,
+  writeJsonAtomic,
+} from 'langnostic';
 
 import { processFileForChanges } from './json-change-detector';
 
@@ -47,10 +50,6 @@ export default function JsonPlugin(): LangnosticPlugin {
 
         const sourceJson = await readJson(file.source.path);
 
-        if (!sourceJson) {
-          continue;
-        }
-
         translationStrings.push(
           ...buildTranslationStrings(sourceJson, keysToTranslate, file),
         );
@@ -79,16 +78,17 @@ export default function JsonPlugin(): LangnosticPlugin {
       const translatedContentMap = buildTranslatedContentMap(translatedStrings);
       const sourceJson = await readJson(file.source.path);
 
-      if (sourceJson == null) {
-        return;
-      }
-
       // Write to each target file concurrently
-      await Promise.all(
+      const writes = await Promise.allSettled(
         file.targets.map((target) =>
           processTargetFile(target, translatedContentMap, sourceJson),
         ),
       );
+      for (const write of writes) {
+        if (write.status === 'rejected') {
+          throw write.reason;
+        }
+      }
     },
     stringsPerRequest: 50,
     async trackFiles(filesMetadata) {
@@ -130,14 +130,9 @@ function sortKeys(
 
 async function readJson(
   path: string,
-): Promise<Record<string, TranslationEntry> | null> {
-  try {
-    const content = await fs.readFile(path, 'utf8');
-
-    return JSON.parse(content);
-  } catch {
-    return null;
-  }
+): Promise<Record<string, TranslationEntry>> {
+  const content = await fs.readFile(path, 'utf8');
+  return JSON.parse(content);
 }
 
 async function processTargetFile(
@@ -147,11 +142,11 @@ async function processTargetFile(
 ) {
   const targetJson = await (async () => {
     try {
-      if (await pathExists(target.path)) {
-        return (await readJson(target.path)) ?? {};
+      return await readJson(target.path);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        throw error;
       }
-    } catch {
-      // Nothing
     }
 
     return {};
@@ -164,5 +159,5 @@ async function processTargetFile(
     sourceJson,
   );
 
-  await writeJson(target.path, sortKeys(mergedContent), { spaces: 2 });
+  await writeJsonAtomic(target.path, mergedContent);
 }

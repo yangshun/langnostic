@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import type { TranslationFileMetadata } from './types';
 
-async function canonicalPath(filePath: string): Promise<string> {
+export async function canonicalPath(filePath: string): Promise<string> {
   let current = path.resolve(filePath);
   const missing: Array<string> = [];
   for (;;) {

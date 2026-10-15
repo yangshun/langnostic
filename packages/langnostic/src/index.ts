@@ -10,3 +10,4 @@ export {
   buildTranslatedContentMap,
   buildTranslationStrings,
 } from '@/lib/plugins';
+export { writeFileAtomic, writeJsonAtomic } from '@/lib/files';
