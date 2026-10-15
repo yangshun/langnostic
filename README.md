@@ -338,6 +338,11 @@ on real runs, including runs that need no AI calls. The exported `writeFileAtomi
 and `writeJsonAtomic` helpers create parent directories and replace files only
 after their full contents have been written.
 
+The exported `buildTranslationStrings` helper accepts a map from message IDs to
+normalized `{ string, description? }` values, a map of changed IDs per target
+locale, and the file metadata. Plugins interpret their own source schemas before
+calling it; the helper adds the source locale, batch ID, and target locales.
+
 ### Development workflow
 
 1. Fork the repository

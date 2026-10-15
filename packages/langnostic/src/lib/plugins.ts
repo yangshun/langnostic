@@ -31,13 +31,8 @@ export function buildTranslatedContentMap(
 }
 
 export function buildTranslationStrings(
-  content: Record<
-    string,
-    | string
-    | {
-        defaultMessage: string;
-        description: string;
-      }
+  content: Readonly<
+    Record<string, Omit<TranslationStringArg['source'], 'locale'>>
   >,
   changes: Record<TranslationLocale, ReadonlyArray<string>>,
   file: TranslationFileMetadata,
@@ -52,7 +47,7 @@ export function buildTranslationStrings(
         acc.push({
           batchId: file.source.path,
           id: key,
-          source: getTranslationSource(value, file.source.locale),
+          source: { ...value, locale: file.source.locale },
           targets: missingInTargets,
         });
       }
@@ -61,13 +56,4 @@ export function buildTranslationStrings(
     },
     [],
   );
-}
-
-function getTranslationSource(
-  value: string | { defaultMessage: string; description: string },
-  locale: TranslationLocale,
-): { description?: string; locale: TranslationLocale; string: string } {
-  return typeof value === 'object'
-    ? { description: value.description, locale, string: value.defaultMessage }
-    : { locale, string: value };
 }

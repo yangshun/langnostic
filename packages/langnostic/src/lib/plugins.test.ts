@@ -66,14 +66,17 @@ describe('buildTranslationStrings', () => {
   };
 
   test('keys to translate is empty', () => {
-    const content = { greeting: 'Hello' };
+    const content = { greeting: { string: 'Hello' } };
     const changes = { 'pt-BR': [], 'zh-CN': [] };
 
     expect(buildTranslationStrings(content, changes, fileMock)).toEqual([]);
   });
 
   test('keys to translate is not empty', () => {
-    const content = { farewell: 'Goodbye', greeting: 'Hello' };
+    const content = {
+      farewell: { string: 'Goodbye' },
+      greeting: { string: 'Hello' },
+    };
     const changes = {
       'pt-BR': ['greeting'],
       'zh-CN': ['greeting', 'farewell'],
@@ -97,9 +100,9 @@ describe('buildTranslationStrings', () => {
     );
   });
 
-  test('source content with value containing defaultMessage and description', () => {
+  test('preserves optional translator context from normalized source content', () => {
     const content = {
-      greeting: { defaultMessage: 'Hello', description: 'A common greeting' },
+      greeting: { string: 'Hello', description: 'A common greeting' },
     };
     const changes = { 'pt-BR': ['greeting'] };
 

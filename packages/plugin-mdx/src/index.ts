@@ -11,6 +11,7 @@ import {
   buildTranslationStrings,
   writeFileAtomic,
 } from 'langnostic';
+import { mapValues } from 'lodash-es';
 
 import { processFileForChanges } from './mdx-change-detector';
 import { buildTargetMDX, generateSourceMDXContentHashMap } from './mdx-file';
@@ -56,13 +57,13 @@ export default function mdxPlugin(options?: PluginOptions): LangnosticPlugin {
         const sourceHashMap = generateSourceMDXContentHashMap(content);
 
         const frontmatterTranslationStrings = buildTranslationStrings(
-          sourceFrontmatter,
+          mapValues(sourceFrontmatter, (string) => ({ string })),
           changes.frontmatter,
           file,
         );
 
         const mdxContentTranslationStrings = buildTranslationStrings(
-          sourceHashMap,
+          mapValues(sourceHashMap, (string) => ({ string })),
           changes.content,
           file,
         );

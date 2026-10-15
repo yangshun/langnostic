@@ -49,9 +49,15 @@ export default function JsonPlugin(): LangnosticPlugin {
         );
 
         const sourceJson = await readJson(file.source.path);
+        const sourceStrings = Object.fromEntries(
+          Object.entries(sourceJson).map(([id, value]) => [
+            id,
+            getTranslationSource(value),
+          ]),
+        );
 
         translationStrings.push(
-          ...buildTranslationStrings(sourceJson, keysToTranslate, file),
+          ...buildTranslationStrings(sourceStrings, keysToTranslate, file),
         );
       }
 
@@ -97,6 +103,14 @@ export default function JsonPlugin(): LangnosticPlugin {
     },
     type: 'json',
   };
+}
+
+function getTranslationSource(
+  value: TranslationEntry,
+): Omit<TranslationStringArg['source'], 'locale'> {
+  return typeof value === 'object'
+    ? { description: value.description, string: value.defaultMessage }
+    : { string: value };
 }
 
 function mergeTranslations(

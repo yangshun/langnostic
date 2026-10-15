@@ -169,7 +169,7 @@ test('installs actual tarballs outside the workspace and exposes usable public t
     `
 import JsonPlugin from '@langnostic/plugin-json';
 import MdxPlugin from '@langnostic/plugin-mdx';
-import { writeJsonAtomic, type ConfigType } from 'langnostic';
+import { buildTranslationStrings, writeJsonAtomic, type ConfigType } from 'langnostic';
 export const config = {
   ai: { model: 'local-test/mock' }, localeConfig: { source: 'en', target: ['fr'] },
   groups: [JsonPlugin(), MdxPlugin()].map((plugin, index) => ({
@@ -177,6 +177,11 @@ export const config = {
   })),
 } satisfies ConfigType;
 export const write: (path: string, value: unknown) => Promise<void> = writeJsonAtomic;
+export const strings = buildTranslationStrings(
+  { greeting: { string: 'Hello', description: 'Greeting' } },
+  { fr: ['greeting'] },
+  { source: { locale: 'en', path: 'en.json' }, targets: [{ locale: 'fr', path: 'fr.json' }] },
+);
 `,
   );
   await fs.writeFile(
