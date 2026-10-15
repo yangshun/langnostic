@@ -19,6 +19,7 @@ export default defineConfig({
         items: ['/features', '/cli', '/workflows', '/plugins'],
       },
       { label: 'Advanced', items: ['/architecture'] },
+      { label: 'Resources', items: ['/roadmap'] },
     ],
   },
   search: orama(),
