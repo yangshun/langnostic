@@ -11,7 +11,7 @@ See [Using plugins](/docs/plugins) for shared setup, groups, paths, and batching
 ## Installation
 
 ```package-install
-npm install langnostic @ai-sdk/openai @langnostic/plugin-formatjs --save-dev
+npm install langnostic @langnostic/plugin-formatjs --save-dev
 ```
 
 ## Configuration
@@ -20,13 +20,13 @@ Import the default factory as `FormatJSPlugin` and pass `FormatJSPlugin()` as
 the group's `plugin`. Catalog filenames use the `.json` extension.
 
 ```typescript title="langnostic.config.ts"
-import { openai } from '@ai-sdk/openai';
 import FormatJSPlugin from '@langnostic/plugin-formatjs';
 import type { ConfigType } from 'langnostic';
 
 export default {
   ai: {
-    model: openai('gpt-6.1-sol'),
+    provider: 'openai',
+    model: 'gpt-6.1-sol',
   },
   localeConfig: {
     source: 'en-US',

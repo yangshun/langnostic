@@ -14,10 +14,11 @@ See [Configuration](/docs/configuration) for a complete setup and
 
 The CLI loads environment variables and searches for `langnostic.config.ts`,
 `langnostic.config.js`, or `langnostic.json`. For JSON, it validates the
-configuration version and structure, resolves provider and plugin factory modules
-from the configuration file's location, and substitutes environment references in
-their options. It creates the provider model and a plugin instance for each group,
-then validates the same runtime configuration used by TS/JS configurations.
+configuration version and structure and resolves plugin factory modules from
+the configuration file's location. Every format uses named providers and plain
+AI settings. Langnostic resolves environment references in credentials, headers,
+parameters, and JSON plugin options, then creates an internal SDK model and a
+plugin instance for each group before translation.
 
 The runner resolves each group's source patterns from the CLI's working directory
 and substitutes target locales and wildcard captures.

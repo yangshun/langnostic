@@ -2,37 +2,10 @@ import { pathToFileURL } from 'node:url';
 
 import { resolve } from 'import-meta-resolve';
 
-import type { ConfigType, ConfigValue, ModuleReference } from './types';
+import { resolveAI, type ResolvedConfig } from './ai';
+import { resolveEnvironment } from './environment';
+import type { ModuleReference } from './types';
 import { validateConfig, validateDeclarativeConfig } from './validate';
-
-function resolveEnvironment(value: ConfigValue, field: string): ConfigValue {
-  if (Array.isArray(value)) {
-    return value.map((item, index) =>
-      resolveEnvironment(item, `${field}.${index}`),
-    );
-  }
-  if (value === null || typeof value !== 'object') {
-    return value;
-  }
-  if (Object.keys(value).length === 1 && 'env' in value) {
-    if (typeof value.env !== 'string' || value.env.trim() === '') {
-      throw new Error(
-        `${field}: Expected a non-empty environment variable name`,
-      );
-    }
-    const resolved = process.env[value.env];
-    if (resolved === undefined) {
-      throw new Error(`${field}: Environment variable ${value.env} is not set`);
-    }
-    return resolved;
-  }
-  return Object.fromEntries(
-    Object.entries(value).map(([key, item]) => [
-      key,
-      resolveEnvironment(item, `${field}.${key}`),
-    ]),
-  );
-}
 
 async function loadFactory(
   reference: string | ModuleReference,
@@ -66,24 +39,9 @@ async function loadFactory(
 export async function loadDeclarativeConfig(
   value: unknown,
   filepath: string,
-): Promise<ConfigType> {
+): Promise<ResolvedConfig> {
   const config = validateDeclarativeConfig(value);
   const parentURL = pathToFileURL(filepath).href;
-  const { provider: providerReference, ...ai } = config.ai;
-  let model: unknown = ai.model;
-  if (providerReference !== undefined) {
-    const provider = (await loadFactory(
-      providerReference,
-      parentURL,
-      'ai.provider',
-    )) as { languageModel?: unknown } | null;
-    if (typeof provider?.languageModel !== 'function') {
-      throw new Error(
-        'ai.provider: Factory must return an AI SDK provider with languageModel()',
-      );
-    }
-    model = await provider.languageModel(ai.model);
-  }
   const groups = await Promise.all(
     config.groups.map(async (group, index) => ({
       ...group,
@@ -94,16 +52,9 @@ export async function loadDeclarativeConfig(
       ),
     })),
   );
-  return validateConfig({
+  const validated = validateConfig({
     ...config,
-    ai: {
-      ...ai,
-      model,
-      providerOptions:
-        ai.providerOptions === undefined
-          ? undefined
-          : resolveEnvironment(ai.providerOptions, 'ai.providerOptions'),
-    },
     groups,
   });
+  return { ...validated, ai: resolveAI(validated.ai) };
 }

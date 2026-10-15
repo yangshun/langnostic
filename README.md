@@ -4,7 +4,7 @@ Translate FormatJS message catalogs and Markdown documents with your own AI prov
 
 ## ✨ Features
 
-- 🤖 **AI-powered translation** - Use compatible language models with structured output through AI SDK providers
+- 🤖 **AI-powered translation** - Translate through OpenAI, Anthropic, Google, or an OpenAI-compatible endpoint with structured output
 - 🔌 **Plugin architecture** - Extensible system supporting multiple file formats
 - 📦 **Plugin-specific change detection** - Fill missing FormatJS IDs and track changed Markdown blocks with source registries
 - ⚡ **Batch processing** - Efficiently processes multiple strings per request
@@ -23,14 +23,14 @@ schemas and formats require a compatible custom plugin.
 
 ## 🚀 Quick start
 
-### Install the CLI, plugin, and provider
+### Install the CLI and plugin
 
 ```bash
-npm install langnostic @langnostic/plugin-formatjs @ai-sdk/openai --save-dev
+npm install langnostic @langnostic/plugin-formatjs --save-dev
 # or
-pnpm add langnostic @langnostic/plugin-formatjs @ai-sdk/openai --save-dev
+pnpm add langnostic @langnostic/plugin-formatjs --save-dev
 # or
-yarn add langnostic @langnostic/plugin-formatjs @ai-sdk/openai --dev
+yarn add langnostic @langnostic/plugin-formatjs --dev
 ```
 
 ### Initialize configuration
@@ -42,13 +42,13 @@ npx langnostic init
 This creates a `langnostic.config.ts` file with default settings:
 
 ```typescript
-import { openai } from '@ai-sdk/openai';
 import FormatJSPlugin from '@langnostic/plugin-formatjs';
 import type { ConfigType } from 'langnostic';
 
 export default {
   ai: {
-    model: openai('gpt-6.1-sol'),
+    provider: 'openai',
+    model: 'gpt-6.1-sol',
   },
   groups: [
     {
@@ -162,21 +162,21 @@ Langnostic uses a flexible configuration system supporting:
 - Concurrency controls
 - Path pattern matching
 
-Example with multiple file types. Install the additional provider and plugin:
+Example with multiple file types. Install the additional plugin:
 
 ```bash
-npm install @ai-sdk/google @langnostic/plugin-mdx --save-dev
+npm install @langnostic/plugin-mdx --save-dev
 ```
 
 ```typescript
-import { google } from '@ai-sdk/google';
 import FormatJSPlugin from '@langnostic/plugin-formatjs';
 import MdxPlugin from '@langnostic/plugin-mdx';
 import type { ConfigType } from 'langnostic';
 
 export default {
   ai: {
-    model: google('gemini-3.8-flash'),
+    provider: 'google',
+    model: 'gemini-3.8-flash',
   },
   localeConfig: {
     source: 'en-US',
@@ -206,6 +206,29 @@ export default {
   ],
 } satisfies ConfigType;
 ```
+
+Supported providers are `openai` (Responses), `anthropic` (Messages), `google`
+(GenerateContent), and `openai-compatible` (Chat Completions). Model IDs are
+freeform strings. Langnostic includes all four adapters.
+
+For a local OpenAI-compatible server:
+
+```typescript
+ai: {
+  provider: 'openai-compatible',
+  model: 'your-local-model',
+  baseURL: 'http://localhost:1234/v1',
+}
+```
+
+`apiKey`, `baseURL`, `headers`, `parameters`, `temperature`, and `topP` are optional,
+except `baseURL` is required for `openai-compatible`. Native providers use their
+standard credentials and endpoints. Use `openai` with a `baseURL` override for
+custom Responses endpoints. `parameters` adds native request fields while
+preserving generated input and output schemas.
+
+See the [configuration guide](apps/docs/content/docs/configuration.mdx)
+for environment references, request parameters, and plugin settings.
 
 ## 🛠️ Development
 

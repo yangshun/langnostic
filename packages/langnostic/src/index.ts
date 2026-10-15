@@ -1,4 +1,8 @@
 export type {
+  AIConfig,
+  AIProvider,
+  EnvironmentReference,
+  ConfigValue,
   ConfigType,
   DeclarativeConfigType,
   ModuleReference,

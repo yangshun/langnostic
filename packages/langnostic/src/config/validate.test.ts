@@ -5,7 +5,7 @@ import { validateConfig } from './validate';
 
 function config(): ConfigType {
   return {
-    ai: { model: 'test/model' },
+    ai: { provider: 'openai', model: 'test/model' },
     localeConfig: { source: 'en-US', target: ['fr', 'de'] },
     groups: [
       {
@@ -122,28 +122,75 @@ test('rejects duplicate group names', () => {
   );
 });
 
-test('preserves provider and plugin instances, options and group overrides', () => {
-  class Model {
-    specificationVersion = 'v4';
-    provider = 'test';
-    modelId = 'model';
-    async doGenerate() {}
+test('preserves plugin instances, options and group overrides', () => {
+  class Plugin {
+    type = 'test';
+    stringsPerRequest = 10;
+    options = { custom: true };
+    async trackFiles() {}
+    async getTranslationStrings() {
+      return [];
+    }
+    async onTranslationBatchComplete() {}
   }
-  const input = {
-    ...config(),
-    concurrencyLimit: 2,
-    ai: {
-      model: new Model(),
-      providerOptions: { test: { custom: true } },
-      temperature: 0.2,
-    },
+  const input = config();
+  input.ai = {
+    ...input.ai,
+    model: '  custom-model  ',
+    parameters: { custom: true },
+    temperature: 0.2,
   };
+  input.groups[0].plugin = new Plugin();
   input.groups[0].localeConfig = { source: 'en', target: ['es'] };
   input.groups[0].stringsPerRequest = 1;
   const validated = validateConfig(input);
-  expect(validated).toBe(input);
-  expect(validated.ai.model).toBe(input.ai.model);
+  expect(validated.ai.model).toBe('custom-model');
+  expect(input.ai.model).toBe('  custom-model  ');
   expect(validated.groups[0].plugin).toBe(input.groups[0].plugin);
-  expect(Object.getPrototypeOf(validated.ai.model)).toBe(Model.prototype);
-  expect(validated.ai.providerOptions).toEqual({ test: { custom: true } });
+  expect(Object.getPrototypeOf(validated.groups[0].plugin)).toBe(
+    Plugin.prototype,
+  );
+  expect(validated.ai.parameters).toEqual({ custom: true });
 });
+
+test.each([
+  [{ model: 'openai/model' }, 'implicit default-provider routing'],
+  [
+    {
+      provider: { module: '@ai-sdk/openai', export: 'createOpenAI' },
+      model: 'model',
+    },
+    'module/export',
+  ],
+  [
+    {
+      provider: 'openai',
+      model: { specificationVersion: 'v4', doGenerate() {} },
+    },
+    'Replace AI SDK model objects',
+  ],
+  [
+    { provider: 'openai', model: 'model', providerOptions: { openai: {} } },
+    'Replace SDK providerOptions with parameters',
+  ],
+  [{ provider: 'unsupported', model: 'model' }, 'ai.provider'],
+  [{ provider: 'openai-compatible', model: 'model' }, 'baseURL is required'],
+  [
+    { provider: 'openai', model: 'model', baseURL: 'file:///tmp' },
+    'ai.baseURL',
+  ],
+  [{ provider: 'openai', model: 'model', apiKey: { env: '' } }, 'ai.apiKey'],
+  [
+    { provider: 'openai', model: 'model', headers: { token: 1 } },
+    'ai.headers.token',
+  ],
+  [
+    { provider: 'openai', model: 'model', parameters: { token: () => {} } },
+    'ai.parameters.token',
+  ],
+])(
+  'rejects legacy or invalid AI settings with migration guidance: %j',
+  (ai, message) => {
+    expect(() => validateConfig({ ...config(), ai })).toThrow(message);
+  },
+);

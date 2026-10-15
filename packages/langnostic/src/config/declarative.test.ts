@@ -24,27 +24,9 @@ export function fail() { throw Error('Factory failed'); }
 export function failWithString() { throw 'Factory rejected'; }
 export function invalidPlugin() { return { type: 'broken' }; }
 `;
-const providerSource = `
-export function createProvider(options) {
-  return {
-    languageModel(modelId) {
-      return {
-        specificationVersion: 'v4', provider: 'test', modelId, options,
-        async doGenerate() {},
-      };
-    },
-  };
-}
-export function nullProvider() { return null; }
-export function undefinedProvider() {}
-export function invalidProvider() { return {}; }
-export function invalidModel() { return { languageModel() { return {}; } }; }
-`;
-
 beforeEach(async () => {
   directory = await fs.mkdtemp(path.join(os.tmpdir(), 'langnostic-config-'));
   await fs.writeFile(path.join(directory, 'plugin.mjs'), pluginSource);
-  await fs.writeFile(path.join(directory, 'provider.mjs'), providerSource);
 });
 afterEach(async () => {
   vi.unstubAllEnvs();
@@ -55,7 +37,7 @@ function configuration(): DeclarativeConfigType {
   return {
     version: 1,
     ai: {
-      provider: { module: './provider.mjs', export: 'createProvider' },
+      provider: 'openai',
       model: 'new-model-without-a-langnostic-update',
     },
     localeConfig: { source: 'en', target: ['fr'] },
@@ -84,7 +66,7 @@ test.each(['langnostic.json', 'langnostic.config.json'])(
     input.groups.push({ ...input.groups[0], name: 'other' });
     const result = await load(input, filename);
     expect(result.ai.model).toMatchObject({
-      provider: 'test',
+      provider: 'openai.responses',
       modelId: input.ai.model,
     });
     expect(result.groups[0].plugin.type).toBe('test');
@@ -121,19 +103,11 @@ test('resolves import-only packages from the configuration directory and support
   });
 });
 
-test('resolves nested environment references in provider, plugin and generation options', async () => {
+test('resolves nested environment references in plugin options and keeps sampling settings', async () => {
   vi.stubEnv('LANGNOSTIC_CONFIG_KEY', 'test-secret');
   vi.stubEnv('LANGNOSTIC_CONFIG_EMPTY', '');
   const input = configuration();
-  input.ai.provider!.options = {
-    apiKey: { env: 'LANGNOSTIC_CONFIG_KEY' },
-    headers: { Authorization: { env: 'LANGNOSTIC_CONFIG_KEY' } },
-  };
-  input.ai.providerOptions = {
-    test: { token: { env: 'LANGNOSTIC_CONFIG_KEY' }, custom: true },
-  };
-  input.ai.temperature = 0.2;
-  input.ai.topP = 0.9;
+  input.ai = { ...input.ai, temperature: 0.2, topP: 0.9 };
   input.groups[0].plugin = {
     module: './plugin.mjs',
     options: {
@@ -142,27 +116,10 @@ test('resolves nested environment references in provider, plugin and generation 
     },
   };
   const result = await load(input);
-  expect(result.ai.model).toMatchObject({
-    options: {
-      apiKey: 'test-secret',
-      headers: { Authorization: 'test-secret' },
-    },
-  });
-  expect(result.ai).toMatchObject({
-    temperature: 0.2,
-    topP: 0.9,
-    providerOptions: { test: { token: 'test-secret', custom: true } },
-  });
+  expect(result.ai).toMatchObject({ temperature: 0.2, topP: 0.9 });
   expect(result.groups[0].plugin).toMatchObject({
     options: { values: [null, 1, true, ''], nested: { key: 'test-secret' } },
   });
-});
-
-test('keeps model strings available for AI SDK default-provider routing', async () => {
-  const input = configuration();
-  delete input.ai.provider;
-  const result = await load(input);
-  expect(result.ai.model).toBe(input.ai.model);
 });
 
 test.each([
@@ -210,22 +167,8 @@ test.each([
   },
 );
 
-test.each(['nullProvider', 'undefinedProvider', 'invalidProvider'])(
-  'rejects a factory that does not return a provider: %s',
-  async (exportName) => {
-    const input = configuration();
-    input.ai.provider!.export = exportName;
-    await expect(load(input)).rejects.toThrow(
-      'ai.provider: Factory must return an AI SDK provider with languageModel()',
-    );
-  },
-);
-
-test('validates the provider model and plugin lifecycle before translation', async () => {
+test('validates plugin lifecycle before translation', async () => {
   const input = configuration();
-  input.ai.provider!.export = 'invalidModel';
-  await expect(load(input)).rejects.toThrow('ai.model');
-  input.ai.provider!.export = 'createProvider';
   input.groups[0].plugin = { module: './plugin.mjs', export: 'invalidPlugin' };
   await expect(load(input)).rejects.toThrow('groups.0.plugin');
 });
@@ -235,22 +178,13 @@ test.each([
   [{ version: undefined }, 'version'],
   [{ unexpected: true }, 'Unrecognized key'],
   [{ ai: { model: '' } }, 'ai.model'],
-  [{ ai: { model: 'test', provider: { module: '' } } }, 'ai.provider.module'],
   [
-    {
-      ai: { model: 'test', provider: { module: './provider.mjs', export: '' } },
-    },
-    'ai.provider.export',
+    { ai: { provider: 'openai', model: 'test', temperature: 'high' } },
+    'ai.temperature',
   ],
-  [{ ai: { model: 'test', temperature: 'high' } }, 'ai.temperature'],
   [
-    {
-      ai: {
-        model: 'test',
-        provider: { module: './provider.mjs', options: [] },
-      },
-    },
-    'ai.provider.options',
+    { ai: { provider: { module: './provider.mjs' }, model: 'test' } },
+    'ai.provider',
   ],
 ])(
   'rejects malformed declarative configuration before loading factories: %j',
@@ -275,7 +209,6 @@ test('supports configuration directories containing URL-special characters', asy
   await fs.mkdir(directory);
   try {
     const input = configuration();
-    input.ai.provider = { module: '../provider.mjs', export: 'createProvider' };
     input.groups[0].plugin = '../plugin.mjs';
     expect((await load(input)).groups[0].plugin.type).toBe('test');
   } finally {

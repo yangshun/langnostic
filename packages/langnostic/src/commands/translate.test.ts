@@ -1,10 +1,11 @@
+import { MockLanguageModelV4 } from 'ai/test';
 import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
 
-import type { ConfigType } from '@/config/types';
+import type { ResolvedConfig } from '@/config/ai';
 import type { TranslationStringArg } from '@/core/types';
 
 const mocks = vi.hoisted(() => ({
-  config: {} as ConfigType,
+  config: {} as ResolvedConfig,
   print: vi.fn(),
   generate: vi.fn(),
   expand: vi.fn(),
@@ -34,7 +35,7 @@ beforeEach(() => {
   vi.spyOn(console, 'info').mockImplementation(() => {});
   mocks.expand.mockResolvedValue([file]);
   mocks.config = {
-    ai: { model: 'test' },
+    ai: { model: new MockLanguageModelV4() },
     localeConfig: { source: 'en', target: ['fr'] },
     groups: [
       {

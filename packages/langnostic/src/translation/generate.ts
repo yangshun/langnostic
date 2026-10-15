@@ -6,7 +6,6 @@ import { z } from 'zod';
 
 import { RUNS_PATH } from '@/core/constants';
 import type {
-  TranslationAI,
   TranslationGroupBatchId,
   TranslationLocale,
   TranslationRequestJob,
@@ -14,6 +13,7 @@ import type {
 } from '@/core/types';
 
 import { getPromptTemplate } from './prompt';
+import type { TranslationAI } from './types';
 
 type BatchStringItemHash = string;
 function hashStringItem(

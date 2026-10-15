@@ -11,9 +11,10 @@ project; the first configuration found is used.
 `langnostic.config.json` is also supported as an alternative JSON filename, with
 lower precedence than `langnostic.json`.
 
-Use TS/JS configuration to supply model instances, plugin instances, or options
-containing functions. Use JSON to configure provider and plugin factories with
-plain data. Both formats use the same translation runner and plugin lifecycle.
+AI configuration uses the same named providers and plain data in every format.
+Use TS/JS for plugin instances or options containing functions. Use JSON for
+plugin factory references. Langnostic creates its internal AI SDK model before
+translation; both formats use the same runner and plugin lifecycle.
 
 `langnostic init` creates a TypeScript configuration. To create `langnostic.json`:
 
@@ -25,18 +26,14 @@ Initialization preserves an existing configuration in any supported format.
 
 ## JSON configuration
 
-Set `version` to `1`. This versions the configuration structure; provider module
-names and model identifiers remain open-ended. This example translates an
+Set `version` to `1`. Model identifiers remain open-ended. This example translates an
 application catalog and Markdown documents:
 
 ```json title="langnostic.json"
 {
   "version": 1,
   "ai": {
-    "provider": {
-      "module": "@ai-sdk/openai",
-      "export": "createOpenAI"
-    },
+    "provider": "openai",
     "model": "gpt-6.1-sol"
   },
   "concurrencyLimit": 5,
@@ -79,13 +76,13 @@ application catalog and Markdown documents:
 }
 ```
 
-Install the referenced packages in your project, just as you would for a TS/JS
-configuration. Langnostic resolves package exports using ESM resolution from the
+Install the referenced plugin packages in your project. Provider adapters are
+included with Langnostic. Langnostic resolves package exports using ESM resolution from the
 configuration file's location. Relative module paths such as
 `./plugins/custom.mjs` are also relative to that file. Installed packages and
 their versions are managed by your package manager and lockfile.
 
-### Provider and plugin factories
+### Plugin factories
 
 A module reference has these fields:
 
@@ -99,13 +96,6 @@ Factories may return their results asynchronously. A plugin factory must return
 a valid `LangnosticPlugin`. Each translation group gets a fresh instance.
 A string such as `"@langnostic/plugin-formatjs"` is shorthand for a reference to
 that module's default factory without options.
-
-The `ai.provider` factory must return an AI SDK provider with a
-`languageModel(modelId)` method. For example, Langnostic loads `createOpenAI`
-from `@ai-sdk/openai`, calls it with `options`, and passes `ai.model` to the
-provider's `languageModel` method. Model identifiers are interpreted by the
-provider package, so new identifiers do not need a Langnostic release. You can
-also omit `ai.provider` to use AI SDK default-provider routing for `ai.model`.
 
 Custom plugins use the same reference format:
 
@@ -126,23 +116,21 @@ configuration or a local wrapper module that exports a factory.
 
 ### Environment-variable references
 
-Within provider `options`, plugin `options`, and `ai.providerOptions`, an object
+In `ai.apiKey`, `ai.headers`, `ai.parameters`, and plugin `options`, an object
 containing only `env` refers to an environment variable:
 
 ```json
 {
   "ai": {
-    "provider": {
-      "module": "@ai-sdk/openai",
-      "export": "createOpenAI",
-      "options": {
-        "apiKey": { "env": "MY_OPENAI_API_KEY" },
-        "headers": {
-          "X-Project": { "env": "PROJECT_ID" }
-        }
-      }
+    "provider": "openai",
+    "model": "gpt-6.1-sol",
+    "apiKey": { "env": "MY_OPENAI_API_KEY" },
+    "headers": {
+      "X-Project": { "env": "PROJECT_ID" }
     },
-    "model": "gpt-6.1-sol"
+    "parameters": {
+      "metadata": { "project": { "env": "PROJECT_ID" } }
+    }
   }
 }
 ```
@@ -153,8 +141,8 @@ variable resolves to an empty string. Strings such as `"${MY_OPENAI_API_KEY}"`
 remain literal strings.
 
 The CLI loads `.env` from its working directory before resolving configuration.
-You can omit explicit credential options when the provider already reads its
-standard environment variable, such as `OPENAI_API_KEY` for `@ai-sdk/openai`.
+You can omit `apiKey` to use a native provider's standard environment variable,
+such as `OPENAI_API_KEY`. Environment references also work in TS/JS configuration.
 
 ## TypeScript and JavaScript configuration
 
@@ -163,14 +151,14 @@ example translates an application catalog and Markdown documents. Each group
 owns a separate plugin instance:
 
 ```typescript title="langnostic.config.ts"
-import { openai } from '@ai-sdk/openai';
 import FormatJSPlugin from '@langnostic/plugin-formatjs';
 import MdxPlugin from '@langnostic/plugin-mdx';
 import type { ConfigType } from 'langnostic';
 
 export default {
   ai: {
-    model: openai('gpt-6.1-sol'),
+    provider: 'openai',
+    model: 'gpt-6.1-sol',
   },
   concurrencyLimit: 5,
   localeConfig: {
@@ -207,12 +195,13 @@ export default {
 } satisfies ConfigType;
 ```
 
-Install each imported provider and plugin separately. The
+Install each imported plugin separately. Langnostic includes the provider
+adapters, so consumers do not install or import AI SDK packages. The
 [quick start](/docs/quick-start) covers installation and setup.
-JavaScript configuration uses the same default export with the TypeScript import
-and `satisfies ConfigType` annotation removed. Existing TS/JS configurations
-continue to work unchanged. `DeclarativeConfigType` and `ModuleReference` are
-also exported for tools that generate JSON configurations.
+JavaScript uses the same default export with the TypeScript import and
+`satisfies ConfigType` annotation removed. `AIConfig`, `AIProvider`,
+`EnvironmentReference`, `DeclarativeConfigType`, and `ModuleReference` are also
+exported for typed configuration and tools that generate JSON.
 
 ## Top-level settings
 
@@ -229,28 +218,83 @@ of files, strings, or target locales in a request.
 
 ## AI settings
 
-| Setting              | Required | Behavior                                                                                 |
-| -------------------- | -------- | ---------------------------------------------------------------------------------------- |
-| `ai.model`           | Yes      | An AI SDK language model instance or a model ID routed by the AI SDK's default provider. |
-| `ai.providerOptions` | No       | Provider-specific options forwarded to AI SDK generation.                                |
-| `ai.temperature`     | No       | Optional sampling setting, when the selected model supports it.                          |
-| `ai.topP`            | No       | Optional sampling setting, when the selected model supports it.                          |
+| Setting          | Required        | Behavior                                                                      |
+| ---------------- | --------------- | ----------------------------------------------------------------------------- |
+| `ai.provider`    | Yes             | `openai`, `anthropic`, `google`, or `openai-compatible`.                      |
+| `ai.model`       | Yes             | Freeform, non-empty model ID understood by the endpoint.                      |
+| `ai.apiKey`      | No              | API key string or an environment-variable reference.                          |
+| `ai.baseURL`     | Compatible only | HTTP(S) API base URL, including its version prefix when needed.               |
+| `ai.headers`     | No              | Additional request headers, with strings or environment references as values. |
+| `ai.parameters`  | No              | Native API request-body additions, with nested environment references.        |
+| `ai.temperature` | No              | Numeric sampling setting, when supported by the model.                        |
+| `ai.topP`        | No              | Numeric sampling setting, when supported by the model.                        |
 
-The model must support the structured translation output used by the runner.
-These docs use `openai('gpt-6.1-sol')`; the provider reads `OPENAI_API_KEY`.
-When using a model ID instead of a provider instance, configure the AI SDK's
-default provider and credentials for that routing.
-In JSON, `ai.model` is a string and `ai.provider` optionally supplies the provider
-factory described above. Generation settings retain the same behavior in both
-configuration formats.
+### Providers and endpoints
 
-Langnostic does not supply defaults for `providerOptions`, `temperature`, or
-`topP`. Avoid setting unsupported sampling parameters on reasoning models.
-Check the [OpenAI provider options](https://ai-sdk.dev/providers/ai-sdk-providers/openai)
-or your provider's AI SDK documentation for supported settings.
+| Provider            | API                     | Default base URL                                   | Default API key variable                               |
+| ------------------- | ----------------------- | -------------------------------------------------- | ------------------------------------------------------ |
+| `openai`            | OpenAI Responses        | `https://api.openai.com/v1`                        | `OPENAI_API_KEY`                                       |
+| `anthropic`         | Anthropic Messages      | `https://api.anthropic.com/v1`                     | `ANTHROPIC_API_KEY`                                    |
+| `google`            | Gemini GenerateContent  | `https://generativelanguage.googleapis.com/v1beta` | `GOOGLE_GENERATIVE_AI_API_KEY`                         |
+| `openai-compatible` | OpenAI Chat Completions | Required in configuration                          | No default; omit `apiKey` for unauthenticated servers. |
 
-The CLI loads a `.env` file from the current working directory. Model selection
-changes do not automatically request fresh translations for existing content.
+Native providers retain their SDK's endpoint and credential defaults. For example,
+the Anthropic adapter also honors `ANTHROPIC_BASE_URL`. An explicit `baseURL`
+overrides the default. Supply the API base, without `/responses`, `/messages`,
+`/chat/completions`, or the Gemini model path; the adapter appends that path.
+
+Model IDs are passed to the adapter without a Langnostic model catalog. Choose a
+model that supports structured translation output. OpenAI-compatible endpoints
+must accept Chat Completions with `response_format.type: "json_schema"`.
+
+An unauthenticated local server needs only these settings:
+
+```json
+{
+  "ai": {
+    "provider": "openai-compatible",
+    "model": "your-local-model",
+    "baseURL": "http://localhost:1234/v1"
+  }
+}
+```
+
+For a custom **Responses** endpoint, use `provider: "openai"` with its `baseURL`
+and credentials. Use `openai-compatible` for Chat Completions endpoints.
+
+### Native request parameters
+
+`parameters` merges recursively into the serialized API request. Use the native
+API's field names and nesting, rather than AI SDK option names. For example:
+
+```json
+{
+  "ai": {
+    "provider": "openai",
+    "model": "gpt-6.1-sol",
+    "parameters": {
+      "reasoning": { "effort": "low" },
+      "text": { "verbosity": "low" }
+    }
+  }
+}
+```
+
+For Anthropic, native additions can include `thinking` and `output_config.effort`.
+For Google, use `generationConfig`, such as
+`{"generationConfig":{"thinkingConfig":{"thinkingBudget":0}}}`.
+The endpoint validates whether a model supports a parameter.
+
+Langnostic preserves the generated model, input, structured-output schema, tool
+definitions and non-streaming request mode. Attempts to replace those fields,
+including replacing a schema's parent object with a scalar or array, are ignored.
+Other object fields merge recursively; arrays and scalar values replace existing
+values. Native parameters take precedence over the plain sampling settings if
+both specify the same request field. Avoid unsupported sampling options on
+reasoning models. Langnostic supplies no default `temperature` or `topP`.
+
+The CLI loads `.env` from its working directory. Changing models does not
+regenerate existing translations automatically.
 
 ## Locale settings
 

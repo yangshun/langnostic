@@ -1,11 +1,11 @@
-import { google } from '@ai-sdk/google';
 import FormatJSPlugin from '@langnostic/plugin-formatjs';
 import MdxPlugin from '@langnostic/plugin-mdx';
 import type { ConfigType } from 'langnostic';
 
 export default {
   ai: {
-    model: google('gemini-2.5-flash'),
+    provider: 'google',
+    model: 'gemini-2.5-flash',
   },
   localeConfig: {
     source: 'en-US',

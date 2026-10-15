@@ -13,12 +13,17 @@ afterEach(() => {
 
 test('accepts a config returned directly by a loader', async () => {
   const config = {
-    ai: { model: 'test/model' },
+    ai: { provider: 'openai', model: 'test/model' },
     groups: [],
     localeConfig: { source: 'en', target: ['fr'] },
   };
   search.mockReturnValue({ config, filepath: '/project/langnostic.config.js' });
-  expect(await Config.load()).toBe(config);
+  const result = await Config.load();
+  expect(result.ai.model).toMatchObject({
+    modelId: 'test/model',
+    provider: 'openai.responses',
+  });
+  expect(result.groups).toBe(config.groups);
 });
 
 test('returns an error when writing the default config fails', () => {

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import type { LangnosticPlugin, TranslationAI } from '@/core/types';
+import type { LangnosticPlugin } from '@/core/types';
 
 import type { ConfigType, DeclarativeConfigType } from './types';
 
@@ -10,15 +10,39 @@ const callable = z.custom(
   (value) => typeof value === 'function',
   'Expected a function',
 );
-const modelSchema = z.union([
-  nonemptyString,
-  z.object({
-    specificationVersion: nonemptyString,
-    provider: nonemptyString,
-    modelId: nonemptyString,
-    doGenerate: callable,
-  }),
-]);
+const environmentReference = z.strictObject({ env: nonemptyString });
+const aiSchema = z
+  .strictObject(
+    {
+      provider: z.enum(['openai', 'anthropic', 'google', 'openai-compatible'], {
+        error:
+          'Set provider to openai, anthropic, google, or openai-compatible. Provider module/export references and implicit default-provider routing are no longer supported.',
+      }),
+      model: z
+        .string({
+          error:
+            'Expected a model ID string. Replace AI SDK model objects with provider and model strings.',
+        })
+        .trim()
+        .min(1),
+      apiKey: z.union([z.string(), environmentReference]).optional(),
+      baseURL: z.url({ protocol: /^https?$/ }).optional(),
+      headers: z
+        .record(z.string(), z.union([z.string(), environmentReference]))
+        .optional(),
+      parameters: z.record(z.string(), z.json()).optional(),
+      temperature: z.number().optional(),
+      topP: z.number().optional(),
+    },
+    {
+      error:
+        'Unsupported AI setting. Replace SDK providerOptions with parameters containing native API request fields.',
+    },
+  )
+  .refine(
+    (ai) => ai.provider !== 'openai-compatible' || ai.baseURL !== undefined,
+    { path: ['baseURL'], message: 'baseURL is required for openai-compatible' },
+  );
 const pluginSchema = z.object({
   type: nonemptyString,
   stringsPerRequest: positiveInteger,
@@ -59,12 +83,7 @@ const groupSchema = z.object({
   ),
 });
 const configSchema = z.object({
-  ai: z.object({
-    model: z.custom<TranslationAI['model']>(
-      (value) => modelSchema.safeParse(value).success,
-      'Expected a model ID or an AI SDK language model',
-    ),
-  }),
+  ai: aiSchema,
   concurrencyLimit: positiveInteger.optional(),
   localeConfig: localeConfigSchema,
   groups: z.array(groupSchema),
@@ -78,15 +97,6 @@ const moduleReferenceSchema = z.strictObject({
 const declarativeConfigSchema = configSchema
   .extend({
     version: z.literal(1),
-    ai: z.strictObject({
-      model: nonemptyString,
-      provider: moduleReferenceSchema.optional(),
-      providerOptions: z
-        .record(z.string(), z.record(z.string(), z.json()))
-        .optional(),
-      temperature: z.number().optional(),
-      topP: z.number().optional(),
-    }),
     groups: z.array(
       groupSchema
         .extend({
@@ -120,9 +130,9 @@ function validate<T extends { groups: Array<{ name: string }> }>(
 }
 
 export function validateConfig(value: unknown): ConfigType {
-  validate(configSchema, value);
-  // Preserve provider and plugin instances, including their prototypes and options.
-  return value as ConfigType;
+  const validated = validate(configSchema, value);
+  // Preserve plugin instances, including their prototypes and options.
+  return { ...(value as ConfigType), ai: validated.ai };
 }
 
 export function validateDeclarativeConfig(

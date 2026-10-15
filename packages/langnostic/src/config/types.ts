@@ -1,7 +1,26 @@
-import type { LangnosticPlugin, TranslationAI } from '@/core/types';
+import type { LangnosticPlugin } from '@/core/types';
+
+export type AIProvider =
+  | 'openai'
+  | 'anthropic'
+  | 'google'
+  | 'openai-compatible';
+
+export type EnvironmentReference = { env: string };
+
+export type AIConfig = Readonly<{
+  provider: AIProvider;
+  model: string;
+  apiKey?: string | EnvironmentReference;
+  baseURL?: string;
+  headers?: Record<string, string | EnvironmentReference>;
+  parameters?: Record<string, ConfigValue>;
+  temperature?: number;
+  topP?: number;
+}>;
 
 export type ConfigType = {
-  ai: TranslationAI;
+  ai: AIConfig;
   concurrencyLimit?: number;
   groups: Array<ConfigGroup>;
   localeConfig: LocaleConfig;
@@ -39,15 +58,8 @@ export type ModuleReference = {
   options?: Record<string, ConfigValue>;
 };
 
-export type DeclarativeConfigType = Omit<ConfigType, 'ai' | 'groups'> & {
+export type DeclarativeConfigType = Omit<ConfigType, 'groups'> & {
   version: 1;
-  ai: {
-    model: string;
-    provider?: ModuleReference;
-    providerOptions?: Record<string, Record<string, ConfigValue>>;
-    temperature?: number;
-    topP?: number;
-  };
   groups: Array<
     Omit<ConfigGroup, 'plugin'> & { plugin: string | ModuleReference }
   >;

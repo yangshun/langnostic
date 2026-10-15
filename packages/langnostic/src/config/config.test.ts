@@ -8,7 +8,8 @@ import type { ConfigType } from 'langnostic';
 
 export default {
   ai: {
-    model: 'openai/gpt-5',
+    provider: 'openai',
+    model: 'arbitrary-model',
   },
   groups: [],
   localeConfig: {
@@ -21,7 +22,7 @@ export default {
 const FIXTURE_PATH = path.join(process.cwd(), '__fixture__');
 const configJSONTest = JSON.stringify({
   version: 1,
-  ai: { model: 'test/model' },
+  ai: { provider: 'openai', model: 'test/model' },
   groups: [],
   localeConfig: { source: 'en', target: ['fr'] },
 });
@@ -58,7 +59,7 @@ describe('Config', () => {
         const config = await Config.load(dir);
 
         expect(config).toMatchObject({
-          ai: { model: 'openai/gpt-5' },
+          ai: { model: { modelId: 'arbitrary-model' } },
           groups: [],
           localeConfig: { source: 'en-US', target: ['zh-CN'] },
         });
@@ -70,7 +71,9 @@ describe('Config', () => {
       fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(path.join(dir, 'langnostic.config.ts'), configFileTest);
       fs.writeFileSync(path.join(dir, 'langnostic.json'), '{"version":2}');
-      expect((await Config.load(dir)).ai.model).toBe('openai/gpt-5');
+      expect((await Config.load(dir)).ai.model).toMatchObject({
+        modelId: 'arbitrary-model',
+      });
     });
 
     test('prefers langnostic.json when both JSON filenames exist', async () => {
@@ -81,7 +84,9 @@ describe('Config', () => {
         path.join(dir, 'langnostic.config.json'),
         '{"version":2}',
       );
-      expect((await Config.load(dir)).ai.model).toBe('test/model');
+      expect((await Config.load(dir)).ai.model).toMatchObject({
+        modelId: 'test/model',
+      });
     });
   });
 
@@ -129,7 +134,7 @@ describe('Config', () => {
       const contents = fs.readFileSync(initialized.filepath!, 'utf8');
       expect(JSON.parse(contents)).toMatchObject({
         version: 1,
-        ai: { provider: { module: '@ai-sdk/openai', export: 'createOpenAI' } },
+        ai: { provider: 'openai' },
         groups: [{ plugin: '@langnostic/plugin-formatjs' }],
       });
       expect(Config.initializeConfig(dir)).toEqual({

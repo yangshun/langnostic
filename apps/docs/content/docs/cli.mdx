@@ -18,8 +18,8 @@ Creates `langnostic.config.ts` in the current directory if no existing project
 configuration is found. If a configuration already exists, the command reports
 its path and leaves it unchanged.
 
-The template imports the OpenAI provider and FormatJS plugin, uses
-`openai('gpt-6.1-sol')`, and targets `zh-CN` from `en-US`. The command does
+The template imports the FormatJS plugin, sets `provider: 'openai'` and
+`model: 'gpt-6.1-sol'`, and targets `zh-CN` from `en-US`. The command does
 not install dependencies, create source catalogs, or configure provider credentials.
 
 ### `--format ts|json`
@@ -29,11 +29,11 @@ npx langnostic init --format json
 ```
 
 Selects the generated configuration format. The default is `ts`. JSON
-initialization creates `langnostic.json` with `version: 1`, an OpenAI
-provider factory reference, and a FormatJS plugin module reference. Existing
+initialization creates `langnostic.json` with `version: 1`, the named OpenAI
+provider, and a FormatJS plugin module reference. Existing
 configurations are preserved regardless of the requested format.
 
-See [Configuration](/docs/configuration#json-configuration) for factory options,
+See [Configuration](/docs/configuration#json-configuration) for provider settings,
 custom plugin modules, and environment-variable references.
 
 ## `translate`

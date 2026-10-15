@@ -12,14 +12,14 @@ The official plugins support [FormatJS catalogs](/docs/plugins/formatjs) and
 
 ## Install plugins
 
-Install the CLI, your AI provider, and the plugins for the formats you use.
+Install the CLI and the plugins for the formats you use.
 This example uses OpenAI and both official plugins:
 
 ```package-install
-npm install langnostic @ai-sdk/openai @langnostic/plugin-formatjs @langnostic/plugin-mdx --save-dev
+npm install langnostic @langnostic/plugin-formatjs @langnostic/plugin-mdx --save-dev
 ```
 
-The CLI does not install plugins or provider packages for you. Make provider
+Langnostic includes provider adapters. Install plugins separately and make provider
 credentials available before translating; the OpenAI provider reads
 `OPENAI_API_KEY` from the environment or your project's `.env` file.
 
@@ -29,14 +29,14 @@ Import each plugin's default factory and assign a new instance to each group.
 This configuration translates a message catalog and MDX documents:
 
 ```typescript title="langnostic.config.ts"
-import { openai } from '@ai-sdk/openai';
 import FormatJSPlugin from '@langnostic/plugin-formatjs';
 import MdxPlugin from '@langnostic/plugin-mdx';
 import type { ConfigType } from 'langnostic';
 
 export default {
   ai: {
-    model: openai('gpt-6.1-sol'),
+    provider: 'openai',
+    model: 'gpt-6.1-sol',
   },
   localeConfig: {
     source: 'en-US',

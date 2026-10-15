@@ -3,9 +3,9 @@ import path from 'node:path';
 
 import { cosmiconfigSync } from 'cosmiconfig';
 
+import { resolveAI, type ResolvedConfig } from './ai';
 import { configFileDefault, configFileJSONDefault } from './config-default';
 import { loadDeclarativeConfig } from './declarative';
-import type { ConfigType } from './types';
 import { validateConfig } from './validate';
 
 const moduleName = 'langnostic';
@@ -21,7 +21,7 @@ const configExplorerSync = cosmiconfigSync(moduleName, {
 });
 
 export default class Config {
-  public static async load(searchFrom?: string): Promise<ConfigType> {
+  public static async load(searchFrom?: string): Promise<ResolvedConfig> {
     const result = configExplorerSync.search(searchFrom);
 
     if (result == null) {
@@ -30,9 +30,11 @@ export default class Config {
       );
     }
 
-    return path.extname(result.filepath) === '.json'
-      ? await loadDeclarativeConfig(result.config, result.filepath)
-      : validateConfig(result.config?.default ?? result.config);
+    if (path.extname(result.filepath) === '.json') {
+      return await loadDeclarativeConfig(result.config, result.filepath);
+    }
+    const config = validateConfig(result.config?.default ?? result.config);
+    return { ...config, ai: resolveAI(config.ai) };
   }
 
   public static initializeConfig(

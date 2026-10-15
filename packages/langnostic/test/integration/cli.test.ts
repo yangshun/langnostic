@@ -1,17 +1,25 @@
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import fs from 'node:fs/promises';
+import { createServer, type Server } from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 
 import { afterAll, beforeAll, expect, test } from 'vite-plus/test';
+
+import type { TranslationStringArg } from '../../src/core/types';
 
 const packageRoot = fileURLToPath(new URL('../../', import.meta.url));
 const repository = path.resolve(packageRoot, '../..');
 let directory: string;
 let consumer: string;
 let cli: string;
+let server: Server;
+let baseURL: string;
+let requests = 0;
+const execFileAsync = promisify(execFile);
 
 beforeAll(async () => {
   directory = await fs.realpath(
@@ -26,10 +34,9 @@ beforeAll(async () => {
       await fs.readFile(path.join(cwd, 'package.json'), 'utf8'),
     );
     const archive = path.join(directory, `${name}.tgz`);
-    execFileSync('vp', ['pm', 'pack', '--out', archive], {
+    await execFileAsync('vp', ['pm', 'pack', '--out', archive], {
       cwd,
       timeout: 30_000,
-      stdio: 'pipe',
     });
     dependencies[metadata.name] = `file:${archive}`;
   }
@@ -46,18 +53,102 @@ beforeAll(async () => {
       dependencies,
     }),
   );
-  execFileSync(
+  await execFileAsync(
     'vp',
     ['install', '--ignore-scripts', '--no-frozen-lockfile', '--prefer-offline'],
     {
       cwd: consumer,
       timeout: 120_000,
-      stdio: 'pipe',
     },
   );
   cli = path.join(consumer, 'node_modules/langnostic/dist/cli.js');
+  server = createServer(async (request, response) => {
+    requests++;
+    response.setHeader('Content-Type', 'application/json');
+    if (
+      request.url !== '/v1/chat/completions' ||
+      request.headers.authorization !== 'Bearer fixture-token'
+    ) {
+      response
+        .writeHead(400)
+        .end(JSON.stringify({ error: { message: 'Invalid fixture request' } }));
+      return;
+    }
+    const mode = request.headers['x-test-mode'];
+    if (mode === 'provider-error') {
+      response.writeHead(400).end(
+        JSON.stringify({
+          error: {
+            message: 'Simulated provider failure',
+            type: 'invalid_request_error',
+          },
+        }),
+      );
+      return;
+    }
+    const chunks = [];
+    for await (const chunk of request) chunks.push(chunk);
+    const body = JSON.parse(Buffer.concat(chunks).toString()) as {
+      model: string;
+      messages: Array<{ role: string; content: string }>;
+    };
+    const text = body.messages.find(
+      (message) => message.role === 'user',
+    )!.content;
+    const payload = JSON.parse(
+      text
+        .slice(text.lastIndexOf('<json>') + 6, text.lastIndexOf('</json>'))
+        .trim(),
+    ) as Array<TranslationStringArg>;
+    const data = payload.map((item) => ({
+      batchId: item.batchId,
+      id: item.id,
+      translations: item.targets.map((locale) => ({
+        locale,
+        string: item.source.string.replace(
+          /Hello/g,
+          locale === 'fr' ? 'Bonjour' : 'Hallo',
+        ),
+      })),
+    }));
+    if (mode === 'missing-row') data.pop();
+    if (mode === 'missing-locale') data[0].translations.pop();
+    response.end(
+      JSON.stringify({
+        id: 'local-chat',
+        object: 'chat.completion',
+        created: 1,
+        model: body.model,
+        choices: [
+          {
+            index: 0,
+            message: {
+              role: 'assistant',
+              content: JSON.stringify(
+                mode === 'invalid-output' ? { invalid: true } : { data },
+              ),
+            },
+            finish_reason: 'stop',
+          },
+        ],
+        usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+      }),
+    );
+  });
+  await new Promise<void>((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', resolve);
+  });
+  const address = server.address();
+  if (!address || typeof address === 'string')
+    throw Error('Missing mock server port');
+  baseURL = `http://127.0.0.1:${address.port}/v1`;
 });
 afterAll(async () => {
+  if (server)
+    await new Promise<void>((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve())),
+    );
   if (directory) await fs.rm(directory, { recursive: true, force: true });
 });
 
@@ -83,41 +174,17 @@ async function fixture(
       ? '{"hello":"Hello"}'
       : '---\ntitle: Hello\nslug: hello\n---\n\nHello\n',
   );
-  const modelSource = `
-const model = {
-  specificationVersion: 'v4', provider: 'local-test', modelId: 'mock', supportedUrls: {},
-  async doGenerate(options) {
-    const mode = process.env.LANGNOSTIC_TEST_MODE;
-    if (mode === 'provider-error') throw Error('Simulated provider failure');
-    if (mode === 'write-error') fs.rename = async () => { throw Error('Simulated write failure'); };
-    const text = options.prompt.find(message => message.role === 'user').content.find(part => part.type === 'text').text;
-    const payload = JSON.parse(text.slice(text.lastIndexOf('<json>') + 6, text.lastIndexOf('</json>')).trim());
-    const data = payload.map(item => ({
-      batchId: item.batchId, id: item.id,
-      translations: item.targets.map(locale => ({ locale, string: item.source.string.replaceAll('Hello', locale === 'fr' ? 'Bonjour' : 'Hallo') })),
-    }));
-    if (mode === 'missing-row') data.pop();
-    if (mode === 'missing-locale') data[0].translations.pop();
-    return {
-      content: [{ type: 'text', text: JSON.stringify({ data }) }],
-      finishReason: { unified: 'stop', raw: 'STOP' },
-      usage: { inputTokens: { total: 1, noCache: 1 }, outputTokens: { total: 1, text: 1 } },
-      warnings: [],
-    };
-  },
-};
-`;
+  const ai = {
+    provider: 'openai-compatible',
+    model: 'any-new-model',
+    baseURL,
+    apiKey: options.declarative
+      ? { env: 'LANGNOSTIC_FIXTURE_TOKEN' }
+      : 'fixture-token',
+    headers: { 'X-Test-Mode': { env: 'LANGNOSTIC_TEST_MODE' } },
+    parameters: { max_tokens: 1000 },
+  };
   if (options.declarative) {
-    await fs.writeFile(
-      path.join(cwd, 'provider.mjs'),
-      `import fs from 'node:fs/promises';
-${modelSource}
-export function createProvider(options) {
-  if (options.token !== 'fixture-token') throw Error('Environment reference was not resolved');
-  return { languageModel(modelId) { return { ...model, modelId }; } };
-}
-`,
-    );
     await fs.writeFile(
       path.join(cwd, '.env'),
       'LANGNOSTIC_FIXTURE_TOKEN=fixture-token\n',
@@ -126,14 +193,7 @@ export function createProvider(options) {
       path.join(cwd, 'langnostic.json'),
       JSON.stringify({
         version: 1,
-        ai: {
-          provider: {
-            module: './provider.mjs',
-            export: 'createProvider',
-            options: { token: { env: 'LANGNOSTIC_FIXTURE_TOKEN' } },
-          },
-          model: 'any-new-model',
-        },
+        ai,
         concurrencyLimit: options.concurrency ?? 2,
         localeConfig: { source: 'en', target: options.locales ?? ['fr'] },
         groups: [
@@ -167,14 +227,14 @@ import FormatJSPlugin from '@langnostic/plugin-formatjs';
 import MdxPlugin from '@langnostic/plugin-mdx';
 import type { ConfigType } from 'langnostic';
 
-${modelSource}
+if (process.env.LANGNOSTIC_TEST_MODE === 'write-error') fs.rename = async () => { throw Error('Simulated write failure'); };
 const group = {
   name: 'app', stringsPerRequest: 1,
   plugin: ${format === 'json' ? 'FormatJSPlugin()' : "MdxPlugin({ frontmatterExcludedKeys: ['slug'] })"},
   paths: [{ source: ${JSON.stringify(options.source ?? source)}, target: ${JSON.stringify(options.target ?? `{locale}.${format}`)} }],
 };
 export default {
-  ai: { model }, concurrencyLimit: ${options.concurrency ?? 2},
+  ai: ${JSON.stringify(ai)}, concurrencyLimit: ${options.concurrency ?? 2},
   localeConfig: { source: 'en', target: ${JSON.stringify(options.locales ?? ['fr'])} },
   groups: [group${options.duplicateGroup ? ', group' : ''}],
 } satisfies ConfigType;
@@ -183,10 +243,9 @@ export default {
   return cwd;
 }
 
-function run(cwd: string, args = ['translate'], mode = 'complete') {
-  const result = spawnSync(process.execPath, [cli, ...args], {
+async function run(cwd: string, args = ['translate'], mode = 'complete') {
+  const child = spawn(process.execPath, [cli, ...args], {
     cwd,
-    encoding: 'utf8',
     timeout: 15_000,
     env: {
       ...process.env,
@@ -195,8 +254,19 @@ function run(cwd: string, args = ['translate'], mode = 'complete') {
       LANGNOSTIC_TEST_MODE: mode,
     },
   });
-  expect(result.error, result.stdout + result.stderr).toBeUndefined();
-  return { ...result, output: result.stdout + result.stderr };
+  let stdout = '';
+  let stderr = '';
+  child.stdout.setEncoding('utf8').on('data', (chunk) => {
+    stdout += chunk;
+  });
+  child.stderr.setEncoding('utf8').on('data', (chunk) => {
+    stderr += chunk;
+  });
+  const status = await new Promise<number | null>((resolve, reject) => {
+    child.on('error', reject);
+    child.on('close', resolve);
+  });
+  return { status, stdout, stderr, output: stdout + stderr };
 }
 
 async function snapshot(cwd: string) {
@@ -220,6 +290,11 @@ test('installs actual tarballs outside the workspace and exposes usable public t
   );
   expect(installed.startsWith(directory)).toBe(true);
   expect(installed.startsWith(repository)).toBe(false);
+  const declarations = await fs.readFile(
+    path.join(installed, 'dist/index.d.ts'),
+    'utf8',
+  );
+  expect(declarations).not.toMatch(/from ["'](?:ai|@ai-sdk\/[^"']*)["']/);
   await fs.writeFile(
     path.join(consumer, 'types.ts'),
     `
@@ -229,12 +304,12 @@ import { buildTranslationStrings, writeJsonAtomic, type ConfigType, type Declara
 export const reference = { module: '@langnostic/plugin-mdx', options: { frontmatterExcludedKeys: ['slug'] } } satisfies ModuleReference;
 export const plainConfig = {
   version: 1,
-  ai: { provider: { module: './provider.mjs', export: 'createProvider' }, model: 'any-new-model' },
+  ai: { provider: 'openai', model: 'any-new-model', parameters: { reasoning: { effort: 'low' } } },
   localeConfig: { source: 'en', target: ['fr'] },
   groups: [{ name: 'docs', plugin: reference, paths: [{ source: 'en.mdx', target: '{locale}.mdx' }] }],
 } satisfies DeclarativeConfigType;
 export const config = {
-  ai: { model: 'local-test/mock' }, localeConfig: { source: 'en', target: ['fr'] },
+  ai: { provider: 'openai-compatible', model: 'local-test/mock', baseURL: 'http://localhost:1234/v1' }, localeConfig: { source: 'en', target: ['fr'] },
   groups: [FormatJSPlugin(), MdxPlugin()].map((plugin, index) => ({
     name: String(index), plugin, paths: [{ source: 'en.json', target: 'fr.json' }],
   })),
@@ -262,17 +337,17 @@ export const strings = buildTranslationStrings(
       files: ['types.ts'],
     }),
   );
-  execFileSync(
+  await execFileAsync(
     'vp',
     ['exec', 'tsc', '--project', path.join(consumer, 'tsconfig.json')],
-    { cwd: packageRoot, timeout: 30_000, stdio: 'pipe' },
+    { cwd: packageRoot, timeout: 30_000 },
   );
 });
 
 test('initializes a config and prints help from the installed CLI', async () => {
   const cwd = path.join(consumer, randomUUID());
   await fs.mkdir(cwd);
-  expect(run(cwd, ['init']).status).toBe(0);
+  expect((await run(cwd, ['init'])).status).toBe(0);
   const config = await fs.readFile(
     path.join(cwd, 'langnostic.config.ts'),
     'utf8',
@@ -282,7 +357,7 @@ test('initializes a config and prints help from the installed CLI', async () => 
   );
   expect(config).toContain('plugin: FormatJSPlugin()');
   expect(config).toContain('satisfies ConfigType');
-  expect(run(cwd, ['--help']).output).toContain('translate');
+  expect((await run(cwd, ['--help'])).output).toContain('translate');
 });
 
 test.each(['langnostic.json', 'langnostic.config.json'])(
@@ -290,7 +365,7 @@ test.each(['langnostic.json', 'langnostic.config.json'])(
   async (filename) => {
     const cwd = path.join(consumer, randomUUID());
     await fs.mkdir(cwd);
-    expect(run(cwd, ['init', '--format', 'json']).status).toBe(0);
+    expect((await run(cwd, ['init', '--format', 'json'])).status).toBe(0);
     const filepath = path.join(cwd, filename);
     if (filename !== 'langnostic.json') {
       await fs.rename(path.join(cwd, 'langnostic.json'), filepath);
@@ -298,10 +373,10 @@ test.each(['langnostic.json', 'langnostic.config.json'])(
     const original = await fs.readFile(filepath, 'utf8');
     expect(JSON.parse(original)).toMatchObject({
       version: 1,
-      ai: { provider: { module: '@ai-sdk/openai', export: 'createOpenAI' } },
+      ai: { provider: 'openai' },
       groups: [{ plugin: '@langnostic/plugin-formatjs' }],
     });
-    expect(run(cwd, ['init']).output).toContain('already exists');
+    expect((await run(cwd, ['init'])).output).toContain('already exists');
     expect(await fs.readFile(filepath, 'utf8')).toBe(original);
     expect(await fs.readdir(cwd)).toEqual([filename]);
   },
@@ -326,10 +401,12 @@ test.each([
       );
     }
     const before = await snapshot(cwd);
-    const dry = run(cwd, ['translate', '--dry-run'], 'provider-error');
+    const beforeRequests = requests;
+    const dry = await run(cwd, ['translate', '--dry-run'], 'provider-error');
+    expect(requests).toBe(beforeRequests);
     expect(dry.status, dry.output).toBe(0);
     expect(await snapshot(cwd)).toEqual(before);
-    const result = run(cwd);
+    const result = await run(cwd);
     expect(result.status, result.output).toBe(0);
     const target = await fs.readFile(path.join(cwd, `fr.${format}`), 'utf8');
     if (format === 'json') {
@@ -340,7 +417,7 @@ test.each([
       expect(target).toContain('Bonjour');
     }
     const translated = await snapshot(cwd);
-    const again = run(cwd, ['translate'], 'provider-error');
+    const again = await run(cwd, ['translate'], 'provider-error');
     expect(again.status, again.output).toBe(0);
     expect(again.output).toContain('Nothing to translate');
     expect(await snapshot(cwd)).toEqual(translated);
@@ -354,7 +431,7 @@ test('reports missing plugin packages from declarative configuration without cha
   config.groups[0].plugin = 'uninstalled-langnostic-plugin';
   await fs.writeFile(filepath, JSON.stringify(config));
   const before = await snapshot(cwd);
-  const result = run(cwd);
+  const result = await run(cwd);
   expect(result.status, result.output).toBe(1);
   expect(result.output).toContain(
     'groups.0.plugin: Cannot load "uninstalled-langnostic-plugin"',
@@ -371,7 +448,7 @@ test('translates multiple JSON chunks into new directories and is idempotent', a
     path.join(cwd, 'en.json'),
     '{"a":"Hello","b":{"defaultMessage":"Hello again","description":"Greeting"}}',
   );
-  const result = run(cwd);
+  const result = await run(cwd);
   expect(result.status, result.output).toBe(0);
   expect(result.output).toContain('1 successful');
   expect(result.output).toContain('en.json');
@@ -385,7 +462,7 @@ test('translates multiple JSON chunks into new directories and is idempotent', a
     JSON.parse(await fs.readFile(path.join(cwd, 'new/de.json'), 'utf8')).a,
   ).toBe('Hallo');
   const before = await snapshot(cwd);
-  const again = run(cwd, ['translate'], 'provider-error');
+  const again = await run(cwd, ['translate'], 'provider-error');
   expect(again.status, again.output).toBe(0);
   expect(again.output).toContain('Nothing to translate');
   expect(await snapshot(cwd)).toEqual(before);
@@ -405,7 +482,7 @@ test.each([false, true])(
       '{ "hello": "Bonjour", "obsolete": "Old" }\n',
     );
     const before = await snapshot(cwd);
-    const result = run(
+    const result = await run(
       cwd,
       ['translate', '--dry-run', '--debug'],
       'provider-error',
@@ -421,7 +498,7 @@ test('MDX dry runs preserve targets and registries while real removal-only runs 
     path.join(cwd, 'en.mdx'),
     '---\ntitle: Hello\nslug: old\nremoved: Old\n---\n\nFirst\n\nSecond\n\nThird\n',
   );
-  const first = run(cwd);
+  const first = await run(cwd);
   expect(first.status, first.output).toBe(0);
   await fs.writeFile(
     path.join(cwd, 'fr.mdx'),
@@ -432,10 +509,10 @@ test('MDX dry runs preserve targets and registries while real removal-only runs 
     '---\ntitle: Hello\nslug: new\n---\n\nThird\n\nFirst\n',
   );
   const before = await snapshot(cwd);
-  const dry = run(cwd, ['translate', '--dry-run'], 'provider-error');
+  const dry = await run(cwd, ['translate', '--dry-run'], 'provider-error');
   expect(dry.status, dry.output).toBe(0);
   expect(await snapshot(cwd)).toEqual(before);
-  const real = run(cwd, ['translate'], 'provider-error');
+  const real = await run(cwd, ['translate'], 'provider-error');
   expect(real.status, real.output).toBe(0);
   const target = await fs.readFile(path.join(cwd, 'fr.mdx'), 'utf8');
   expect(target).toContain('Troisième\n\nPremier');
@@ -445,7 +522,7 @@ test('MDX dry runs preserve targets and registries while real removal-only runs 
 
 test('returns a nonzero exit code with provider errors and the affected filename', async () => {
   const cwd = await fixture();
-  const result = run(cwd, ['translate'], 'provider-error');
+  const result = await run(cwd, ['translate'], 'provider-error');
   expect(result.status).toBe(1);
   expect(result.output).toContain('Simulated provider failure');
   expect(result.output).toContain('en.json');
@@ -453,14 +530,18 @@ test('returns a nonzero exit code with provider errors and the affected filename
   expect(await fs.readdir(cwd)).toEqual(['en.json', 'langnostic.config.ts']);
 });
 
-test.each(['missing-row', 'missing-locale'])(
+test.each(['missing-row', 'missing-locale', 'invalid-output'])(
   'rejects incomplete model results without creating target files: %s',
   async (mode) => {
     const cwd = await fixture('json', { locales: ['fr', 'de'] });
-    const result = run(cwd, ['translate'], mode);
+    const result = await run(cwd, ['translate'], mode);
     expect(result.status).toBe(1);
     expect(result.output).toContain(
-      mode === 'missing-row' ? 'Missing translation' : 'Missing locale de',
+      mode === 'missing-row'
+        ? 'Missing translation'
+        : mode === 'missing-locale'
+          ? 'Missing locale de'
+          : 'No object generated',
     );
     expect(await fs.readdir(cwd)).toEqual(['en.json', 'langnostic.config.ts']);
   },
@@ -470,7 +551,7 @@ test.each(['json', 'mdx'] as const)(
   'reports write failures and preserves files and registries for %s',
   async (format) => {
     const cwd = await fixture(format);
-    const first = run(cwd);
+    const first = await run(cwd);
     expect(first.status, first.output).toBe(0);
     await fs.writeFile(
       path.join(cwd, `en.${format}`),
@@ -479,7 +560,7 @@ test.each(['json', 'mdx'] as const)(
         : '---\ntitle: Hello\nslug: hello\n---\n\nHello\n\nHello again\n',
     );
     const before = await snapshot(cwd);
-    const result = run(cwd, ['translate'], 'write-error');
+    const result = await run(cwd, ['translate'], 'write-error');
     expect(result.status, result.output).toBe(1);
     expect(result.output).toContain('Simulated write failure');
     expect(result.output).toContain('0 successful');
@@ -497,7 +578,7 @@ test.each([
   async (options, message) => {
     const cwd = await fixture('json', options);
     const before = await snapshot(cwd);
-    const result = run(cwd);
+    const result = await run(cwd);
     expect(result.status, result.output).toBe(1);
     expect(result.output).toContain(message);
     expect(await snapshot(cwd)).toEqual(before);
@@ -506,7 +587,7 @@ test.each([
 
 test('warns when source patterns match no files', async () => {
   const cwd = await fixture('json', { source: 'missing*.json' });
-  const result = run(cwd);
+  const result = await run(cwd);
   expect(result.status, result.output).toBe(0);
   expect(result.output).toContain('No source files matched: missing*.json');
 });

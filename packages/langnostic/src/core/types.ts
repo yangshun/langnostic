@@ -1,13 +1,4 @@
-import type { generateText, LanguageModel } from 'ai';
-
 import type { TranslationGroupBatch } from './runner/translation-group-batch';
-
-export type TranslationAI = Readonly<{
-  model: LanguageModel;
-  providerOptions?: Parameters<typeof generateText>[0]['providerOptions'];
-  temperature?: Parameters<typeof generateText>[0]['temperature'];
-  topP?: Parameters<typeof generateText>[0]['topP'];
-}>;
 
 export type TranslationLocale = string;
 export type TranslationFileItem = Readonly<{
