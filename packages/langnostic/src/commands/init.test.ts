@@ -17,16 +17,13 @@ afterEach(() => vi.restoreAllMocks());
 test.each(['created', 'exists', 'error'] as const)(
   'reports config initialization result: %s',
   async (result) => {
-    const exit = vi
-      .spyOn(process, 'exit')
-      .mockImplementation(() => undefined as never);
     vi.mocked(Config.initializeConfig).mockReturnValue(
       result === 'error'
         ? { result, filepath: null }
         : { result, filepath: `${process.cwd()}/langnostic.config.ts` },
     );
     vi.mocked(outro).mockClear();
-    await init();
+    expect(await init()).toBe(result === 'error' ? 1 : 0);
     const s = vi.mocked(spinner).mock.results.slice(-1)[0]?.value;
     expect(s.start).toHaveBeenCalledWith('Creating default configuration...');
     expect(s.stop).toHaveBeenCalledWith(
@@ -39,6 +36,5 @@ test.each(['created', 'exists', 'error'] as const)(
       ),
     );
     expect(outro).toHaveBeenCalledTimes(result === 'created' ? 1 : 0);
-    expect(exit).toHaveBeenCalledWith(0);
   },
 );

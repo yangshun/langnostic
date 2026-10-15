@@ -44,6 +44,17 @@ export class TranslationGroupBatch {
     return this.#translations;
   }
 
+  get errors(): ReadonlyArray<Error> {
+    return this.#errors;
+  }
+
+  get readyToWrite() {
+    return (
+      this.#status === 'translating' &&
+      this.#translations.length === this.#strings.length
+    );
+  }
+
   startTranslating() {
     if (this.#status !== 'queued') {
       return;
@@ -61,16 +72,22 @@ export class TranslationGroupBatch {
     }
 
     this.#translations.push(...results);
-
-    if (this.#translations.length === this.#strings.length) {
-      this.#status = 'success';
-      this.#time.end = Date.now();
-    }
   }
 
-  addError(error: Error) {
-    this.#errors.push(error);
-    if (this.#status === 'success' || this.#status === 'error') {
+  markSuccess() {
+    if (!this.readyToWrite) {
+      throw Error('Cannot complete a batch before all translations are ready.');
+    }
+
+    this.#status = 'success';
+    this.#time.end = Date.now();
+  }
+
+  addError(error: unknown) {
+    this.#errors.push(
+      error instanceof Error ? error : new Error(String(error)),
+    );
+    if (this.#status === 'error') {
       return;
     }
 

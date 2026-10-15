@@ -39,6 +39,7 @@ test('renders queued, translating, successful and failed batches and summary', a
   complete.addTranslations([
     { ...string, targets: [{ locale: 'fr', string: 'Bonjour' }] },
   ]);
+  complete.markSuccess();
   const failed = new TranslationGroupBatch('./failed', []);
   failed.addError(Error('failed'));
   const groups: TranslationGroups = new Map([
@@ -66,12 +67,17 @@ test('renders queued, translating, successful and failed batches and summary', a
   expect(batchStatusSymbol('translating')).toBe('⠋');
   vi.advanceTimersByTime(80);
   expect(batchStatusSymbol('translating')).toBe('⠙');
+  expect(vi.getTimerCount()).toBe(0);
   printGroupStatus(groups);
   const printed = vi.mocked(logUpdate).mock.calls.slice(-1)[0]?.[0];
   expect(printed).toContain('[app]');
   expect(printed).toContain('(1 string)');
   expect(printed).toContain('(2 strings)');
   expect(printed).toContain('1 successful');
+  expect(printed).toContain('1 failed');
+  expect(printed).toContain('queued');
+  expect(printed).toContain('complete');
+  expect(printed).toContain('failed');
   expect(printed).toContain('4 total');
   expect(printed).toContain('Duration:');
   printGroupStatus(groups, { showSummary: false });

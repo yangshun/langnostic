@@ -36,5 +36,5 @@ export async function init() {
     }
   }
 
-  process.exit(0);
+  return initResult.result === 'error' ? 1 : 0;
 }

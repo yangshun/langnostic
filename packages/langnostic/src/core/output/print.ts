@@ -25,16 +25,20 @@ export function printGroupStatus(
 
   const results: Array<string> = [];
   let completedBatches = 0;
+  let failedBatches = 0;
   let totalBatches = 0;
 
   for (const group of groups.values()) {
     for (const batch of group.batches.values()) {
       const batchPrefix =
         chalk.dim(formatGroupId(group.groupId).padStart(longestGroupIdLength)) +
-        ` ${chalk.visible(batch.batchId.replace(/^\.\//, ''))}`;
+        ` ${batch.batchId.replace(/^\.\//, '')}`;
 
       if (batch.status === 'success') {
         completedBatches++;
+      }
+      if (batch.status === 'error') {
+        failedBatches++;
       }
       totalBatches++;
 
@@ -48,6 +52,9 @@ export function printGroupStatus(
           chalk.dim(formatDuration(batch.duration)),
         ].join(' '),
       );
+      for (const error of batch.errors) {
+        results.push(`  ${chalk.red(error.message)}`);
+      }
     }
   }
 
@@ -57,6 +64,7 @@ export function printGroupStatus(
       [
         `${chalk.bold('Batches:')} `,
         `${chalk.bold.green(`${completedBatches} successful`)},`,
+        `${chalk.bold.red(`${failedBatches} failed`)},`,
         `${totalBatches} total`,
       ].join(' '),
       `${chalk.bold('Duration:')} ${formatDuration(Date.now() - timeStart)}`,

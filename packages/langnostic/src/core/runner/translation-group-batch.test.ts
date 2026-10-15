@@ -26,6 +26,8 @@ describe('TranslationGroupBatch', () => {
     expect(batch.translations).toEqual([]);
     expect(batch.status).toBe('queued');
     expect(batch.duration).toBeNull();
+    expect(batch.readyToWrite).toBe(false);
+    expect(() => batch.markSuccess()).toThrow('all translations are ready');
     expect(() => batch.addTranslations(results)).toThrow('not translating');
     batch.startTranslating();
     vi.advanceTimersByTime(100);
@@ -35,13 +37,16 @@ describe('TranslationGroupBatch', () => {
     expect(batch.status).toBe('translating');
     vi.advanceTimersByTime(200);
     batch.addTranslations([results[1]]);
+    expect(batch.status).toBe('translating');
+    expect(batch.readyToWrite).toBe(true);
+    batch.markSuccess();
     expect(batch.status).toBe('success');
     expect(batch.translations).toEqual(results);
     vi.advanceTimersByTime(100);
     expect(batch.duration).toBe(300);
     batch.addError(Error('late error'));
-    expect(batch.status).toBe('success');
-    expect(batch.duration).toBe(300);
+    expect(batch.status).toBe('error');
+    expect(batch.duration).toBe(400);
   });
 
   test('records errors before and during translation', () => {
@@ -50,7 +55,11 @@ describe('TranslationGroupBatch', () => {
     const queued = new TranslationGroupBatch('file', strings);
     queued.addError(Error('failed'));
     expect(queued.status).toBe('error');
-    queued.addError(Error('again'));
+    queued.addError('again');
+    expect(queued.errors.map((error) => error.message)).toEqual([
+      'failed',
+      'again',
+    ]);
     expect(queued.duration).toBeNull();
     const started = new TranslationGroupBatch('file', strings);
     started.startTranslating();

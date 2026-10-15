@@ -109,7 +109,7 @@ export async function translate({
 
   if (jobQueue.length === 0) {
     console.info('Nothing to translate. Terminating.');
-    process.exit(0);
+    return 0;
   }
 
   function print() {
@@ -119,37 +119,47 @@ export async function translate({
   if (dryRun) {
     console.info('[DRY RUN] Pending translations:\n');
     printGroupStatus(groups, { showSummary: false });
-    process.exit(0);
+    return 0;
   }
 
   const intervalId = setInterval(print, REFRESH_INTERVAL);
 
   // Translate the strings
-  await mapAsync(
-    jobQueue,
-    async ({ batch, group, job }) => {
-      try {
-        batch.startTranslating();
-        const instructions = (await group.plugin.getInstructions?.()) || '';
-        const translatedStrings = await generate(config.ai, job, {
-          debug,
-          instructions,
-        });
+  try {
+    await mapAsync(
+      jobQueue,
+      async ({ batch, group, job }) => {
+        try {
+          batch.startTranslating();
+          const instructions = (await group.plugin.getInstructions?.()) || '';
+          const translatedStrings = await generate(config.ai, job, {
+            debug,
+            instructions,
+          });
 
-        batch.addTranslations(translatedStrings);
+          batch.addTranslations(translatedStrings);
 
-        if (batch.status === 'success') {
-          await group.plugin.onTranslationBatchComplete(batch.translations);
+          if (batch.readyToWrite) {
+            await group.plugin.onTranslationBatchComplete(batch.translations);
+            batch.markSuccess();
+          }
+        } catch (err) {
+          batch.addError(err);
         }
-      } catch (err) {
-        batch.addError(err as Error);
-      }
-    },
-    config.concurrencyLimit ?? DEFAULT_CONCURRENCY_LIMIT,
-  );
+      },
+      config.concurrencyLimit ?? DEFAULT_CONCURRENCY_LIMIT,
+    );
+  } finally {
+    clearInterval(intervalId);
+  }
 
   printGroupStatus(groups);
 
-  clearInterval(intervalId);
-  process.exit(0);
+  return Array.from(groups.values()).some((group) =>
+    Array.from(group.batches.values()).some(
+      (batch) => batch.status === 'error',
+    ),
+  )
+    ? 1
+    : 0;
 }

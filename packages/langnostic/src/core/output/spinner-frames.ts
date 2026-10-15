@@ -4,11 +4,7 @@ import type { TranslationGroupBatchStatus } from '@/core/types';
 
 const spinnerFrames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 
-let index = 0;
-
-setInterval(() => {
-  index = (index + 1) % spinnerFrames.length;
-}, 80);
+const startTime = Date.now();
 
 export function batchStatusSymbol(status: TranslationGroupBatchStatus) {
   switch (status) {
@@ -16,7 +12,9 @@ export function batchStatusSymbol(status: TranslationGroupBatchStatus) {
       return chalk.grey('.');
     }
     case 'translating': {
-      return spinnerFrames[index];
+      return spinnerFrames[
+        Math.floor((Date.now() - startTime) / 80) % spinnerFrames.length
+      ];
     }
     case 'success': {
       return chalk.green('✔');

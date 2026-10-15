@@ -29,14 +29,10 @@ const file = {
   source: { locale: 'en', path: './locales/en.json' },
   targets: [{ locale: 'fr', path: './locales/fr.json' }],
 };
-const exited = Error('process exited');
 
 beforeEach(() => {
   vi.useFakeTimers();
   vi.clearAllMocks();
-  vi.spyOn(process, 'exit').mockImplementation(() => {
-    throw exited;
-  });
   vi.spyOn(console, 'info').mockImplementation(() => {});
   mocks.expand.mockResolvedValue([file]);
   mocks.config = {
@@ -71,7 +67,7 @@ afterEach(() => {
 });
 
 test('discovers files, chunks requests and completes each batch once with all translations', async () => {
-  await expect(translate({ debug: true })).rejects.toBe(exited);
+  await expect(translate({ debug: true })).resolves.toBe(0);
   const plugin = mocks.config.groups[0].plugin;
   expect(mocks.expand).toHaveBeenCalledWith(
     mocks.config.localeConfig,
@@ -113,7 +109,7 @@ test('honors group overrides and optional instructions and refreshes progress', 
       targets: [{ locale: 'de', string: s.id }],
     }));
   });
-  await expect(translate({})).rejects.toBe(exited);
+  await expect(translate({})).resolves.toBe(0);
   expect(mocks.expand).toHaveBeenCalledWith(group.localeConfig, group.paths[0]);
   expect(mocks.generate).toHaveBeenCalledTimes(3);
   expect(mocks.generate.mock.calls[0][2]).toEqual({
@@ -127,7 +123,7 @@ test('exits without generating when no strings need translation', async () => {
   vi.mocked(
     mocks.config.groups[0].plugin.getTranslationStrings,
   ).mockResolvedValue([]);
-  await expect(translate({})).rejects.toBe(exited);
+  await expect(translate({})).resolves.toBe(0);
   expect(console.info).toHaveBeenCalledWith(
     'Nothing to translate. Terminating.',
   );
@@ -139,7 +135,7 @@ test('exits without generating when no strings need translation', async () => {
 });
 
 test('dry runs show pending batches without calling the model or writing translations', async () => {
-  await expect(translate({ dryRun: true })).rejects.toBe(exited);
+  await expect(translate({ dryRun: true })).resolves.toBe(0);
   expect(mocks.print).toHaveBeenCalledWith(expect.any(Map), {
     showSummary: false,
   });
@@ -156,7 +152,7 @@ test('dry runs show pending batches without calling the model or writing transla
 test('dry runs skip maintenance even when there are no pending translations', async () => {
   const plugin = mocks.config.groups[0].plugin;
   vi.mocked(plugin.getTranslationStrings).mockResolvedValue([]);
-  await expect(translate({ dryRun: true })).rejects.toBe(exited);
+  await expect(translate({ dryRun: true })).resolves.toBe(0);
   expect(plugin.onTranslationStart).not.toHaveBeenCalled();
   expect(mocks.generate).not.toHaveBeenCalled();
 });
@@ -168,11 +164,52 @@ test('reports failed generation and continues with other batches', async () => {
     { ...strings[1], batchId: 'other' },
   ]);
   mocks.generate.mockRejectedValueOnce(Error('provider failed'));
-  await expect(translate({})).rejects.toBe(exited);
+  await expect(translate({})).resolves.toBe(1);
   const groups = mocks.print.mock.calls.slice(-1)[0]?.[0];
   expect(groups.get('app').batches.get(strings[0].batchId).status).toBe(
     'error',
   );
   expect(groups.get('app').batches.get('other').status).toBe('success');
   expect(plugin.onTranslationBatchComplete).toHaveBeenCalledOnce();
+});
+
+test('does not mark a batch successful until its files have been persisted', async () => {
+  const plugin = mocks.config.groups[0].plugin;
+  vi.mocked(plugin.onTranslationBatchComplete).mockImplementation(async () => {
+    await vi.advanceTimersByTimeAsync(100);
+    const groups = mocks.print.mock.calls.slice(-1)[0][0];
+    expect(groups.get('app').batches.get(strings[0].batchId).status).toBe(
+      'translating',
+    );
+  });
+  expect(await translate({})).toBe(0);
+  const groups = mocks.print.mock.calls.slice(-1)[0][0];
+  expect(groups.get('app').batches.get(strings[0].batchId).status).toBe(
+    'success',
+  );
+});
+
+test('reports persistence failures and clears the progress timer', async () => {
+  const plugin = mocks.config.groups[0].plugin;
+  vi.mocked(plugin.onTranslationBatchComplete).mockRejectedValueOnce(
+    Error('disk full'),
+  );
+  expect(await translate({})).toBe(1);
+  const batch = mocks.print.mock.calls
+    .slice(-1)[0][0]
+    .get('app')
+    .batches.get(strings[0].batchId);
+  expect(batch.status).toBe('error');
+  expect(batch.errors[0].message).toBe('disk full');
+  expect(vi.getTimerCount()).toBe(0);
+});
+
+test('propagates maintenance failures before starting requests or progress timers', async () => {
+  const plugin = mocks.config.groups[0].plugin;
+  vi.mocked(plugin.onTranslationStart!).mockRejectedValueOnce(
+    Error('read-only filesystem'),
+  );
+  await expect(translate({})).rejects.toThrow('read-only filesystem');
+  expect(mocks.generate).not.toHaveBeenCalled();
+  expect(vi.getTimerCount()).toBe(0);
 });
