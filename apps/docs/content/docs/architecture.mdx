@@ -20,7 +20,7 @@ The runner is the orchestration engine that manages the entire translation lifec
 
 ### Plugins
 
-Plugins handle format-specific operations for different file types (JSON, MDX, etc.):
+Plugins handle format-specific operations for different file types (FormatJS JSON, MDX, etc.):
 
 - **Loading**: Reads and parses files in their specific format
 - **Change Detection**: Determines what content needs translation
@@ -31,7 +31,7 @@ Plugins handle format-specific operations for different file types (JSON, MDX, e
 This separation of concerns provides several benefits:
 
 - **Flexibility**: New file formats can be added by creating plugins without modifying the runner
-- **Optimization**: Each plugin can optimize for its format (e.g., hash-based detection for MDX, key comparison for JSON)
+- **Optimization**: Each plugin can optimize for its format (e.g., hash-based detection for MDX, message ID comparison for FormatJS)
 - **Reusability**: The runner handles all the complex orchestration (concurrency, batching, AI calls) once
 - **Extensibility**: Plugin-specific instructions allow format-specific AI guidance
 
@@ -64,7 +64,7 @@ export default {
   groups: [
     {
       name: 'app',
-      plugin: JsonPlugin(),
+      plugin: FormatJSPlugin(),
       paths: [
         {
           source: './src/locales/en-US.json',
@@ -116,10 +116,10 @@ Targets: [
 
 Each plugin implements its own change detection strategy:
 
-**JSON Plugin:**
+**FormatJS Plugin:**
 
 ```typescript
-// Compares object keys
+// Compares message IDs
 Source (en-US.json): { "welcome": "Hello", "new": "New key" }
 Target (zh-CN.json): { "welcome": "你好" }
 
@@ -216,7 +216,7 @@ Job 3: Strings 101-120
 - **Merge with existing content**: Combines new translations with existing files
 - **Write files**: Updates target files while preserving format and structure
 
-**Example (JSON Plugin):**
+**Example (FormatJS Plugin):**
 
 ```typescript
 // Receives from runner:
@@ -267,7 +267,7 @@ The runner and plugins communicate through a well-defined interface:
 
 ```typescript
 interface LangnosticPlugin {
-  type: string; // Plugin identifier (e.g., 'json', 'mdx')
+  type: string; // Plugin identifier (e.g., 'formatjs', 'mdx')
   stringsPerRequest: number; // How many strings to translate per AI request
 
   // Runner calls these methods in sequence:

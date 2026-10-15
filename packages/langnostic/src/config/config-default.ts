@@ -1,7 +1,7 @@
 // TODO: Define as a `.ts` file and bundle into the package as a string during build time
 export const configFileDefault = `
 import { openai } from '@ai-sdk/openai';
-import JsonPlugin from '@langnostic/plugin-json';
+import FormatJSPlugin from '@langnostic/plugin-formatjs';
 import type { ConfigType } from 'langnostic';
 
 export default {
@@ -17,7 +17,7 @@ export default {
           target: './src/locales/{locale}.json',
         },
       ],
-      plugin: JsonPlugin(),
+      plugin: FormatJSPlugin(),
     },
   ],
   localeConfig: {

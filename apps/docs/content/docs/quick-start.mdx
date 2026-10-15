@@ -16,14 +16,14 @@ Get Langnostic up and running in your project in just a few minutes.
 ## Prerequisites
 
 - Node.js 18 or higher
-- A project with source locale files in JSON or Markdown/MDX format
+- A project with source locale files in FormatJS JSON or Markdown/MDX format
 
 ## Installation
 
 Install Langnostic in your project:
 
 ```package-install
-npm install langnostic @langnostic/plugin-json --save-dev
+npm install langnostic @langnostic/plugin-formatjs --save-dev
 ```
 
 ## Ignore the `.langnostic` directory
@@ -46,7 +46,7 @@ This creates a `langnostic.config.ts` file in the root of the project:
 
 ```typescript title="langnostic.config.ts"
 import { openai } from '@ai-sdk/openai';
-import JsonPlugin from '@langnostic/plugin-json';
+import FormatJSPlugin from '@langnostic/plugin-formatjs';
 import type { ConfigType } from 'langnostic';
 
 export default {
@@ -62,7 +62,7 @@ export default {
           target: './src/locales/{locale}.json',
         },
       ],
-      plugin: JsonPlugin(),
+      plugin: FormatJSPlugin(),
     },
   ],
   localeConfig: {
@@ -90,7 +90,7 @@ Create a group that targets the source locale file at `src/locales/en-US.json`:
 
 ```typescript title="langnostic.config.ts"
 import { openai } from '@ai-sdk/openai';
-import JsonPlugin from '@langnostic/plugin-json';
+import FormatJSPlugin from '@langnostic/plugin-formatjs';
 import type { ConfigType } from 'langnostic';
 
 export default {
@@ -104,7 +104,7 @@ export default {
   groups: [
     {
       name: 'app-strings',
-      plugin: JsonPlugin(),
+      plugin: FormatJSPlugin(),
       paths: [
         {
           source: './src/locales/en-US.json', // Path to source file

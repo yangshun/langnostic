@@ -1,7 +1,7 @@
 {
-  "name": "@langnostic/plugin-json",
+  "name": "@langnostic/plugin-formatjs",
   "version": "0.0.10",
-  "description": "JSON plugin for Langnostic",
+  "description": "FormatJS message catalog plugin for Langnostic",
   "license": "MIT",
   "files": [
     "dist"

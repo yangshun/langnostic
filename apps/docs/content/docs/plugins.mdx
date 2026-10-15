@@ -4,10 +4,13 @@ title: Using plugins
 
 {/* Reference: https://vite.dev/guide/using-plugins.html */}
 
-Langnostic plugins handle file format-specific (JSON, MDX, etc.) operations:
+Langnostic plugins handle format-specific (FormatJS JSON, MDX, etc.) operations:
 
 - **Loading**: Reads and parses files in their specific format
 - **Change Detection**: Determines what content needs translation
 - **Writing**: Writes translated content back to files while preserving format
+
+Use `FormatJSPlugin` from `@langnostic/plugin-formatjs` for React Intl/FormatJS
+message catalogs. This package replaces `@langnostic/plugin-json`.
 
 _Page in-progress._

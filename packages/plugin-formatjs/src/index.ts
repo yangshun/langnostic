@@ -17,7 +17,7 @@ type TranslationEntry =
   | Readonly<{ defaultMessage: string; description: string }>
   | string;
 
-export default function JsonPlugin(): LangnosticPlugin {
+export default function FormatJSPlugin(): LangnosticPlugin {
   const files: Array<TranslationFileMetadata> = [];
   const pendingUpdates: Array<() => Promise<void>> = [];
 
@@ -101,7 +101,7 @@ export default function JsonPlugin(): LangnosticPlugin {
       // Start tracking files
       files.push(...filesMetadata);
     },
-    type: 'json',
+    type: 'formatjs',
   };
 }
 

@@ -16,19 +16,22 @@ Fast, scalable, and efficient translation system to continuously translate strin
 
 ## 📦 Supported file formats
 
-- **JSON** - Locale files with ICU message format support
+- **FormatJS JSON** - React Intl/FormatJS message catalogs with ICU syntax
 - **MDX** - Documentation files with frontmatter and content translation
+
+`@langnostic/plugin-formatjs` replaces `@langnostic/plugin-json`. Update your
+dependency and import it as `FormatJSPlugin`; locale file paths remain `.json`.
 
 ## 🚀 Quick start
 
 ### Installation
 
 ```bash
-npm install langnostic
+npm install langnostic @langnostic/plugin-formatjs
 # or
-pnpm add langnostic
+pnpm add langnostic @langnostic/plugin-formatjs
 # or
-yarn add langnostic
+yarn add langnostic @langnostic/plugin-formatjs
 ```
 
 ### Initialize configuration
@@ -41,7 +44,7 @@ This creates a `langnostic.config.ts` file with default settings:
 
 ```typescript
 import { openai } from '@ai-sdk/openai';
-import JsonPlugin from '@langnostic/plugin-json';
+import FormatJSPlugin from '@langnostic/plugin-formatjs';
 import type { ConfigType } from 'langnostic';
 
 export default {
@@ -57,7 +60,7 @@ export default {
           target: './src/locales/{locale}.json',
         },
       ],
-      plugin: JsonPlugin(),
+      plugin: FormatJSPlugin(),
     },
   ],
   localeConfig: {
@@ -94,7 +97,7 @@ npx langnostic translate --debug
 
 ## 🎯 Use cases
 
-### JSON locale files
+### FormatJS message catalogs
 
 Perfect for translating application strings with support for:
 
@@ -145,7 +148,7 @@ This monorepo contains:
 ### Core packages
 
 - **`packages/langnostic`** - Main CLI tool and core functionality
-- **`packages/plugin-json`** - JSON file format plugin
+- **`packages/plugin-formatjs`** - FormatJS message catalog plugin
 - **`packages/plugin-mdx`** - MDX file format plugin
 - **`packages/typescript-config`** - Shared TypeScript configurations
 
@@ -178,7 +181,7 @@ export default {
   groups: [
     {
       name: 'app',
-      plugin: JsonPlugin(),
+      plugin: FormatJSPlugin(),
       paths: [
         {
           source: './src/locales/en-US.json',
@@ -281,7 +284,7 @@ do not require provider API keys.
 
 The integration suite builds and packs the three libraries, installs their tarballs
 in a temporary consumer project, checks the published types, and runs the real CLI
-against JSON and MDX files. Installing the consumer's dependencies may require
+against FormatJS JSON and MDX files. Installing the consumer's dependencies may require
 registry access. Translation requests use a local mock model and need no API keys.
 CI runs checks, type checks, coverage, integration tests, documentation validation,
 and builds from the repository root.

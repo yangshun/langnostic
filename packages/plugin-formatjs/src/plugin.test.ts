@@ -6,7 +6,7 @@ import path from 'node:path';
 import type { TranslationFileMetadata, LangnosticPlugin } from 'langnostic';
 import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
 
-import JsonPlugin from './index';
+import FormatJSPlugin from './index';
 import { processFileForChanges } from './json-change-detector';
 
 type TranslationStringResult = Parameters<
@@ -16,7 +16,7 @@ type TranslationStringResult = Parameters<
 let dir: string;
 let file: TranslationFileMetadata;
 beforeEach(async () => {
-  dir = await mkdtemp(path.join(os.tmpdir(), 'langnostic-json-'));
+  dir = await mkdtemp(path.join(os.tmpdir(), 'langnostic-formatjs-'));
   file = {
     source: { locale: 'en', path: path.join(dir, 'en.json') },
     targets: ['fr', 'de'].map((locale) => ({
@@ -52,9 +52,9 @@ test('discovers missing strings, removes obsolete keys and writes sorted transla
     file.targets[0].path,
     JSON.stringify({ obsolete: 'Remove', kept: 'Garder' }),
   );
-  const plugin = JsonPlugin();
+  const plugin = FormatJSPlugin();
   await plugin.trackFiles([file]);
-  expect(plugin.type).toBe('json');
+  expect(plugin.type).toBe('formatjs');
   expect(plugin.stringsPerRequest).toBe(50);
   expect(await plugin.getInstructions?.()).toContain('ICU');
   const strings = await plugin.getTranslationStrings();
@@ -96,7 +96,7 @@ test('plans removal-only changes without writing until a real run starts', async
     file.targets[0].path,
     '{ "hello": "Bonjour", "old": "Old" }\n',
   );
-  const plugin = JsonPlugin();
+  const plugin = FormatJSPlugin();
   await plugin.trackFiles([{ ...file, targets: [file.targets[0]] }]);
   const before = await readFile(file.targets[0].path, 'utf8');
   expect(await plugin.getTranslationStrings()).toEqual([]);
@@ -110,7 +110,7 @@ test('plans removal-only changes without writing until a real run starts', async
 });
 
 test('ignores empty and unrelated batches but reports unreadable sources', async () => {
-  const plugin = JsonPlugin();
+  const plugin = FormatJSPlugin();
   await plugin.trackFiles([file]);
   await plugin.onTranslationBatchComplete([]);
   await plugin.onTranslationBatchComplete([
@@ -144,7 +144,7 @@ test('handles empty and missing targets when detecting changes', async () => {
 test('preserves unreadable target JSON and reports target read failures', async () => {
   await writeFile(file.source.path, '{"hello":"Hello"}');
   await writeFile(file.targets[0].path, 'invalid');
-  const plugin = JsonPlugin();
+  const plugin = FormatJSPlugin();
   await plugin.trackFiles([{ ...file, targets: [file.targets[0]] }]);
   await expect(
     plugin.onTranslationBatchComplete([result('hello', 'Bonjour')]),
@@ -166,7 +166,7 @@ test('creates missing destination directories and leaves no temporary files', as
     locale: 'fr',
     path: path.join(dir, 'new-directory/fr.json'),
   };
-  const plugin = JsonPlugin();
+  const plugin = FormatJSPlugin();
   await plugin.trackFiles([{ ...file, targets: [target] }]);
   await plugin.onTranslationBatchComplete([result('hello', 'Bonjour')]);
   expect(JSON.parse(await readFile(target.path, 'utf8'))).toEqual({

@@ -20,7 +20,7 @@ beforeAll(async () => {
   consumer = path.join(directory, 'consumer');
   await fs.mkdir(consumer);
   const dependencies: Record<string, string> = {};
-  for (const name of ['langnostic', 'plugin-json', 'plugin-mdx']) {
+  for (const name of ['langnostic', 'plugin-formatjs', 'plugin-mdx']) {
     const cwd = path.join(repository, 'packages', name);
     const metadata = JSON.parse(
       await fs.readFile(path.join(cwd, 'package.json'), 'utf8'),
@@ -86,7 +86,7 @@ async function fixture(
     path.join(cwd, 'langnostic.config.ts'),
     `
 import fs from 'node:fs/promises';
-import JsonPlugin from '@langnostic/plugin-json';
+import FormatJSPlugin from '@langnostic/plugin-formatjs';
 import MdxPlugin from '@langnostic/plugin-mdx';
 import type { ConfigType } from 'langnostic';
 
@@ -114,7 +114,7 @@ const model = {
 };
 const group = {
   name: 'app', stringsPerRequest: 1,
-  plugin: ${format === 'json' ? 'JsonPlugin()' : "MdxPlugin({ frontmatterExcludedKeys: ['slug'] })"},
+  plugin: ${format === 'json' ? 'FormatJSPlugin()' : "MdxPlugin({ frontmatterExcludedKeys: ['slug'] })"},
   paths: [{ source: ${JSON.stringify(options.source ?? source)}, target: ${JSON.stringify(options.target ?? `{locale}.${format}`)} }],
 };
 export default {
@@ -167,12 +167,12 @@ test('installs actual tarballs outside the workspace and exposes usable public t
   await fs.writeFile(
     path.join(consumer, 'types.ts'),
     `
-import JsonPlugin from '@langnostic/plugin-json';
+import FormatJSPlugin from '@langnostic/plugin-formatjs';
 import MdxPlugin from '@langnostic/plugin-mdx';
 import { buildTranslationStrings, writeJsonAtomic, type ConfigType } from 'langnostic';
 export const config = {
   ai: { model: 'local-test/mock' }, localeConfig: { source: 'en', target: ['fr'] },
-  groups: [JsonPlugin(), MdxPlugin()].map((plugin, index) => ({
+  groups: [FormatJSPlugin(), MdxPlugin()].map((plugin, index) => ({
     name: String(index), plugin, paths: [{ source: 'en.json', target: 'fr.json' }],
   })),
 } satisfies ConfigType;
@@ -210,9 +210,15 @@ test('initializes a config and prints help from the installed CLI', async () => 
   const cwd = path.join(consumer, randomUUID());
   await fs.mkdir(cwd);
   expect(run(cwd, ['init']).status).toBe(0);
-  expect(
-    await fs.readFile(path.join(cwd, 'langnostic.config.ts'), 'utf8'),
-  ).toContain('satisfies ConfigType');
+  const config = await fs.readFile(
+    path.join(cwd, 'langnostic.config.ts'),
+    'utf8',
+  );
+  expect(config).toContain(
+    "import FormatJSPlugin from '@langnostic/plugin-formatjs';",
+  );
+  expect(config).toContain('plugin: FormatJSPlugin()');
+  expect(config).toContain('satisfies ConfigType');
   expect(run(cwd, ['--help']).output).toContain('translate');
 });
 

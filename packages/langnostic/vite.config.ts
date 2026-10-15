@@ -17,7 +17,7 @@ export default defineConfig({
         command: 'vp test run --config vite.integration.config.ts',
         dependsOn: [
           'langnostic#build:package',
-          '@langnostic/plugin-json#build:package',
+          '@langnostic/plugin-formatjs#build:package',
           '@langnostic/plugin-mdx#build:package',
         ],
         cache: false,

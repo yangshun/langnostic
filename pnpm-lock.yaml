@@ -246,9 +246,9 @@ importers:
       '@ai-sdk/google':
         specifier: ^4.0.95
         version: 4.0.95(zod@4.6.7)
-      '@langnostic/plugin-json':
+      '@langnostic/plugin-formatjs':
         specifier: workspace:^
-        version: link:../../packages/plugin-json
+        version: link:../../packages/plugin-formatjs
       '@langnostic/plugin-mdx':
         specifier: workspace:^
         version: link:../../packages/plugin-mdx
@@ -323,7 +323,7 @@ importers:
         specifier: 'catalog:'
         version: 5.0.4(@opentelemetry/api@1.9.0)(@types/node@26.6.5)(@vitest/browser-preview@5.0.4)(@vitest/coverage-v8@5.0.4)(@vitest/ui@5.0.4)(@voidzero-dev/vite-plus-core@1.2.0(@types/node@26.6.5)(@volar/typescript@2.4.28(typescript@7.0.2))(esbuild@0.28.2)(jiti@2.7.0)(typescript@7.0.2)(yaml@2.9.1))
 
-  packages/plugin-json:
+  packages/plugin-formatjs:
     dependencies:
       fs-extra:
         specifier: 'catalog:'

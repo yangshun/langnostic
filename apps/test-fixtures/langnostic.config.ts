@@ -1,5 +1,5 @@
 import { google } from '@ai-sdk/google';
-import JsonPlugin from '@langnostic/plugin-json';
+import FormatJSPlugin from '@langnostic/plugin-formatjs';
 import MdxPlugin from '@langnostic/plugin-mdx';
 import type { ConfigType } from 'langnostic';
 
@@ -14,7 +14,7 @@ export default {
   groups: [
     {
       name: 'app',
-      plugin: JsonPlugin(),
+      plugin: FormatJSPlugin(),
       paths: [
         {
           source: './src/locales/en-US.json',

@@ -11,7 +11,7 @@
   },
   "devDependencies": {
     "@ai-sdk/google": "^4.0.95",
-    "@langnostic/plugin-json": "workspace:^",
+    "@langnostic/plugin-formatjs": "workspace:^",
     "@langnostic/plugin-mdx": "workspace:^",
     "langnostic": "workspace:^"
   }
