@@ -6,7 +6,7 @@ import matter from 'gray-matter';
 import type { TranslationFileMetadata, LangnosticPlugin } from 'langnostic';
 import { afterEach, beforeEach, expect, test } from 'vite-plus/test';
 
-import mdxPlugin from './index';
+import mdxPlugin, { type PluginOptions } from './index';
 import { processFileForChanges } from './mdx-change-detector';
 import { generateHash, generateMDXContentHashList } from './mdx-file';
 import registryManager from './registry-manager';
@@ -34,6 +34,18 @@ const doc = (
   content: string,
   data: Record<string, string> = { title: 'Hello', slug: 'hello' },
 ) => matter.stringify(content, data);
+
+async function applyFileChanges(
+  metadata: TranslationFileMetadata,
+  options?: PluginOptions,
+) {
+  const updates: Array<() => Promise<void>> = [];
+  const changes = await processFileForChanges(metadata, options, updates);
+  for (const update of updates) {
+    await update();
+  }
+  return changes;
+}
 
 test('discovers and writes MDX translations and persists the registry for incremental runs', async () => {
   await writeFile(file.source.path, doc('# Hello'));
@@ -127,7 +139,7 @@ test('reorders and removes translated blocks and frontmatter without generating 
     }),
   );
   await writeFile(file.source.path, doc('Third\n\nFirst', { title: 'Hello' }));
-  expect(await processFileForChanges(oneTarget)).toEqual({
+  expect(await applyFileChanges(oneTarget)).toEqual({
     content: { fr: [] },
     frontmatter: { fr: [] },
   });
@@ -154,7 +166,7 @@ test('updates only removed frontmatter while preserving the content registry', a
     doc('Premier', { title: 'Bonjour', removed: 'Ancien' }),
   );
   await writeFile(file.source.path, doc('First', { title: 'Hello' }));
-  await processFileForChanges(oneTarget);
+  await applyFileChanges(oneTarget);
   expect(matter(await readFile(file.targets[0].path, 'utf8')).data).toEqual({
     title: 'Bonjour',
   });
@@ -173,7 +185,7 @@ test('updates only reordered blocks while preserving target frontmatter', async 
     doc('Premier\n\nDeuxième', { title: 'Bonjour', slug: 'hello' }),
   );
   await writeFile(file.source.path, doc('Second\n\nFirst'));
-  await processFileForChanges(oneTarget, { frontmatterExcludedKeys: [] });
+  await applyFileChanges(oneTarget, { frontmatterExcludedKeys: [] });
   const target = matter(await readFile(file.targets[0].path, 'utf8'));
   expect(target.content.trim()).toBe('Deuxième\n\nPremier');
   expect(target.data.title).toBe('Bonjour');
@@ -193,7 +205,7 @@ test('copies changed excluded fields and removes excluded fields deleted from so
     doc('Bonjour', { title: 'Bonjour', slug: 'old', removed: 'obsolete' }),
   );
   expect(
-    await processFileForChanges(oneTarget, {
+    await applyFileChanges(oneTarget, {
       frontmatterExcludedKeys: ['slug', 'removed'],
     }),
   ).toEqual({ content: { fr: [] }, frontmatter: { fr: [] } });
@@ -201,6 +213,48 @@ test('copies changed excluded fields and removes excluded fields deleted from so
     title: 'Bonjour',
     slug: 'hello',
   });
+});
+
+test('discovery leaves MDX content, frontmatter and registry bytes unchanged', async () => {
+  const metadata = { ...file, targets: [file.targets[0]] };
+  const options = { frontmatterExcludedKeys: ['slug'] };
+  await writeFile(
+    file.source.path,
+    doc('First\n\nSecond\n\nThird', {
+      title: 'Hello',
+      slug: 'old',
+      removed: 'Old',
+    }),
+  );
+  await registryManager().updateFileRegistry(metadata, options);
+  await writeFile(
+    file.targets[0].path,
+    doc('Premier\n\nDeuxième\n\nTroisième', {
+      title: 'Bonjour',
+      slug: 'old',
+      removed: 'Ancien',
+    }),
+  );
+  await writeFile(file.source.path, doc('Second\n\nFirst'));
+  const registryPath = path.join(dir, 'en.langnostic.json');
+  const paths = [file.source.path, file.targets[0].path, registryPath];
+  const before = await Promise.all(
+    paths.map((filePath) => readFile(filePath, 'utf8')),
+  );
+  const plugin = mdxPlugin(options);
+  await plugin.trackFiles([metadata]);
+  expect(await plugin.getTranslationStrings()).toEqual([]);
+  expect(await plugin.getTranslationStrings()).toEqual([]);
+  expect(
+    await Promise.all(paths.map((filePath) => readFile(filePath, 'utf8'))),
+  ).toEqual(before);
+  await plugin.onTranslationStart?.();
+  const target = matter(await readFile(file.targets[0].path, 'utf8'));
+  expect(target.content.trim()).toBe('Deuxième\n\nPremier');
+  expect(target.data).toEqual({ title: 'Bonjour', slug: 'hello' });
+  expect(await readFile(registryPath, 'utf8')).not.toBe(before[2]);
+  await plugin.onTranslationStart?.();
+  expect(await plugin.getTranslationStrings()).toEqual([]);
 });
 
 test('updates a legacy registry without content metadata', async () => {

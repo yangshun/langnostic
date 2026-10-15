@@ -51,6 +51,7 @@ beforeEach(() => {
           stringsPerRequest: 2,
           trackFiles: vi.fn().mockResolvedValue(undefined),
           getTranslationStrings: vi.fn().mockResolvedValue(strings),
+          onTranslationStart: vi.fn().mockResolvedValue(undefined),
           onTranslationBatchComplete: vi.fn().mockResolvedValue(undefined),
           getInstructions: vi.fn().mockResolvedValue('Preserve markup'),
         },
@@ -77,6 +78,7 @@ test('discovers files, chunks requests and completes each batch once with all tr
     mocks.config.groups[0].paths[0],
   );
   expect(plugin.trackFiles).toHaveBeenCalledWith([file]);
+  expect(plugin.onTranslationStart).toHaveBeenCalledOnce();
   expect(mocks.generate).toHaveBeenCalledTimes(2);
   expect(mocks.generate).toHaveBeenNthCalledWith(
     1,
@@ -102,6 +104,7 @@ test('honors group overrides and optional instructions and refreshes progress', 
   group.localeConfig = { source: 'en', target: ['de'] };
   group.stringsPerRequest = 1;
   delete group.plugin.getInstructions;
+  delete group.plugin.onTranslationStart;
   mocks.config.concurrencyLimit = 1;
   mocks.generate.mockImplementation(async (_ai, job) => {
     await vi.advanceTimersByTimeAsync(100);
@@ -129,6 +132,9 @@ test('exits without generating when no strings need translation', async () => {
     'Nothing to translate. Terminating.',
   );
   expect(mocks.generate).not.toHaveBeenCalled();
+  expect(
+    mocks.config.groups[0].plugin.onTranslationStart,
+  ).toHaveBeenCalledOnce();
   expect(vi.getTimerCount()).toBe(0);
 });
 
@@ -139,9 +145,20 @@ test('dry runs show pending batches without calling the model or writing transla
   });
   expect(mocks.generate).not.toHaveBeenCalled();
   expect(
+    mocks.config.groups[0].plugin.onTranslationStart,
+  ).not.toHaveBeenCalled();
+  expect(
     mocks.config.groups[0].plugin.onTranslationBatchComplete,
   ).not.toHaveBeenCalled();
   expect(vi.getTimerCount()).toBe(0);
+});
+
+test('dry runs skip maintenance even when there are no pending translations', async () => {
+  const plugin = mocks.config.groups[0].plugin;
+  vi.mocked(plugin.getTranslationStrings).mockResolvedValue([]);
+  await expect(translate({ dryRun: true })).rejects.toBe(exited);
+  expect(plugin.onTranslationStart).not.toHaveBeenCalled();
+  expect(mocks.generate).not.toHaveBeenCalled();
 });
 
 test('reports failed generation and continues with other batches', async () => {

@@ -27,6 +27,7 @@ function compareJsonData(
 
 export async function processFileForChanges(
   file: TranslationFileMetadata,
+  pendingUpdates: Array<() => Promise<void>> = [],
 ): Promise<Record<TranslationLocale, Array<string>>> {
   const sourceContent = await fs.readFile(file.source.path, 'utf8');
   const sourceJson = JSON.parse(String(sourceContent));
@@ -51,7 +52,9 @@ export async function processFileForChanges(
       removedKeys.forEach((key) => {
         delete targetJson[key];
       });
-      await outputJson(target.path, targetJson, { spaces: 2 });
+      pendingUpdates.push(() =>
+        outputJson(target.path, targetJson, { spaces: 2 }),
+      );
     }
   }
 

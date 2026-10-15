@@ -75,6 +75,11 @@ test('discovers missing strings, removes obsolete keys and writes sorted transla
     ]),
   );
   expect(JSON.parse(await readFile(file.targets[0].path, 'utf8'))).toEqual({
+    obsolete: 'Remove',
+    kept: 'Garder',
+  });
+  await plugin.onTranslationStart?.();
+  expect(JSON.parse(await readFile(file.targets[0].path, 'utf8'))).toEqual({
     kept: 'Garder',
   });
   await plugin.onTranslationBatchComplete([
@@ -89,6 +94,25 @@ test('discovers missing strings, removes obsolete keys and writes sorted transla
   });
   expect(Object.keys(target)).toEqual(['a', 'kept', 'z']);
   expect(JSON.parse(await readFile(file.targets[1].path, 'utf8'))).toEqual({});
+});
+
+test('plans removal-only changes without writing until a real run starts', async () => {
+  await writeFile(file.source.path, '{"hello":"Hello"}');
+  await writeFile(
+    file.targets[0].path,
+    '{ "hello": "Bonjour", "old": "Old" }\n',
+  );
+  const plugin = JsonPlugin();
+  await plugin.trackFiles([{ ...file, targets: [file.targets[0]] }]);
+  const before = await readFile(file.targets[0].path, 'utf8');
+  expect(await plugin.getTranslationStrings()).toEqual([]);
+  expect(await plugin.getTranslationStrings()).toEqual([]);
+  expect(await readFile(file.targets[0].path, 'utf8')).toBe(before);
+  await plugin.onTranslationStart?.();
+  expect(JSON.parse(await readFile(file.targets[0].path, 'utf8'))).toEqual({
+    hello: 'Bonjour',
+  });
+  await plugin.onTranslationStart?.();
 });
 
 test('ignores empty, unrelated and unreadable source batches', async () => {

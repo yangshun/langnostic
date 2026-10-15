@@ -20,6 +20,7 @@ export type PluginOptions = Readonly<{
 export default function mdxPlugin(options?: PluginOptions): LangnosticPlugin {
   const files: Array<TranslationFileMetadata> = [];
   const registry = registryManager();
+  const pendingUpdates: Array<() => Promise<void>> = [];
 
   return {
     async getInstructions() {
@@ -36,11 +37,16 @@ export default function mdxPlugin(options?: PluginOptions): LangnosticPlugin {
       ].join('\n');
     },
     async getTranslationStrings() {
+      pendingUpdates.length = 0;
       const translationStrings: Array<TranslationStringArg> = [];
 
       for (const file of files) {
         // Process file for changes
-        const changes = await processFileForChanges(file, options);
+        const changes = await processFileForChanges(
+          file,
+          options,
+          pendingUpdates,
+        );
 
         const sourceContent = await fs.readFile(file.source.path, 'utf8');
         const { content, data: sourceFrontmatter } = grayMatter(sourceContent);
@@ -63,6 +69,11 @@ export default function mdxPlugin(options?: PluginOptions): LangnosticPlugin {
       }
 
       return translationStrings;
+    },
+    async onTranslationStart() {
+      for (const update of pendingUpdates.splice(0)) {
+        await update();
+      }
     },
     async onTranslationBatchComplete(translatedStrings) {
       if (translatedStrings.length === 0) {

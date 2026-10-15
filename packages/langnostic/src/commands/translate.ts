@@ -99,6 +99,14 @@ export async function translate({
     }
   }
 
+  if (!dryRun) {
+    await Promise.all(
+      Array.from(groups.values()).map((group) =>
+        group.plugin.onTranslationStart?.(),
+      ),
+    );
+  }
+
   if (jobQueue.length === 0) {
     console.info('Nothing to translate. Terminating.');
     process.exit(0);

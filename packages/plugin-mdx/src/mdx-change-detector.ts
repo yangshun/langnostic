@@ -131,6 +131,7 @@ function detectContentDiff(
 export async function processFileForChanges(
   file: TranslationFileMetadata,
   options?: PluginOptions,
+  pendingUpdates: Array<() => Promise<void>> = [],
 ): Promise<{
   content: Record<TranslationLocale, ReadonlyArray<string>>;
   frontmatter: Record<TranslationLocale, ReadonlyArray<string>>;
@@ -187,7 +188,7 @@ export async function processFileForChanges(
           registryData.frontmatter,
         );
 
-        await rebuildTargetContent({
+        const rebuiltContent = rebuildTargetContent({
           contentDiff,
           frontmatterDiff,
           frontmatterExcludedKeys,
@@ -198,6 +199,11 @@ export async function processFileForChanges(
           targetFrontmatter,
           targetMDXContent,
         });
+        if (rebuiltContent !== undefined) {
+          pendingUpdates.push(() =>
+            fse.outputFile(target.path, rebuiltContent, 'utf8'),
+          );
+        }
 
         // Update registry state
         if (frontmatterDiff.isReorderOrRemoval) {
@@ -228,7 +234,7 @@ export async function processFileForChanges(
     registryUpdatedFrontmatter ||
     Object.keys(registryUpdatedMDXContent).length > 0
   ) {
-    await registry.save(file.source.path, {
+    const updatedRegistry: Registry = {
       content: {
         source: {
           ...registryData.content.source,
@@ -243,7 +249,8 @@ export async function processFileForChanges(
         },
       },
       frontmatter: registryUpdatedFrontmatter || registryData.frontmatter,
-    });
+    };
+    pendingUpdates.push(() => registry.save(file.source.path, updatedRegistry));
   }
 
   return result;
@@ -255,7 +262,7 @@ export async function processFileForChanges(
  * 2. Frontmatter removals without translation keys
  * 3. Changes to excluded frontmatter keys.
  */
-async function rebuildTargetContent({
+function rebuildTargetContent({
   contentDiff,
   frontmatterDiff,
   frontmatterExcludedKeys,
@@ -317,7 +324,7 @@ async function rebuildTargetContent({
     updatedTargetFrontmatter,
   );
 
-  await fse.outputFile(target.path, `${updatedTargetContent.trim()}\n`, 'utf8');
+  return `${updatedTargetContent.trim()}\n`;
 }
 
 // Test exports

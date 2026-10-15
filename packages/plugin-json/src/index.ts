@@ -16,6 +16,7 @@ type TranslationEntry =
 
 export default function JsonPlugin(): LangnosticPlugin {
   const files: Array<TranslationFileMetadata> = [];
+  const pendingUpdates: Array<() => Promise<void>> = [];
 
   return {
     async getInstructions() {
@@ -34,11 +35,15 @@ export default function JsonPlugin(): LangnosticPlugin {
       ].join('\n');
     },
     async getTranslationStrings() {
+      pendingUpdates.length = 0;
       const translationStrings: Array<TranslationStringArg> = [];
 
       for (const file of files) {
         // Process file to get keys that need to be translated
-        const keysToTranslate = await processFileForChanges(file);
+        const keysToTranslate = await processFileForChanges(
+          file,
+          pendingUpdates,
+        );
 
         const sourceJson = await readJson(file.source.path);
 
@@ -52,6 +57,11 @@ export default function JsonPlugin(): LangnosticPlugin {
       }
 
       return translationStrings;
+    },
+    async onTranslationStart() {
+      for (const update of pendingUpdates.splice(0)) {
+        await update();
+      }
     },
     async onTranslationBatchComplete(translatedStrings) {
       if (!translatedStrings.length) {

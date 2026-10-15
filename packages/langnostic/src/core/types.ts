@@ -69,9 +69,14 @@ export type LangnosticPlugin = {
    */
   getInstructions?: () => Promise<string>;
   /**
-   * Return a list of strings to be translated and their target locales
+   * Return strings and their target locales without modifying files.
    */
   getTranslationStrings: () => Promise<ReadonlyArray<TranslationStringArg>>;
+  /**
+   * Apply maintenance planned during discovery, including removal-only changes.
+   * Called after discovery on real runs only, even when no AI calls are needed.
+   */
+  onTranslationStart?: () => Promise<void>;
   /**
    * Called when the runner completes translating strings in an entire batch
    */
