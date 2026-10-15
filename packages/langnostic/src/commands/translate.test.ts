@@ -10,9 +10,7 @@ const mocks = vi.hoisted(() => ({
   expand: vi.fn(),
 }));
 vi.mock('@/config', () => ({
-  default: class {
-    config = mocks.config;
-  },
+  default: { load: async () => mocks.config },
 }));
 vi.mock('@/core', () => ({ expandTargetPaths: mocks.expand }));
 vi.mock('@/core/output/print', () => ({ printGroupStatus: mocks.print }));

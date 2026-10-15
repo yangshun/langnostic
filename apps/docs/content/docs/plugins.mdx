@@ -71,6 +71,40 @@ Each factory returns a `LangnosticPlugin`. A plugin instance stores its group's
 tracked files and options, so create a separate instance for every group, even
 when several groups use the same format.
 
+### JSON configuration
+
+In `langnostic.json`, reference each plugin's factory module. Use a string for its
+default factory without options, or an object to supply options:
+
+```json
+{
+  "groups": [
+    {
+      "name": "docs",
+      "plugin": {
+        "module": "@langnostic/plugin-mdx",
+        "options": {
+          "frontmatterExcludedKeys": ["slug", "date", "tags"]
+        }
+      },
+      "paths": [
+        {
+          "source": "./docs/en-US/**/*.mdx",
+          "target": "./docs/{locale}/**/*.mdx"
+        }
+      ]
+    }
+  ]
+}
+```
+
+For FormatJS, `"plugin": "@langnostic/plugin-formatjs"` is sufficient.
+Package names and local modules are resolved from the configuration file's
+location. Use `export` to select a named factory. Each group receives a new plugin
+instance, including when groups reference the same module. See the
+[complete JSON example](/docs/configuration#json-configuration) for required
+top-level fields, provider configuration, and environment references.
+
 Pass format-specific options to the factory. Put `paths`, `localeConfig`, and
 `stringsPerRequest` on the group. See
 [Configuration](/docs/configuration#translation-groups) for all group fields.

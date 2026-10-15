@@ -15,9 +15,16 @@ try {
     .command(
       'init',
       'Initializes a config file',
-      () => {},
-      async () => {
-        process.exitCode = await init();
+      {
+        format: {
+          choices: ['ts', 'json'] as const,
+          default: 'ts' as const,
+          description: 'Configuration file format',
+          type: 'string',
+        },
+      },
+      async (argv) => {
+        process.exitCode = await init({ format: argv.format });
       },
     )
     .command(

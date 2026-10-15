@@ -24,3 +24,31 @@ export type ConfigGroup = {
   plugin: LangnosticPlugin; // Plugin to use for the group
   stringsPerRequest?: number; // Optional, maximum number of strings per request
 };
+
+export type ConfigValue =
+  | null
+  | boolean
+  | number
+  | string
+  | Array<ConfigValue>
+  | { [key: string]: ConfigValue };
+
+export type ModuleReference = {
+  module: string;
+  export?: string;
+  options?: Record<string, ConfigValue>;
+};
+
+export type DeclarativeConfigType = Omit<ConfigType, 'ai' | 'groups'> & {
+  version: 1;
+  ai: {
+    model: string;
+    provider?: ModuleReference;
+    providerOptions?: Record<string, Record<string, ConfigValue>>;
+    temperature?: number;
+    topP?: number;
+  };
+  groups: Array<
+    Omit<ConfigGroup, 'plugin'> & { plugin: string | ModuleReference }
+  >;
+};

@@ -1,4 +1,8 @@
-export type { ConfigType } from '@/config/types';
+export type {
+  ConfigType,
+  DeclarativeConfigType,
+  ModuleReference,
+} from '@/config/types';
 export type {
   LangnosticPlugin,
   TranslationFileItem,

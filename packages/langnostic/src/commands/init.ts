@@ -5,14 +5,14 @@ import chalk from 'chalk';
 
 import Config from '@/config';
 
-export async function init() {
+export async function init({ format = 'ts' }: { format?: 'ts' | 'json' } = {}) {
   intro(`${chalk.blue.bold('Langnostic Config Setup')}`);
 
   const s = spinner();
 
   s.start('Creating default configuration...');
 
-  const initResult = Config.initializeConfig();
+  const initResult = Config.initializeConfig(undefined, format);
 
   switch (initResult.result) {
     case 'created': {

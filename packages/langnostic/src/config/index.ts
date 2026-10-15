@@ -3,20 +3,25 @@ import path from 'node:path';
 
 import { cosmiconfigSync } from 'cosmiconfig';
 
-import { configFileDefault } from './config-default';
+import { configFileDefault, configFileJSONDefault } from './config-default';
+import { loadDeclarativeConfig } from './declarative';
 import type { ConfigType } from './types';
 import { validateConfig } from './validate';
 
 const moduleName = 'langnostic';
 const configExplorerSync = cosmiconfigSync(moduleName, {
-  searchPlaces: [`${moduleName}.config.ts`, `${moduleName}.config.js`],
+  cache: false,
+  searchPlaces: [
+    `${moduleName}.config.ts`,
+    `${moduleName}.config.js`,
+    `${moduleName}.json`,
+    `${moduleName}.config.json`,
+  ],
   searchStrategy: 'project',
 });
 
 export default class Config {
-  #config: ConfigType;
-
-  constructor(searchFrom?: string) {
+  public static async load(searchFrom?: string): Promise<ConfigType> {
     const result = configExplorerSync.search(searchFrom);
 
     if (result == null) {
@@ -25,15 +30,14 @@ export default class Config {
       );
     }
 
-    this.#config = validateConfig(result.config?.default ?? result.config);
-  }
-
-  get config(): ConfigType {
-    return this.#config;
+    return path.extname(result.filepath) === '.json'
+      ? await loadDeclarativeConfig(result.config, result.filepath)
+      : validateConfig(result.config?.default ?? result.config);
   }
 
   public static initializeConfig(
     searchPath?: string,
+    format: 'ts' | 'json' = 'ts',
   ): Readonly<
     | { filepath: null; result: 'error' }
     | { filepath: string; result: 'created' }
@@ -48,10 +52,12 @@ export default class Config {
     try {
       const configPath = path.join(
         searchPath ?? process.cwd(),
-        'langnostic.config.ts',
+        format === 'json' ? `${moduleName}.json` : `${moduleName}.config.ts`,
       );
 
-      fs.writeFileSync(configPath, `${configFileDefault.trim()}\n`);
+      const template =
+        format === 'json' ? configFileJSONDefault : configFileDefault;
+      fs.writeFileSync(configPath, `${template.trim()}\n`);
 
       return { filepath: configPath, result: 'created' };
     } catch (error) {

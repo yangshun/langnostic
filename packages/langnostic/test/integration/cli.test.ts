@@ -67,6 +67,7 @@ type FixtureOptions = {
   concurrency?: number;
   locales?: Array<string>;
   duplicateGroup?: boolean;
+  declarative?: boolean;
 };
 
 async function fixture(
@@ -82,14 +83,7 @@ async function fixture(
       ? '{"hello":"Hello"}'
       : '---\ntitle: Hello\nslug: hello\n---\n\nHello\n',
   );
-  await fs.writeFile(
-    path.join(cwd, 'langnostic.config.ts'),
-    `
-import fs from 'node:fs/promises';
-import FormatJSPlugin from '@langnostic/plugin-formatjs';
-import MdxPlugin from '@langnostic/plugin-mdx';
-import type { ConfigType } from 'langnostic';
-
+  const modelSource = `
 const model = {
   specificationVersion: 'v4', provider: 'local-test', modelId: 'mock', supportedUrls: {},
   async doGenerate(options) {
@@ -112,6 +106,68 @@ const model = {
     };
   },
 };
+`;
+  if (options.declarative) {
+    await fs.writeFile(
+      path.join(cwd, 'provider.mjs'),
+      `import fs from 'node:fs/promises';
+${modelSource}
+export function createProvider(options) {
+  if (options.token !== 'fixture-token') throw Error('Environment reference was not resolved');
+  return { languageModel(modelId) { return { ...model, modelId }; } };
+}
+`,
+    );
+    await fs.writeFile(
+      path.join(cwd, '.env'),
+      'LANGNOSTIC_FIXTURE_TOKEN=fixture-token\n',
+    );
+    await fs.writeFile(
+      path.join(cwd, 'langnostic.json'),
+      JSON.stringify({
+        version: 1,
+        ai: {
+          provider: {
+            module: './provider.mjs',
+            export: 'createProvider',
+            options: { token: { env: 'LANGNOSTIC_FIXTURE_TOKEN' } },
+          },
+          model: 'any-new-model',
+        },
+        concurrencyLimit: options.concurrency ?? 2,
+        localeConfig: { source: 'en', target: options.locales ?? ['fr'] },
+        groups: [
+          {
+            name: 'app',
+            stringsPerRequest: 1,
+            plugin:
+              format === 'json'
+                ? '@langnostic/plugin-formatjs'
+                : {
+                    module: '@langnostic/plugin-mdx',
+                    options: { frontmatterExcludedKeys: ['slug'] },
+                  },
+            paths: [
+              {
+                source: options.source ?? source,
+                target: options.target ?? `{locale}.${format}`,
+              },
+            ],
+          },
+        ],
+      }),
+    );
+    return cwd;
+  }
+  await fs.writeFile(
+    path.join(cwd, 'langnostic.config.ts'),
+    `
+import fs from 'node:fs/promises';
+import FormatJSPlugin from '@langnostic/plugin-formatjs';
+import MdxPlugin from '@langnostic/plugin-mdx';
+import type { ConfigType } from 'langnostic';
+
+${modelSource}
 const group = {
   name: 'app', stringsPerRequest: 1,
   plugin: ${format === 'json' ? 'FormatJSPlugin()' : "MdxPlugin({ frontmatterExcludedKeys: ['slug'] })"},
@@ -169,7 +225,14 @@ test('installs actual tarballs outside the workspace and exposes usable public t
     `
 import FormatJSPlugin from '@langnostic/plugin-formatjs';
 import MdxPlugin from '@langnostic/plugin-mdx';
-import { buildTranslationStrings, writeJsonAtomic, type ConfigType } from 'langnostic';
+import { buildTranslationStrings, writeJsonAtomic, type ConfigType, type DeclarativeConfigType, type ModuleReference } from 'langnostic';
+export const reference = { module: '@langnostic/plugin-mdx', options: { frontmatterExcludedKeys: ['slug'] } } satisfies ModuleReference;
+export const plainConfig = {
+  version: 1,
+  ai: { provider: { module: './provider.mjs', export: 'createProvider' }, model: 'any-new-model' },
+  localeConfig: { source: 'en', target: ['fr'] },
+  groups: [{ name: 'docs', plugin: reference, paths: [{ source: 'en.mdx', target: '{locale}.mdx' }] }],
+} satisfies DeclarativeConfigType;
 export const config = {
   ai: { model: 'local-test/mock' }, localeConfig: { source: 'en', target: ['fr'] },
   groups: [FormatJSPlugin(), MdxPlugin()].map((plugin, index) => ({
@@ -220,6 +283,83 @@ test('initializes a config and prints help from the installed CLI', async () => 
   expect(config).toContain('plugin: FormatJSPlugin()');
   expect(config).toContain('satisfies ConfigType');
   expect(run(cwd, ['--help']).output).toContain('translate');
+});
+
+test.each(['langnostic.json', 'langnostic.config.json'])(
+  'initializes JSON without overwriting existing %s',
+  async (filename) => {
+    const cwd = path.join(consumer, randomUUID());
+    await fs.mkdir(cwd);
+    expect(run(cwd, ['init', '--format', 'json']).status).toBe(0);
+    const filepath = path.join(cwd, filename);
+    if (filename !== 'langnostic.json') {
+      await fs.rename(path.join(cwd, 'langnostic.json'), filepath);
+    }
+    const original = await fs.readFile(filepath, 'utf8');
+    expect(JSON.parse(original)).toMatchObject({
+      version: 1,
+      ai: { provider: { module: '@ai-sdk/openai', export: 'createOpenAI' } },
+      groups: [{ plugin: '@langnostic/plugin-formatjs' }],
+    });
+    expect(run(cwd, ['init']).output).toContain('already exists');
+    expect(await fs.readFile(filepath, 'utf8')).toBe(original);
+    expect(await fs.readdir(cwd)).toEqual([filename]);
+  },
+);
+
+test.each([
+  { format: 'json', filename: 'langnostic.json' },
+  { format: 'mdx', filename: 'langnostic.json' },
+  { format: 'json', filename: 'langnostic.config.json' },
+  { format: 'mdx', filename: 'langnostic.config.json' },
+] as const)(
+  'translates and dry-runs $format using $filename and project-installed plugins',
+  async ({ format, filename }) => {
+    const cwd = await fixture(format, {
+      declarative: true,
+      locales: ['fr', 'de'],
+    });
+    if (filename !== 'langnostic.json') {
+      await fs.rename(
+        path.join(cwd, 'langnostic.json'),
+        path.join(cwd, filename),
+      );
+    }
+    const before = await snapshot(cwd);
+    const dry = run(cwd, ['translate', '--dry-run'], 'provider-error');
+    expect(dry.status, dry.output).toBe(0);
+    expect(await snapshot(cwd)).toEqual(before);
+    const result = run(cwd);
+    expect(result.status, result.output).toBe(0);
+    const target = await fs.readFile(path.join(cwd, `fr.${format}`), 'utf8');
+    if (format === 'json') {
+      expect(JSON.parse(target)).toEqual({ hello: 'Bonjour' });
+    } else {
+      expect(target).toContain('title: Bonjour');
+      expect(target).toContain('slug: hello');
+      expect(target).toContain('Bonjour');
+    }
+    const translated = await snapshot(cwd);
+    const again = run(cwd, ['translate'], 'provider-error');
+    expect(again.status, again.output).toBe(0);
+    expect(again.output).toContain('Nothing to translate');
+    expect(await snapshot(cwd)).toEqual(translated);
+  },
+);
+
+test('reports missing plugin packages from declarative configuration without changing files', async () => {
+  const cwd = await fixture('json', { declarative: true });
+  const filepath = path.join(cwd, 'langnostic.json');
+  const config = JSON.parse(await fs.readFile(filepath, 'utf8'));
+  config.groups[0].plugin = 'uninstalled-langnostic-plugin';
+  await fs.writeFile(filepath, JSON.stringify(config));
+  const before = await snapshot(cwd);
+  const result = run(cwd);
+  expect(result.status, result.output).toBe(1);
+  expect(result.output).toContain(
+    'groups.0.plugin: Cannot load "uninstalled-langnostic-plugin"',
+  );
+  expect(await snapshot(cwd)).toEqual(before);
 });
 
 test('translates multiple JSON chunks into new directories and is idempotent', async () => {

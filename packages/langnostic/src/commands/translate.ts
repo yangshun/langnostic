@@ -23,7 +23,7 @@ export async function translate({
   debug?: boolean;
   dryRun?: boolean;
 }>) {
-  const { config } = new Config();
+  const config = await Config.load();
   const groups = new Map<TranslationGroupId, TranslationGroup>();
   const runId = new Date().toISOString();
 

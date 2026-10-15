@@ -3,12 +3,160 @@ title: Configuration
 description: Configure AI providers, locales, translation groups, paths, and request limits.
 ---
 
-Langnostic searches for `langnostic.config.ts` or `langnostic.config.js` from
-the directory where you run the CLI. Export a configuration object as the default
-export. `langnostic init` creates a TypeScript configuration if one is not already
-found; it does not overwrite an existing configuration.
+Langnostic supports `langnostic.config.ts`, `langnostic.config.js`, and
+`langnostic.json`. It searches from the directory where you run the CLI, checking
+those filenames in that order in each directory. Keep one configuration file per
+project; the first configuration found is used.
 
-## Complete example
+`langnostic.config.json` is also supported as an alternative JSON filename, with
+lower precedence than `langnostic.json`.
+
+Use TS/JS configuration to supply model instances, plugin instances, or options
+containing functions. Use JSON to configure provider and plugin factories with
+plain data. Both formats use the same translation runner and plugin lifecycle.
+
+`langnostic init` creates a TypeScript configuration. To create `langnostic.json`:
+
+```bash
+npx langnostic init --format json
+```
+
+Initialization preserves an existing configuration in any supported format.
+
+## JSON configuration
+
+Set `version` to `1`. This versions the configuration structure; provider module
+names and model identifiers remain open-ended. This example translates an
+application catalog and Markdown documents:
+
+```json title="langnostic.json"
+{
+  "version": 1,
+  "ai": {
+    "provider": {
+      "module": "@ai-sdk/openai",
+      "export": "createOpenAI"
+    },
+    "model": "gpt-6.1-sol"
+  },
+  "concurrencyLimit": 5,
+  "localeConfig": {
+    "source": "en-US",
+    "target": ["zh-CN"]
+  },
+  "groups": [
+    {
+      "name": "app-strings",
+      "plugin": "@langnostic/plugin-formatjs",
+      "stringsPerRequest": 25,
+      "paths": [
+        {
+          "source": "./src/locales/en-US.json",
+          "target": "./src/locales/{locale}.json"
+        }
+      ]
+    },
+    {
+      "name": "docs",
+      "plugin": {
+        "module": "@langnostic/plugin-mdx",
+        "options": {
+          "frontmatterExcludedKeys": ["slug", "date", "tags"]
+        }
+      },
+      "localeConfig": {
+        "source": "en-US",
+        "target": ["zh-CN", "pt-BR"]
+      },
+      "paths": [
+        {
+          "source": "./docs/en-US/**/*.mdx",
+          "target": "./docs/{locale}/**/*.mdx"
+        }
+      ]
+    }
+  ]
+}
+```
+
+Install the referenced packages in your project, just as you would for a TS/JS
+configuration. Langnostic resolves package exports using ESM resolution from the
+configuration file's location. Relative module paths such as
+`./plugins/custom.mjs` are also relative to that file. Installed packages and
+their versions are managed by your package manager and lockfile.
+
+### Provider and plugin factories
+
+A module reference has these fields:
+
+| Field     | Required | Behavior                                                              |
+| --------- | -------- | --------------------------------------------------------------------- |
+| `module`  | Yes      | Installed package, exported package subpath, or local module.         |
+| `export`  | No       | Factory export name. Defaults to `default`.                           |
+| `options` | No       | JSON object passed to the factory, including plugin-specific options. |
+
+Factories may return their results asynchronously. A plugin factory must return
+a valid `LangnosticPlugin`. Each translation group gets a fresh instance.
+A string such as `"@langnostic/plugin-formatjs"` is shorthand for a reference to
+that module's default factory without options.
+
+The `ai.provider` factory must return an AI SDK provider with a
+`languageModel(modelId)` method. For example, Langnostic loads `createOpenAI`
+from `@ai-sdk/openai`, calls it with `options`, and passes `ai.model` to the
+provider's `languageModel` method. Model identifiers are interpreted by the
+provider package, so new identifiers do not need a Langnostic release. You can
+also omit `ai.provider` to use AI SDK default-provider routing for `ai.model`.
+
+Custom plugins use the same reference format:
+
+```json
+{
+  "plugin": {
+    "module": "./plugins/custom.mjs",
+    "export": "createPlugin",
+    "options": {
+      "preserveComments": true
+    }
+  }
+}
+```
+
+For options that contain functions or other executable values, use TS/JS
+configuration or a local wrapper module that exports a factory.
+
+### Environment-variable references
+
+Within provider `options`, plugin `options`, and `ai.providerOptions`, an object
+containing only `env` refers to an environment variable:
+
+```json
+{
+  "ai": {
+    "provider": {
+      "module": "@ai-sdk/openai",
+      "export": "createOpenAI",
+      "options": {
+        "apiKey": { "env": "MY_OPENAI_API_KEY" },
+        "headers": {
+          "X-Project": { "env": "PROJECT_ID" }
+        }
+      }
+    },
+    "model": "gpt-6.1-sol"
+  }
+}
+```
+
+References work in nested objects and arrays, and resolve to strings. An unset
+variable fails configuration loading with its option path. An empty environment
+variable resolves to an empty string. Strings such as `"${MY_OPENAI_API_KEY}"`
+remain literal strings.
+
+The CLI loads `.env` from its working directory before resolving configuration.
+You can omit explicit credential options when the provider already reads its
+standard environment variable, such as `OPENAI_API_KEY` for `@ai-sdk/openai`.
+
+## TypeScript and JavaScript configuration
 
 Use the exported `ConfigType` with `satisfies` to check your configuration. This
 example translates an application catalog and Markdown documents. Each group
@@ -61,15 +209,20 @@ export default {
 
 Install each imported provider and plugin separately. The
 [quick start](/docs/quick-start) covers installation and setup.
+JavaScript configuration uses the same default export with the TypeScript import
+and `satisfies ConfigType` annotation removed. Existing TS/JS configurations
+continue to work unchanged. `DeclarativeConfigType` and `ModuleReference` are
+also exported for tools that generate JSON configurations.
 
 ## Top-level settings
 
-| Setting            | Required | Behavior                                                                  |
-| ------------------ | -------- | ------------------------------------------------------------------------- |
-| `ai`               | Yes      | Model and optional generation settings shared by all groups.              |
-| `localeConfig`     | Yes      | Default source and target locales, even when groups supply overrides.     |
-| `groups`           | Yes      | Array of translation groups. An empty array produces no translation work. |
-| `concurrencyLimit` | No       | Maximum concurrent AI requests across groups. Defaults to `5`.            |
+| Setting            | Required  | Behavior                                                                  |
+| ------------------ | --------- | ------------------------------------------------------------------------- |
+| `ai`               | Yes       | Model and optional generation settings shared by all groups.              |
+| `localeConfig`     | Yes       | Default source and target locales, even when groups supply overrides.     |
+| `groups`           | Yes       | Array of translation groups. An empty array produces no translation work. |
+| `concurrencyLimit` | No        | Maximum concurrent AI requests across groups. Defaults to `5`.            |
+| `version`          | JSON only | Configuration structure version. Required as `1` in JSON.                 |
 
 `concurrencyLimit` must be a positive integer. It limits requests, not the number
 of files, strings, or target locales in a request.
@@ -87,6 +240,9 @@ The model must support the structured translation output used by the runner.
 These docs use `openai('gpt-6.1-sol')`; the provider reads `OPENAI_API_KEY`.
 When using a model ID instead of a provider instance, configure the AI SDK's
 default provider and credentials for that routing.
+In JSON, `ai.model` is a string and `ai.provider` optionally supplies the provider
+factory described above. Generation settings retain the same behavior in both
+configuration formats.
 
 Langnostic does not supply defaults for `providerOptions`, `temperature`, or
 `topP`. Avoid setting unsupported sampling parameters on reasoning models.
@@ -115,7 +271,7 @@ that group. It is not a partial override: provide both `source` and `target`.
 | Setting             | Required | Behavior                                                             |
 | ------------------- | -------- | -------------------------------------------------------------------- |
 | `name`              | Yes      | Non-empty identifier, unique across groups, used in progress output. |
-| `plugin`            | Yes      | Plugin instance that discovers pending content and writes results.   |
+| `plugin`            | Yes      | Plugin instance in TS/JS; factory module reference in JSON.          |
 | `paths`             | Yes      | Non-empty array of source/target path mappings.                      |
 | `localeConfig`      | No       | Complete locale override for this group.                             |
 | `stringsPerRequest` | No       | Positive integer overriding the plugin's batch-size default.         |
@@ -159,8 +315,10 @@ that mapping; ensure your paths are correct before relying on a successful exit.
 ## Configuration errors
 
 Invalid required fields, locale lists, positive-integer settings, plugin methods,
-or duplicate group names cause the command to fail. Configuration and discovery
-failures exit with status `1`.
+or duplicate group names cause the command to fail. JSON configuration also
+rejects unsupported versions, unknown top-level fields, invalid module
+references, missing packages or factory exports, and unset environment
+references. Configuration and discovery failures exit with status `1`.
 
 See [CLI](/docs/cli) for command behavior and
 [Plugin API](/docs/plugin-api) for the plugin contract.

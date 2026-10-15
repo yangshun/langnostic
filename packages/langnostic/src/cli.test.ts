@@ -16,6 +16,7 @@ afterEach(() => {
 
 test.each([
   ['init'],
+  ['init', '--format', 'json'],
   ['translate'],
   ['translate', '--debug', '--dry-run'],
   ['translate', '-d', '-r'],
@@ -30,6 +31,9 @@ test.each([
   expect(config).toHaveBeenCalledOnce();
   if (args[0] === 'init') {
     expect(init).toHaveBeenCalledOnce();
+    expect(init).toHaveBeenCalledWith({
+      format: args.length > 1 ? 'json' : 'ts',
+    });
   } else {
     expect(translate).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -4,7 +4,8 @@ description: Initialize configuration, translate files, preview pending batches,
 ---
 
 Run commands from your project directory. The CLI loads `.env` and searches for
-`langnostic.config.ts` or `langnostic.config.js` from that directory.
+`langnostic.config.ts`, `langnostic.config.js`, or `langnostic.json` from that
+directory.
 See [Quick start](/docs/quick-start) for installation and setup.
 
 ## `init`
@@ -20,6 +21,20 @@ its path and leaves it unchanged.
 The template imports the OpenAI provider and FormatJS plugin, uses
 `openai('gpt-6.1-sol')`, and targets `zh-CN` from `en-US`. The command does
 not install dependencies, create source catalogs, or configure provider credentials.
+
+### `--format ts|json`
+
+```bash
+npx langnostic init --format json
+```
+
+Selects the generated configuration format. The default is `ts`. JSON
+initialization creates `langnostic.json` with `version: 1`, an OpenAI
+provider factory reference, and a FormatJS plugin module reference. Existing
+configurations are preserved regardless of the requested format.
+
+See [Configuration](/docs/configuration#json-configuration) for factory options,
+custom plugin modules, and environment-variable references.
 
 ## `translate`
 

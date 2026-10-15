@@ -12,25 +12,7 @@ criteria here, and describe user-facing outcomes on the public page.
 The milestones below are ordered by priority, with scope and completion criteria
 for each milestone.
 
-## 1. Minimal backend interface and declarative configuration
-
-Give Langnostic a stable foundation for multiple translation backends and
-installations outside the JavaScript ecosystem.
-
-Define a small Langnostic-owned translation interface covering messages, locales,
-context, instructions, and results. Keep AI SDK behind that interface as the
-existing API implementation, preserving support for multiple providers.
-
-Add versioned declarative configuration for backend selection, models,
-environment-variable references, locales, translation groups, and plugins. Retain
-executable TS/JS configuration as an advanced option and preserve user-supplied
-plugins.
-
-**Complete when:** Existing translation workflows work through declarative
-configuration, and the core can accept another backend without depending on AI
-SDK's public types.
-
-## 2. Project context and glossary
+## 1. Project context and glossary
 
 Help translations reflect the project's terminology, audience, and writing style.
 
@@ -49,7 +31,7 @@ way to identify affected translations and request regeneration.
 understand which guidance applies, and identify translations affected by changes
 to that guidance.
 
-## 3. Local CLI translation backends
+## 2. Local CLI translation backends
 
 Let users translate through their installed, authenticated AI CLIs.
 
@@ -65,7 +47,7 @@ Keep translation file updates under Langnostic's control.
 using its existing authentication, with the same output checks as an API-backed
 run.
 
-## 4. Standalone distribution
+## 3. Standalone distribution
 
 Make Langnostic installable and usable without a JavaScript development
 environment.
@@ -82,7 +64,7 @@ packaged executables support custom plugins.
 supported backend, and translate files without installing Node, Bun, npm, or
 project dependencies.
 
-## 5. Desktop translation workspace
+## 4. Desktop translation workspace
 
 Provide a local desktop app for configuring projects, managing terminology, and
 reviewing translations, using the same engine as the CLI.
@@ -104,7 +86,7 @@ users can move between both interfaces within the same project.
 supported backend, translate selected entries, review and apply changes through
 the desktop app, and continue using the CLI with the same project files.
 
-## 6. More ecosystems, starting with one non-JS integration
+## 5. More ecosystems, starting with one non-JS integration
 
 Prove that Langnostic fits naturally into localization workflows beyond
 JavaScript.
@@ -121,7 +103,7 @@ documentation and examples that fit existing extraction and build workflows.
 subsequent changes translate correctly, and unchanged runs produce stable
 results. Apply these criteria separately to each ecosystem.
 
-## 7. Plugin installation and publishing
+## 6. Plugin installation and publishing
 
 Make additional integrations easy to distribute, install, and maintain.
 
@@ -146,6 +128,6 @@ Each milestone should include appropriate tests, documentation, and CI coverage.
 
 ## Open implementation decisions
 
-The configuration format, instruction filenames, executable packager, desktop
+Declarative configuration uses JSON. Instruction filenames, executable packager, desktop
 framework, and plugin distribution mechanism remain open decisions until their
 respective milestones.

@@ -26,3 +26,34 @@ export default {
   },
 } satisfies ConfigType;
 `;
+
+export const configFileJSONDefault = JSON.stringify(
+  {
+    version: 1,
+    ai: {
+      provider: {
+        module: '@ai-sdk/openai',
+        export: 'createOpenAI',
+      },
+      model: 'gpt-6.1-sol',
+    },
+    groups: [
+      {
+        name: 'app-strings',
+        paths: [
+          {
+            source: './src/locales/en-US.json',
+            target: './src/locales/{locale}.json',
+          },
+        ],
+        plugin: '@langnostic/plugin-formatjs',
+      },
+    ],
+    localeConfig: {
+      source: 'en-US',
+      target: ['zh-CN'],
+    },
+  },
+  null,
+  2,
+);

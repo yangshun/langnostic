@@ -12,9 +12,15 @@ See [Configuration](/docs/configuration) for a complete setup and
 
 ## 1. Configuration and discovery
 
-The CLI loads environment variables and searches for `langnostic.config.ts`
-or `langnostic.config.js`. It validates the configuration, resolves each group's
-source patterns, and substitutes target locales and wildcard captures.
+The CLI loads environment variables and searches for `langnostic.config.ts`,
+`langnostic.config.js`, or `langnostic.json`. For JSON, it validates the
+configuration version and structure, resolves provider and plugin factory modules
+from the configuration file's location, and substitutes environment references in
+their options. It creates the provider model and a plugin instance for each group,
+then validates the same runtime configuration used by TS/JS configurations.
+
+The runner resolves each group's source patterns from the CLI's working directory
+and substitutes target locales and wildcard captures.
 
 For a source at `src/locales/en-US.json` and target pattern
 `src/locales/{locale}.json`, the resolved metadata has this shape:

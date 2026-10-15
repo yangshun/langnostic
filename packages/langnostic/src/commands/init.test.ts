@@ -38,3 +38,12 @@ test.each(['created', 'exists', 'error'] as const)(
     expect(outro).toHaveBeenCalledTimes(result === 'created' ? 1 : 0);
   },
 );
+
+test('requests JSON initialization', async () => {
+  vi.mocked(Config.initializeConfig).mockReturnValue({
+    result: 'created',
+    filepath: `${process.cwd()}/langnostic.json`,
+  });
+  expect(await init({ format: 'json' })).toBe(0);
+  expect(Config.initializeConfig).toHaveBeenCalledWith(undefined, 'json');
+});

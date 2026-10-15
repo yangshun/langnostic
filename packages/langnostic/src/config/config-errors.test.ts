@@ -11,14 +11,14 @@ afterEach(() => {
   search.mockReset();
 });
 
-test('accepts a config returned directly by a loader', () => {
+test('accepts a config returned directly by a loader', async () => {
   const config = {
     ai: { model: 'test/model' },
     groups: [],
     localeConfig: { source: 'en', target: ['fr'] },
   };
-  search.mockReturnValue({ config });
-  expect(new Config().config).toBe(config);
+  search.mockReturnValue({ config, filepath: '/project/langnostic.config.js' });
+  expect(await Config.load()).toBe(config);
 });
 
 test('returns an error when writing the default config fails', () => {

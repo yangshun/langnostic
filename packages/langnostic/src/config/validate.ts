@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import type { LangnosticPlugin, TranslationAI } from '@/core/types';
 
-import type { ConfigType } from './types';
+import type { ConfigType, DeclarativeConfigType } from './types';
 
 const positiveInteger = z.number().int().positive();
 const nonemptyString = z.string().trim().min(1);
@@ -46,6 +46,18 @@ const localeConfigSchema = z
         'Target locales must be unique and differ from the source locale',
     },
   );
+const groupSchema = z.object({
+  name: nonemptyString,
+  localeConfig: localeConfigSchema.optional(),
+  paths: z
+    .array(z.object({ source: nonemptyString, target: nonemptyString }))
+    .min(1),
+  stringsPerRequest: positiveInteger.optional(),
+  plugin: z.custom<LangnosticPlugin>(
+    (value) => pluginSchema.safeParse(value).success,
+    'Expected a plugin with a type, positive integer stringsPerRequest, and callable lifecycle methods',
+  ),
+});
 const configSchema = z.object({
   ai: z.object({
     model: z.custom<TranslationAI['model']>(
@@ -55,24 +67,41 @@ const configSchema = z.object({
   }),
   concurrencyLimit: positiveInteger.optional(),
   localeConfig: localeConfigSchema,
-  groups: z.array(
-    z.object({
-      name: nonemptyString,
-      localeConfig: localeConfigSchema.optional(),
-      paths: z
-        .array(z.object({ source: nonemptyString, target: nonemptyString }))
-        .min(1),
-      stringsPerRequest: positiveInteger.optional(),
-      plugin: z.custom<LangnosticPlugin>(
-        (value) => pluginSchema.safeParse(value).success,
-        'Expected a plugin with a type, positive integer stringsPerRequest, and callable lifecycle methods',
-      ),
-    }),
-  ),
+  groups: z.array(groupSchema),
 });
 
-export function validateConfig(value: unknown): ConfigType {
-  const result = configSchema.safeParse(value);
+const moduleReferenceSchema = z.strictObject({
+  module: nonemptyString,
+  export: nonemptyString.optional(),
+  options: z.record(z.string(), z.json()).optional(),
+});
+const declarativeConfigSchema = configSchema
+  .extend({
+    version: z.literal(1),
+    ai: z.strictObject({
+      model: nonemptyString,
+      provider: moduleReferenceSchema.optional(),
+      providerOptions: z
+        .record(z.string(), z.record(z.string(), z.json()))
+        .optional(),
+      temperature: z.number().optional(),
+      topP: z.number().optional(),
+    }),
+    groups: z.array(
+      groupSchema
+        .extend({
+          plugin: z.union([nonemptyString, moduleReferenceSchema]),
+        })
+        .strict(),
+    ),
+  })
+  .strict();
+
+function validate<T extends { groups: Array<{ name: string }> }>(
+  schema: z.ZodType<T>,
+  value: unknown,
+): T {
+  const result = schema.safeParse(value);
   if (!result.success) {
     throw new Error(
       `Invalid Langnostic configuration:\n${result.error.issues.map((issue) => `${issue.path.join('.') || 'config'}: ${issue.message}`).join('\n')}`,
@@ -87,6 +116,17 @@ export function validateConfig(value: unknown): ConfigType {
     names.add(group.name);
   }
 
+  return result.data;
+}
+
+export function validateConfig(value: unknown): ConfigType {
+  validate(configSchema, value);
   // Preserve provider and plugin instances, including their prototypes and options.
   return value as ConfigType;
+}
+
+export function validateDeclarativeConfig(
+  value: unknown,
+): DeclarativeConfigType {
+  return validate(declarativeConfigSchema, value);
 }
