@@ -264,6 +264,9 @@ pnpm test
 # Measure coverage and enforce 100% for every package source file
 vp run test:coverage
 
+# Test the CLI from freshly packed and installed packages
+vp run test:integration
+
 # Run tests in watch mode
 pnpm --filter langnostic test:watch
 
@@ -276,12 +279,20 @@ have 100% statement, branch, function, and line coverage. The HTML report is
 generated at `coverage/index.html`. AI generation tests use a mock model and
 do not require provider API keys.
 
+The integration suite builds and packs the three libraries, installs their tarballs
+in a temporary consumer project, checks the published types, and runs the real CLI
+against JSON and MDX files. Installing the consumer's dependencies may require
+registry access. Translation requests use a local mock model and need no API keys.
+CI runs checks, type checks, coverage, integration tests, documentation validation,
+and builds from the repository root.
+
 ## 📋 Available scripts
 
 - `pnpm build` - Build all packages
 - `pnpm dev` - Start development mode
 - `pnpm test` - Run all tests
 - `vp run test:coverage` - Run tests with coverage and enforce 100% per file
+- `vp run test:integration` - Test the packed CLI and plugins in an isolated consumer
 - `pnpm tc` - Type check all libraries
 - `pnpm exec vp check` - Check formatting, lint, and types with Vite+
 - `pnpm lint` - Lint all packages with Vite+
@@ -320,6 +331,12 @@ export default function MyPlugin(): LangnosticPlugin {
   };
 }
 ```
+
+`getTranslationStrings()` must leave files unchanged. Queue maintenance such as
+removals or reordering for an optional `onTranslationStart()` hook, which runs only
+on real runs, including runs that need no AI calls. The exported `writeFileAtomic`
+and `writeJsonAtomic` helpers create parent directories and replace files only
+after their full contents have been written.
 
 ### Development workflow
 

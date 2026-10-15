@@ -13,6 +13,15 @@ export default defineConfig({
       },
       typecheck: 'tsc',
       'test:unit': 'vp test run',
+      'test:integration': {
+        command: 'vp test run --config vite.integration.config.ts',
+        dependsOn: [
+          'langnostic#build:package',
+          '@langnostic/plugin-json#build:package',
+          '@langnostic/plugin-mdx#build:package',
+        ],
+        cache: false,
+      },
     },
   },
   resolve: {
@@ -20,6 +29,7 @@ export default defineConfig({
   },
   test: {
     globals: true,
+    include: ['src/**/*.test.ts'],
   },
   pack: {
     format: 'esm',

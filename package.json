@@ -10,6 +10,7 @@
     "tc": "vp run -r typecheck",
     "test": "vp run -r test:unit",
     "test:coverage": "vp test run --coverage",
+    "test:integration": "vp run langnostic#test:integration",
     "publish-all": "pnpm -r publish --access public",
     "prepare": "vp config"
   },
