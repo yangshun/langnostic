@@ -20,7 +20,7 @@ function hashStringItem(
   batchId: TranslationGroupBatchId,
   id: string,
 ): BatchStringItemHash {
-  return `${batchId}#${id}`;
+  return JSON.stringify([batchId, id]);
 }
 
 export async function generate(
@@ -94,35 +94,63 @@ export async function generate(
       );
     }
 
+    const requestedStrings = new Map(
+      strings.map((string) => [
+        hashStringItem(string.batchId, string.id),
+        string,
+      ]),
+    );
     const translationStringsMap = new Map<
       BatchStringItemHash,
-      Record<TranslationLocale, string>
+      Map<TranslationLocale, string>
     >();
 
-    object.data.forEach((r) => {
-      translationStringsMap.set(
-        hashStringItem(r.batchId, r.id),
-        r.translations.reduce(
-          (acc: Record<TranslationLocale, string>, { locale, string }) => {
-            acc[locale] = string;
-            return acc;
-          },
-          {},
-        ),
-      );
-    });
+    for (const entry of object.data) {
+      const key = hashStringItem(entry.batchId, entry.id);
+      const requested = requestedStrings.get(key);
+      const label = `${entry.id} (${entry.batchId})`;
+      if (!requested) {
+        throw new Error(`Unexpected translation: ${label}`);
+      }
+      if (translationStringsMap.has(key)) {
+        throw new Error(`Duplicate translation: ${label}`);
+      }
 
-    return strings.map((string) => ({
-      ...string,
-      targets: Object.entries(
-        // TODO: report if there are missing results from the LLM
-        // oxlint-ignore typescript/no-non-null-assertion -- TODO
-        translationStringsMap.get(hashStringItem(string.batchId, string.id))!,
-      ).map(([locale, translation]) => ({
-        locale,
-        string: translation,
-      })),
-    }));
+      const translations = new Map<TranslationLocale, string>();
+      for (const { locale, string } of entry.translations) {
+        if (!requested.targets.includes(locale)) {
+          throw new Error(`Unexpected locale ${locale} for ${label}`);
+        }
+        if (translations.has(locale)) {
+          throw new Error(`Duplicate locale ${locale} for ${label}`);
+        }
+        translations.set(locale, string);
+      }
+      for (const locale of requested.targets) {
+        if (!translations.has(locale)) {
+          throw new Error(`Missing locale ${locale} for ${label}`);
+        }
+      }
+      translationStringsMap.set(key, translations);
+    }
+
+    return strings.map((string) => {
+      const translations = translationStringsMap.get(
+        hashStringItem(string.batchId, string.id),
+      );
+      if (!translations) {
+        throw new Error(
+          `Missing translation: ${string.id} (${string.batchId})`,
+        );
+      }
+      return {
+        ...string,
+        targets: Array.from(translations, ([locale, translation]) => ({
+          locale,
+          string: translation,
+        })),
+      };
+    });
   } catch (err) {
     if (debug) {
       await outputFile(

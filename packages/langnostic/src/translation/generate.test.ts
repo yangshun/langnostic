@@ -197,4 +197,87 @@ describe('generate', () => {
       info.mockRestore();
     }
   });
+
+  test.each([
+    [{ data: [] }, 'Missing translation: greeting (file-a.json)'],
+    [{ data: [output.data[0]] }, 'Missing translation: greeting (file-a.json)'],
+    [{ data: [output.data[1]] }, 'Missing translation: greeting (file-b.json)'],
+    [{ data: [...output.data, output.data[0]] }, 'Duplicate translation'],
+    [
+      { data: [{ ...output.data[0], batchId: 'unknown' }] },
+      'Unexpected translation',
+    ],
+    [
+      { data: [{ ...output.data[0], id: 'unknown' }] },
+      'Unexpected translation',
+    ],
+    [
+      { data: [{ ...output.data[1], translations: [] }] },
+      'Missing locale pt-BR',
+    ],
+    [
+      {
+        data: [
+          { ...output.data[1], translations: [output.data[1].translations[0]] },
+        ],
+      },
+      'Missing locale zh-CN',
+    ],
+    [
+      {
+        data: [
+          {
+            ...output.data[0],
+            translations: [{ locale: 'fr', string: 'Bonjour' }],
+          },
+        ],
+      },
+      'Unexpected locale fr',
+    ],
+    [
+      {
+        data: [
+          {
+            ...output.data[0],
+            translations: [
+              output.data[0].translations[0],
+              output.data[0].translations[0],
+            ],
+          },
+        ],
+      },
+      'Duplicate locale pt-BR',
+    ],
+  ])(
+    'rejects incomplete or ambiguous results: %s',
+    async (response, message) => {
+      await expect(
+        generate({ model: mockModel(response) }, job, {}),
+      ).rejects.toThrow(message);
+    },
+  );
+
+  test('keeps batch and string identities distinct when IDs contain separators', async () => {
+    const collisionJob = {
+      ...job,
+      strings: [
+        { ...job.strings[1], batchId: 'file#a', id: 'b' },
+        { ...job.strings[1], batchId: 'file', id: 'a#b' },
+      ],
+    };
+    const data = collisionJob.strings.map((string, index) => ({
+      batchId: string.batchId,
+      id: string.id,
+      translations: [{ locale: 'pt-BR', string: `Translation ${index}` }],
+    }));
+    const result = await generate(
+      { model: mockModel({ data }) },
+      collisionJob,
+      {},
+    );
+    expect(result.map((string) => string.targets[0].string)).toEqual([
+      'Translation 0',
+      'Translation 1',
+    ]);
+  });
 });
