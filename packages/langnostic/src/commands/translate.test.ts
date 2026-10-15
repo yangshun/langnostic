@@ -213,3 +213,12 @@ test('propagates maintenance failures before starting requests or progress timer
   expect(mocks.generate).not.toHaveBeenCalled();
   expect(vi.getTimerCount()).toBe(0);
 });
+
+test('rejects conflicting group destinations before tracking or modifying files', async () => {
+  const group = mocks.config.groups[0];
+  mocks.config.groups.push({ ...group, name: 'other' });
+  await expect(translate({})).rejects.toThrow('configured more than once');
+  expect(group.plugin.trackFiles).not.toHaveBeenCalled();
+  expect(group.plugin.onTranslationStart).not.toHaveBeenCalled();
+  expect(mocks.generate).not.toHaveBeenCalled();
+});

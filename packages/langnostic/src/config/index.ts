@@ -5,6 +5,7 @@ import { cosmiconfigSync } from 'cosmiconfig';
 
 import { configFileDefault } from './config-default';
 import type { ConfigType } from './types';
+import { validateConfig } from './validate';
 
 const moduleName = 'langnostic';
 const configExplorerSync = cosmiconfigSync(moduleName, {
@@ -24,7 +25,7 @@ export default class Config {
       );
     }
 
-    this.#config = (result.config?.default ?? result.config) as ConfigType;
+    this.#config = validateConfig(result.config?.default ?? result.config);
   }
 
   get config(): ConfigType {

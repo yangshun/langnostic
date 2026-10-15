@@ -12,7 +12,11 @@ afterEach(() => {
 });
 
 test('accepts a config returned directly by a loader', () => {
-  const config = { groups: [] };
+  const config = {
+    ai: { model: 'test/model' },
+    groups: [],
+    localeConfig: { source: 'en', target: ['fr'] },
+  };
   search.mockReturnValue({ config });
   expect(new Config().config).toBe(config);
 });

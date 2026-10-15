@@ -18,6 +18,13 @@ export function generateTargetPaths(
   // Convert the source glob pattern into a regex.
   // We'll split the pattern by the wildcard tokens **/ and *
   const srcTokens = srcPattern.split(/(\*\*\/|\*)/);
+  const sourceWildcards = srcPattern.match(/\*\*\/|\*/g) || [];
+  const targetWildcards = destPattern.match(/\*\*\/|\*/g) || [];
+  if (targetWildcards.length > sourceWildcards.length) {
+    throw new Error(
+      'Target pattern has more wildcards than the source pattern',
+    );
+  }
   let regexStr = '^';
 
   for (const token of srcTokens) {
@@ -78,6 +85,9 @@ export async function expandTargetPaths(
   pathItem: ConfigGroupPathItem,
 ): Promise<ReadonlyArray<TranslationFileMetadata>> {
   const paths = await globby(pathItem.source);
+  if (paths.length === 0) {
+    console.warn(`No source files matched: ${pathItem.source}`);
+  }
 
   return paths.map((sourcePath) => ({
     source: {

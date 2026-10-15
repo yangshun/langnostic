@@ -2,7 +2,7 @@ import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
-import { expect, test } from 'vite-plus/test';
+import { expect, test, vi } from 'vite-plus/test';
 
 import { expandTargetPaths, generateTargetPaths } from './index';
 
@@ -12,7 +12,20 @@ test('rejects source paths outside the configured pattern', () => {
   ).toThrow('does not match');
 });
 
+test('rejects target wildcard captures missing from the source pattern', () => {
+  expect(() =>
+    generateTargetPaths('en.json', 'fr/*.json', 'en.json', ['fr']),
+  ).toThrow('more wildcards');
+});
+
+test('maps literal source paths to locale-specific destinations', () => {
+  expect(
+    generateTargetPaths('en.json', '{locale}.json', 'en.json', ['fr']),
+  ).toEqual([{ locale: 'fr', path: 'fr.json' }]);
+});
+
 test('expands real glob matches including zero or multiple subdirectories', async () => {
+  const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
   const dir = await mkdtemp(path.join(os.tmpdir(), 'langnostic-paths-'));
   try {
     await mkdir(path.join(dir, 'nested'));
@@ -41,7 +54,11 @@ test('expands real glob matches including zero or multiple subdirectories', asyn
         { source: `${dir}/*.missing`, target: '*' },
       ),
     ).resolves.toEqual([]);
+    expect(warning).toHaveBeenCalledWith(
+      `No source files matched: ${dir}/*.missing`,
+    );
   } finally {
+    warning.mockRestore();
     await rm(dir, { recursive: true, force: true });
   }
 });

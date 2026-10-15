@@ -9,6 +9,7 @@ import type {
   TranslationGroupId,
   TranslationRequestJob,
 } from '@/core/types';
+import { validateFilePaths } from '@/core/validate-paths';
 import { generate } from '@/translation/generate';
 import mapAsync from '@/utils/map-async';
 
@@ -27,7 +28,7 @@ export async function translate({
   const runId = new Date().toISOString();
 
   // Discover files to translate
-  await Promise.all(
+  const discoveredGroups = await Promise.all(
     config.groups.map(async (group) => {
       const groupFiles = await Promise.all(
         group.paths.map(
@@ -39,8 +40,15 @@ export async function translate({
         ),
       );
 
+      return { group, files: groupFiles.flat() };
+    }),
+  );
+  await validateFilePaths(discoveredGroups.flatMap(({ files }) => files));
+
+  await Promise.all(
+    discoveredGroups.map(async ({ group, files }) => {
       const { plugin } = group;
-      await plugin.trackFiles(groupFiles.flat());
+      await plugin.trackFiles(files);
       groups.set(group.name, {
         batches: new Map(),
         groupId: group.name,
