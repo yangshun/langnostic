@@ -4,7 +4,7 @@ import { orama } from 'blume/search';
 export default defineConfig({
   title: 'Langnostic',
   description:
-    'Fast, scalable, and efficient translation system to continuously translate strings within React components + Markdown documents using AI.',
+    'Translate FormatJS message catalogs and Markdown documents with AI, using your own provider and keeping translations in your repository.',
   basePath: '/docs',
   deployment: { site: 'https://langnostic.com' },
   content: { root: 'content/docs' },
@@ -13,13 +13,22 @@ export default defineConfig({
   navigation: {
     actions: [{ label: 'Documentation', href: '/' }],
     sidebar: [
-      { label: 'Getting started', items: ['/', '/quick-start'] },
+      { label: 'Getting started', items: ['/', '/why', '/quick-start'] },
       {
         label: 'Guide',
-        items: ['/features', '/cli', '/workflows', '/plugins'],
+        items: [
+          '/features',
+          '/configuration',
+          '/cli',
+          '/workflows',
+          '/plugins',
+        ],
       },
       { label: 'Advanced', items: ['/architecture'] },
-      { label: 'Resources', items: ['/roadmap'] },
+      {
+        label: 'Resources',
+        items: ['/philosophy', '/comparisons', '/roadmap'],
+      },
     ],
   },
   search: orama(),

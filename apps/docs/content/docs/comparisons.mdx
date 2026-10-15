@@ -1,6 +1,49 @@
 ---
 title: Comparisons
-description: TODO
+description: Compare file-based AI translation with hosted localization workflows.
 ---
 
-Reference: https://v5.vite.dev/guide/comparisons.html
+Langnostic generates translated files through a CLI using your own AI provider.
+Hosted localization platforms provide a shared service for coordinating content,
+people, and translation workflows. Choose based on the workflow you need rather
+than the number of commands in a setup example.
+
+## Workflow differences
+
+| Area               | Langnostic's current implementation                                                                   | Hosted localization workflow                                                             |
+| ------------------ | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Content workflow   | Source and translated files stay in your repository; you configure scripts and CI.                    | Content is managed in a service and can be synchronized through integrations.            |
+| Translation review | Use diffs and your existing review tools.                                                             | A platform can provide translator editors and review workflows.                          |
+| Provider access    | Configure a compatible AI SDK model and your own credentials.                                         | Available translation engines and billing depend on the platform and plan.               |
+| Tracking           | FormatJS compares IDs; MDX uses source registries and block hashes.                                   | Translation memory, terminology, and workflow features depend on the service.            |
+| Format handling    | Official plugins cover flat string/FormatJS JSON and Markdown/MDX; generated syntax needs validation. | Check the service's format support and test a representative catalog or document.        |
+| Costs              | AI provider usage plus applicable licensing; no Langnostic-hosted translation store is required.      | Subscription, capacity, and translation-service charges depend on the platform and plan. |
+
+Langnostic does not currently provide a hosted translator editor, glossary,
+translation memory service, or approval workspace. Planned capabilities are
+listed on the [roadmap](/docs/roadmap).
+
+## Crowdin as an example
+
+Crowdin documents automated content synchronization through its integrations.
+Its workflow does not inherently require manually uploading and downloading files
+for every translation run.
+
+Crowdin's pricing describes plans with managers and hosted-word capacity, with
+translation services available separately. Hosted words are calculated from source
+word count and target languages; this is different from charging only for each
+new translation request. Crowdin also offers an open-source program.
+
+See [Crowdin pricing and workflow information](https://crowdin.com/pricing) for
+current details. Compare the plan and format you would actually use, rather than
+assuming every hosted platform has the same pricing or preservation behavior.
+
+## Choosing a workflow
+
+Langnostic can fit when your team wants file-based output, provider choice, and
+translation changes reviewed in the repository. A hosted platform can fit when
+you need a shared localization workspace and managed collaboration.
+
+For Langnostic, check [supported behavior](/docs/features) and
+[upcoming-release availability and licensing](/docs#availability-and-licensing)
+before adopting it.

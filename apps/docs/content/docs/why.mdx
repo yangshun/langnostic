@@ -1,18 +1,45 @@
 ---
 title: Why Langnostic
-description: TODO
+description: When file-based AI translation fits your development workflow.
 ---
 
-Ref: https://vite.dev/guide/why.html
+Langnostic fits projects that already keep localization catalogs or documentation
+in version control and want to generate translations as part of development.
 
-## Overview
+You define the source files and target locales, select a compatible AI provider,
+and run one translation command. Generated files can go through the same review,
+validation, and deployment process as the rest of your application.
 
-In today's global applications, managing translations across multiple languages is a constant challenge. Traditional approaches require:
+## Keep content with your project
 
-- Manual translation management
-- Sending strings to translation services
-- Tracking what needs to be translated
-- Maintaining format consistency across languages
-- Dealing with outdated translations
+Source and translated files stay in your repository. You can inspect changes,
+edit translations, restore earlier versions, and use the output without a hosted
+translation store.
 
-Langnostic automates this entire workflow using AI, making translation as simple as running a CLI command.
+Langnostic does not replace your i18n runtime or string-extraction tools. The
+runtime must accept the generated file schema, and other localization formats
+need a compatible plugin.
+
+## Choose your provider and workflow
+
+Use an AI SDK provider with your own credentials and a model that supports
+structured translation output. Provider charges are separate from
+[Langnostic's planned licensing](/docs#availability-and-licensing).
+
+Run the CLI manually, from project scripts, or in a CI workflow you configure.
+It produces file changes for review rather than changing a visitor's page at
+runtime.
+
+## Understand the tradeoffs
+
+You own translation review, syntax validation, credentials, and automation.
+FormatJS fills missing IDs but does not detect edits under existing source IDs.
+MDX tracking requires committed registries and care when restructuring target
+documents. Format preservation depends on the model and must be reviewed.
+
+A hosted localization platform may fit better when you need a shared translator
+workspace, terminology management, translation memory, or approval workflows
+provided as a service. See [Comparisons](/docs/comparisons).
+
+Start with [Quick start](/docs/quick-start) and check
+[Features](/docs/features) for the current implementation's boundaries.

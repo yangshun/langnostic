@@ -1,8 +1,163 @@
 ---
 title: Configuration
-description: How to configure Langnostic
+description: Configure AI providers, locales, translation groups, paths, and request limits.
 ---
 
-{/* Reference: https://vite.dev/config/ */}
+Langnostic searches for `langnostic.config.ts` or `langnostic.config.js` from
+the directory where you run the CLI. Export a configuration object as the default
+export. `langnostic init` creates a TypeScript configuration if one is not already
+found; it does not overwrite an existing configuration.
 
-_Page in-progress._
+## Complete example
+
+This configuration translates an application catalog and Markdown documents. Each
+group owns a separate plugin instance:
+
+```typescript title="langnostic.config.ts"
+import { openai } from '@ai-sdk/openai';
+import FormatJSPlugin from '@langnostic/plugin-formatjs';
+import MdxPlugin from '@langnostic/plugin-mdx';
+import type { ConfigType } from 'langnostic';
+
+export default {
+  ai: {
+    model: openai('gpt-6.1-sol'),
+  },
+  concurrencyLimit: 5,
+  localeConfig: {
+    source: 'en-US',
+    target: ['zh-CN'],
+  },
+  groups: [
+    {
+      name: 'app-strings',
+      plugin: FormatJSPlugin(),
+      stringsPerRequest: 25,
+      paths: [
+        {
+          source: './src/locales/en-US.json',
+          target: './src/locales/{locale}.json',
+        },
+      ],
+    },
+    {
+      name: 'docs',
+      plugin: MdxPlugin({ frontmatterExcludedKeys: ['slug', 'date', 'tags'] }),
+      localeConfig: {
+        source: 'en-US',
+        target: ['zh-CN', 'pt-BR'],
+      },
+      paths: [
+        {
+          source: './docs/en-US/**/*.mdx',
+          target: './docs/{locale}/**/*.mdx',
+        },
+      ],
+    },
+  ],
+} satisfies ConfigType;
+```
+
+Install each imported provider and plugin separately. The
+[quick start](/docs/quick-start) describes upcoming-release availability and setup.
+
+## Top-level settings
+
+| Setting            | Required | Behavior                                                                  |
+| ------------------ | -------- | ------------------------------------------------------------------------- |
+| `ai`               | Yes      | Model and optional generation settings shared by all groups.              |
+| `localeConfig`     | Yes      | Default source and target locales, even when groups supply overrides.     |
+| `groups`           | Yes      | Array of translation groups. An empty array produces no translation work. |
+| `concurrencyLimit` | No       | Maximum concurrent AI requests across groups. Defaults to `5`.            |
+
+`concurrencyLimit` must be a positive integer. It limits requests, not the number
+of files, strings, or target locales in a request.
+
+## AI settings
+
+| Setting              | Required | Behavior                                                                                 |
+| -------------------- | -------- | ---------------------------------------------------------------------------------------- |
+| `ai.model`           | Yes      | An AI SDK language model instance or a model ID routed by the AI SDK's default provider. |
+| `ai.providerOptions` | No       | Provider-specific options forwarded to AI SDK generation.                                |
+| `ai.temperature`     | No       | Optional sampling setting, when the selected model supports it.                          |
+| `ai.topP`            | No       | Optional sampling setting, when the selected model supports it.                          |
+
+The model must support the structured translation output used by the runner.
+These docs use `openai('gpt-6.1-sol')`; the provider reads `OPENAI_API_KEY`.
+When using a model ID instead of a provider instance, configure the AI SDK's
+default provider and credentials for that routing.
+
+Langnostic does not supply defaults for `providerOptions`, `temperature`, or
+`topP`. Avoid setting unsupported sampling parameters on reasoning models.
+Check the [OpenAI provider options](https://ai-sdk.dev/providers/ai-sdk-providers/openai)
+or your provider's AI SDK documentation for supported settings.
+
+The CLI loads a `.env` file from the current working directory. Model selection
+changes do not automatically request fresh translations for existing content.
+
+## Locale settings
+
+`localeConfig` contains:
+
+- `source`: The source locale, such as `en-US`.
+- `target`: A non-empty array of target locales, such as `['zh-CN', 'pt-BR']`.
+
+Locale strings must match the supported hyphen-separated locale syntax.
+Target locales must be unique and different from the source, compared without
+case sensitivity.
+
+A group's `localeConfig` replaces the entire top-level locale configuration for
+that group. It is not a partial override: provide both `source` and `target`.
+
+## Translation groups
+
+| Setting             | Required | Behavior                                                             |
+| ------------------- | -------- | -------------------------------------------------------------------- |
+| `name`              | Yes      | Non-empty identifier, unique across groups, used in progress output. |
+| `plugin`            | Yes      | Plugin instance that discovers pending content and writes results.   |
+| `paths`             | Yes      | Non-empty array of source/target path mappings.                      |
+| `localeConfig`      | No       | Complete locale override for this group.                             |
+| `stringsPerRequest` | No       | Positive integer overriding the plugin's batch-size default.         |
+
+The official FormatJS and MDX plugins default to **50** and **20** strings per
+request respectively. A string can be a short message, a frontmatter value, or a
+whole Markdown block; this setting is not a token limit.
+
+Use a new plugin instance for each group so tracked files and options stay
+independent. See [Using plugins](/docs/plugins) for plugin-specific options.
+
+## Path mappings
+
+Each path mapping has a `source` pattern and a `target` pattern. Paths are
+resolved from the CLI's working directory, not from the configuration file's
+directory.
+
+Use `{locale}` in the target to insert each configured target locale. The path
+mapper supports `*` and `**/` wildcard captures, reused in order in the target:
+
+| Source                     | Target                        | Example result for `zh-CN`                                          |
+| -------------------------- | ----------------------------- | ------------------------------------------------------------------- |
+| `./src/locales/en-US.json` | `./src/locales/{locale}.json` | `./src/locales/zh-CN.json`                                          |
+| `./docs/en-US/**/*.mdx`    | `./docs/{locale}/**/*.mdx`    | `./docs/zh-CN/guides/setup.mdx` for `./docs/en-US/guides/setup.mdx` |
+| `./blog/*/en-US.mdx`       | `./blog/*/{locale}.mdx`       | `./blog/welcome/zh-CN.mdx` for `./blog/welcome/en-US.mdx`           |
+
+The target cannot contain more wildcard captures than the source. Use matching
+capture layouts so different source files resolve to different output files.
+
+Source discovery uses glob matching, but target reconstruction only understands
+the wildcard captures above. Avoid unsupported glob constructs when mapping a
+matched filename into a target path.
+
+Before plugins run, Langnostic rejects target paths that overwrite any discovered
+source file or resolve to the same destination more than once, including through
+symlinks. A source pattern matching no files produces a warning and no work for
+that mapping; ensure your paths are correct before relying on a successful exit.
+
+## Configuration errors
+
+Invalid required fields, locale lists, positive-integer settings, plugin methods,
+or duplicate group names cause the command to fail. Configuration and discovery
+failures exit with status `1`.
+
+See [CLI](/docs/cli) for command behavior and
+[Architecture](/docs/architecture) for the runner/plugin contract.

@@ -1,16 +1,249 @@
 ---
 title: Using plugins
+description: Install official format plugins, understand change tracking, and create a custom plugin.
 ---
 
-{/* Reference: https://vite.dev/guide/using-plugins.html */}
+Plugins handle file-format operations: reading source and target files, deciding
+what needs translation, providing instructions, and writing results. The runner
+handles AI requests, concurrency, and batch completion.
 
-Langnostic plugins handle format-specific (FormatJS JSON, MDX, etc.) operations:
+These instructions target the [upcoming release](/docs#availability-and-licensing).
+Install plugins separately and use a distinct instance for each translation group.
 
-- **Loading**: Reads and parses files in their specific format
-- **Change Detection**: Determines what content needs translation
-- **Writing**: Writes translated content back to files while preserving format
+## FormatJS plugin
 
-Use `FormatJSPlugin` from `@langnostic/plugin-formatjs` for React Intl/FormatJS
-message catalogs. This package replaces `@langnostic/plugin-json`.
+```package-install
+npm install @langnostic/plugin-formatjs --save-dev
+```
 
-_Page in-progress._
+Import the default factory as `FormatJSPlugin` and pass `FormatJSPlugin()` as
+the group's `plugin`. This package replaces `@langnostic/plugin-json` in the
+upcoming release; catalog filenames still end in `.json`.
+
+### Catalog schema
+
+A catalog is a flat map of message IDs to strings or FormatJS descriptors:
+
+```json
+{
+  "greeting": {
+    "defaultMessage": "Hello, {name}!",
+    "description": "Greeting on the dashboard"
+  },
+  "save": "Save"
+}
+```
+
+For descriptors, the model receives `defaultMessage` plus `description` as
+context. Newly translated descriptors retain the source description. Nested
+objects representing message namespaces are not supported by this plugin.
+
+The factory takes no options. Its default `stringsPerRequest` is **50**;
+override this on the [translation group](/docs/configuration#translation-groups).
+
+### FormatJS change detection
+
+- A missing target file queues every source ID for that locale.
+- IDs missing from an existing target are queued for translation.
+- IDs removed from the source are removed from existing targets on a real run,
+  even when no AI requests are needed.
+- Existing IDs are not queued when their source text or description changes.
+  Update target values manually or remove affected target IDs to request new
+  translations.
+
+The plugin does not maintain source-value history. It preserves existing target
+entries when merging new translations, sorts IDs on translation writes, and
+writes formatted JSON. Original JSON whitespace is not preserved.
+
+ICU syntax, tags, and placeholders are handled through model instructions.
+Validate the generated messages with your application's tooling.
+
+## Markdown/MDX plugin
+
+```package-install
+npm install @langnostic/plugin-mdx --save-dev
+```
+
+Use this complete configuration to translate Markdown documents while keeping
+non-translatable metadata out of AI requests:
+
+```typescript title="langnostic.config.ts"
+import { openai } from '@ai-sdk/openai';
+import MdxPlugin from '@langnostic/plugin-mdx';
+import type { ConfigType } from 'langnostic';
+
+export default {
+  ai: {
+    model: openai('gpt-6.1-sol'),
+  },
+  localeConfig: {
+    source: 'en-US',
+    target: ['zh-CN'],
+  },
+  groups: [
+    {
+      name: 'docs',
+      plugin: MdxPlugin({
+        frontmatterExcludedKeys: ['slug', 'date', 'tags'],
+      }),
+      paths: [
+        {
+          source: './docs/en-US/**/*.md',
+          target: './docs/{locale}/**/*.md',
+        },
+      ],
+    },
+  ],
+} satisfies ConfigType;
+```
+
+The same plugin handles `.mdx`; change both path patterns to that extension.
+The default `stringsPerRequest` is **20**.
+
+### Frontmatter options
+
+`frontmatterExcludedKeys?: string[]` names top-level frontmatter fields to
+exclude from translation requests. It defaults to no excluded keys.
+
+Use it for identifiers, slugs, dates, numbers, arrays, and objects that should not
+be translated. Translatable frontmatter values should be strings. Exclusion
+keeps a field out of AI requests; review generated metadata when source fields
+change.
+
+### MDX change detection
+
+The plugin parses a document into top-level Markdown/MDX blocks and hashes the
+serialized source blocks. It separately tracks source frontmatter hashes.
+For `docs/en-US/setup.mdx`, the registry is
+`docs/en-US/setup.langnostic.json`.
+
+Commit this registry with source and translated documents. The ignored
+`.langnostic/` directory is only for debug output and is not the registry store.
+
+Source hashes identify which blocks have been translated for each target locale.
+New or modified source blocks and missing or changed translatable frontmatter
+are queued. Removal-only or reordering-only changes can be applied without
+translation requests.
+
+Existing target blocks are associated with source hashes by position. Manual
+text edits can be reused while that association remains intact, but changing the
+number or order of target blocks can invalidate it or associate text with the
+wrong source block. If the target block count differs from the registry, every
+source block is queued again. A missing registry also causes retranslation.
+
+Review manual structural edits carefully and keep a version-control copy before
+rebuilding translations. Restoring matching source, target, and registry files
+together preserves the tracking context.
+
+### Syntax and code examples
+
+The plugin sends Markdown blocks, including code fences and JSX, to the model.
+Its instructions ask the model to retain inline code and handle Markdown/JSX,
+but code blocks are not excluded or validated as unchanged. Review syntax,
+placeholders, links, and executable examples after translation.
+
+Markdown and YAML frontmatter are reserialized. Expect formatting changes even
+when the resulting document has equivalent structure.
+
+## Custom plugins
+
+Use the exported `LangnosticPlugin` type to implement the current contract.
+The following complete example translates each missing plain-text target as one
+string. It deliberately keeps existing target files and does not track source
+edits or removals:
+
+```typescript title="text-plugin.ts"
+import { access, readFile } from 'node:fs/promises';
+import type {
+  LangnosticPlugin,
+  TranslationFileMetadata,
+  TranslationStringArg,
+} from 'langnostic';
+import { writeFileAtomic } from 'langnostic';
+
+export default function TextPlugin(): LangnosticPlugin {
+  let files: ReadonlyArray<TranslationFileMetadata> = [];
+
+  return {
+    type: 'plain-text',
+    stringsPerRequest: 1,
+    async trackFiles(metadata) {
+      files = metadata;
+    },
+    async getTranslationStrings() {
+      const strings: TranslationStringArg[] = [];
+
+      for (const file of files) {
+        const targets: string[] = [];
+        for (const target of file.targets) {
+          try {
+            await access(target.path);
+          } catch (error) {
+            if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+              throw error;
+            }
+            targets.push(target.locale);
+          }
+        }
+
+        if (targets.length > 0) {
+          strings.push({
+            batchId: file.source.path,
+            id: 'content',
+            source: {
+              locale: file.source.locale,
+              string: await readFile(file.source.path, 'utf8'),
+            },
+            targets,
+          });
+        }
+      }
+
+      return strings;
+    },
+    async getInstructions() {
+      return 'Translate the plain text, retaining its paragraph structure.';
+    },
+    async onTranslationBatchComplete(results) {
+      for (const result of results) {
+        const file = files.find((item) => item.source.path === result.batchId);
+        for (const translation of result.targets) {
+          const target = file?.targets.find(
+            (item) => item.locale === translation.locale,
+          );
+          if (!target) {
+            throw new Error('Translation has no matching target file');
+          }
+          await writeFileAtomic(target.path, translation.string);
+        }
+      }
+    },
+  };
+}
+```
+
+Import your factory into the configuration and instantiate it like an official
+plugin. Map source `.txt` files to target `.txt` paths using `{locale}`.
+
+### Lifecycle and writes
+
+| Hook                                  | Contract                                                                |
+| ------------------------------------- | ----------------------------------------------------------------------- |
+| `trackFiles(metadata)`                | Receive readonly source/target file and locale metadata.                |
+| `getTranslationStrings()`             | Return pending strings without modifying files.                         |
+| `onTranslationStart?()`               | Apply maintenance on real runs, including runs with no pending AI work. |
+| `getInstructions?()`                  | Supply instructions before each translation request.                    |
+| `onTranslationBatchComplete(results)` | Write results after the entire batch has translated successfully.       |
+
+Queue removal or reordering maintenance during discovery, then apply it in
+`onTranslationStart()`. Dry runs skip both write hooks. Preserve the readonly
+input contract rather than mutating metadata or result arrays.
+
+The exported `writeFileAtomic` and `writeJsonAtomic` helpers create parent
+directories and replace individual files after their complete contents are
+written. They do not provide a transaction spanning multiple files.
+
+For larger formats, `buildTranslationStrings` converts normalized
+`{ string, description? }` source values and per-locale changed-ID lists into
+runner arguments. `buildTranslatedContentMap` groups results by locale and ID.
+See [Architecture](/docs/architecture) for argument and result shapes.

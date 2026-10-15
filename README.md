@@ -1,16 +1,16 @@
 # Langnostic
 
-Fast, scalable, and efficient translation system to continuously translate strings within React components + Markdown documents using AI.
+Translate FormatJS message catalogs and Markdown documents with your own AI provider, keeping the results in your repository.
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ## ✨ Features
 
-- 🤖 **AI-Powered translation** - Powered by AI with support for any model (OpenAI, Google, Anthropic, and more)
+- 🤖 **AI-powered translation** - Use compatible language models with structured output through AI SDK providers
 - 🔌 **Plugin architecture** - Extensible system supporting multiple file formats
-- 📦 **Smart change detection** - Only translates new or modified content
+- 📦 **Plugin-specific change detection** - Fill missing FormatJS IDs and track changed Markdown blocks with source registries
 - ⚡ **Batch processing** - Efficiently processes multiple strings per request
-- 🎯 **Format preservation** - Maintains code syntax, HTML tags, and template variables
+- 🎯 **Format-aware instructions** - Guide the model on syntax and placeholders, then review and validate the generated content
 - 🔄 **Concurrent processing** - Configurable parallel translation for faster results
 - 🛠️ **Simple CLI** - Easy-to-use command-line interface
 
@@ -19,19 +19,26 @@ Fast, scalable, and efficient translation system to continuously translate strin
 - **FormatJS JSON** - React Intl/FormatJS message catalogs with ICU syntax
 - **MDX** - Documentation files with frontmatter and content translation
 
-`@langnostic/plugin-formatjs` replaces `@langnostic/plugin-json`. Update your
-dependency and import it as `FormatJSPlugin`; locale file paths remain `.json`.
+In the upcoming release, `@langnostic/plugin-formatjs` replaces
+`@langnostic/plugin-json`. Import it as `FormatJSPlugin`; locale paths remain
+`.json`. Other localization schemas and formats require a compatible custom plugin.
 
 ## 🚀 Quick start
 
-### Installation
+### Availability and installation
+
+This README describes the upcoming release. The renamed FormatJS package awaits
+publication; the commands below apply once the upcoming packages are available.
+The existing npm release uses `@langnostic/plugin-json`. See
+[availability and licensing](apps/docs/content/docs/index.mdx#availability-and-licensing)
+for the distinction between existing MIT releases and planned commercial licensing.
 
 ```bash
-npm install langnostic @langnostic/plugin-formatjs
+npm install langnostic @langnostic/plugin-formatjs @ai-sdk/openai --save-dev
 # or
-pnpm add langnostic @langnostic/plugin-formatjs
+pnpm add langnostic @langnostic/plugin-formatjs @ai-sdk/openai --save-dev
 # or
-yarn add langnostic @langnostic/plugin-formatjs
+yarn add langnostic @langnostic/plugin-formatjs @ai-sdk/openai --dev
 ```
 
 ### Initialize configuration
@@ -49,7 +56,7 @@ import type { ConfigType } from 'langnostic';
 
 export default {
   ai: {
-    model: openai('gpt-4'),
+    model: openai('gpt-6.1-sol'),
   },
   groups: [
     {
@@ -65,7 +72,7 @@ export default {
   ],
   localeConfig: {
     source: 'en-US',
-    target: ['zh-CN', 'es-ES', 'fr-FR'],
+    target: ['zh-CN'],
   },
 } satisfies ConfigType;
 ```
@@ -88,12 +95,17 @@ export GOOGLE_GENERATIVE_AI_API_KEY="your-api-key"
 # Translate all untranslated content
 npx langnostic translate
 
-# Preview what would be translated (dry run)
+# Preview pending file batches and string counts (dry run)
 npx langnostic translate --dry-run
 
 # Enable debug mode to see prompts and responses
 npx langnostic translate --debug
 ```
+
+FormatJS fills missing target IDs and removes obsolete IDs. Changes to source text
+or descriptions under an existing ID do not trigger retranslation; update the
+translation manually or remove the affected target ID before running again.
+Dry runs do not print strings or list removal-only maintenance.
 
 ## 🎯 Use cases
 
@@ -121,25 +133,16 @@ Perfect for translating application strings with support for:
 
 ### MDX files
 
-Ideal for translating documentation sites while preserving:
+Translate document blocks and string-valued frontmatter fields. Commit each
+source document's `*.langnostic.json` registry beside the source and target files.
+Ignore only the separate `.langnostic/` debug directory.
 
-- Frontmatter metadata
-- Code blocks
-- JSX components
-- Markdown formatting
+The plugin sends Markdown, JSX, and code blocks to the model. Review generated
+syntax and code examples; preservation is model-dependent. Missing registries or
+target block-count changes can trigger full content retranslation.
 
-```mdx
----
-title: Getting Started
-description: Learn how to use our platform
----
-
-# Getting Started
-
-Welcome to our platform! Here's how to get started:
-
-<CustomComponent prop="value" />
-```
+See [MDX setup and tracking](apps/docs/content/docs/plugins.mdx#markdownmdx-plugin)
+for options, limitations, and a complete configuration.
 
 ## 🏗️ Repository structure
 
@@ -167,12 +170,21 @@ Langnostic uses a flexible configuration system supporting:
 - Concurrency controls
 - Path pattern matching
 
-Example with multiple file types:
+Example with multiple file types. Install the additional provider and plugin:
+
+```bash
+npm install @ai-sdk/google @langnostic/plugin-mdx --save-dev
+```
 
 ```typescript
+import { google } from '@ai-sdk/google';
+import FormatJSPlugin from '@langnostic/plugin-formatjs';
+import MdxPlugin from '@langnostic/plugin-mdx';
+import type { ConfigType } from 'langnostic';
+
 export default {
   ai: {
-    model: google('gemini-1.5-pro'),
+    model: google('gemini-3.8-flash'),
   },
   localeConfig: {
     source: 'en-US',
@@ -194,8 +206,8 @@ export default {
       plugin: MdxPlugin(),
       paths: [
         {
-          source: './docs/**/**/en-US.mdx',
-          target: './docs/**/**/{locale}.mdx',
+          source: './docs/en-US/**/*.mdx',
+          target: './docs/{locale}/**/*.mdx',
         },
       ],
     },
@@ -304,47 +316,23 @@ and builds from the repository root.
 
 ## 🔌 Plugin development
 
-Create custom plugins to support additional file formats:
-
-```typescript
-import type { LangnosticPlugin } from 'langnostic';
-
-export default function MyPlugin(): LangnosticPlugin {
-  return {
-    type: 'my-format',
-    stringsPerRequest: 50,
-
-    async trackFiles(filesMetadata) {
-      // Track files for translation
-    },
-
-    async getTranslationStrings() {
-      // Return strings that need translation
-      return translationStrings;
-    },
-
-    async onTranslationBatchComplete(translatedStrings) {
-      // Handle completed translations
-    },
-
-    async getInstructions() {
-      // Return AI-specific instructions for this format
-      return 'Custom instructions for translating this format...';
-    },
-  };
-}
-```
+Implement the exported `LangnosticPlugin` type. See the
+[complete plain-text plugin example](apps/docs/content/docs/plugins.mdx#custom-plugins)
+and [runner architecture](apps/docs/content/docs/architecture.mdx) for current
+argument/result shapes.
 
 `getTranslationStrings()` must leave files unchanged. Queue maintenance such as
-removals or reordering for an optional `onTranslationStart()` hook, which runs only
-on real runs, including runs that need no AI calls. The exported `writeFileAtomic`
-and `writeJsonAtomic` helpers create parent directories and replace files only
-after their full contents have been written.
+removals or reordering for the optional `onTranslationStart()` hook, which runs
+only on real runs, including runs that need no AI calls. The runner invokes
+`onTranslationBatchComplete()` after an entire batch succeeds.
 
-The exported `buildTranslationStrings` helper accepts a map from message IDs to
-normalized `{ string, description? }` values, a map of changed IDs per target
-locale, and the file metadata. Plugins interpret their own source schemas before
-calling it; the helper adds the source locale, batch ID, and target locales.
+The exported `writeFileAtomic` and `writeJsonAtomic` helpers create parent
+directories and replace individual files after their full contents are written.
+They do not create a transaction spanning multiple files.
+
+`buildTranslationStrings` accepts normalized `{ string, description? }` source
+values, changed IDs per locale, and file metadata. `buildTranslatedContentMap`
+groups translated results by locale and ID.
 
 ### Development workflow
 
@@ -358,4 +346,9 @@ calling it; the helper adds the source locale, batch ID, and target locales.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](packages/langnostic/LICENSE) file for details.
+The current repository and existing published releases include the
+[MIT license](packages/langnostic/LICENSE). The upcoming release has a planned
+free-for-open-source and paid-commercial policy; its terms and pricing will be
+announced separately. See
+[availability and licensing](apps/docs/content/docs/index.mdx#availability-and-licensing).
+This planned policy does not replace the license included with an existing release.

@@ -1,29 +1,66 @@
 ---
 title: Workflows
-description: Integrate Langnostic into any development and release workflow
+description: Review translations locally and integrate the CLI into scripts and CI.
 ---
 
-Since there's only one main command for translating, Langnostic can be easily integrated into many common workflows:
+Run `langnostic translate` as an explicit step before building or deploying your
+application. You can invoke it locally, in a pre-commit hook, after a pull request
+or merge, on a schedule, or before a release.
 
-- **Precommit hook**: Run translation command before committing
-- **Post-PR**: Run translation command after PR is created. Can be done via CI hooks (e.g. GitHub actions)
-- **Post-merging**: Run translation command after PR is merged. Can be done via CI hooks (e.g. GitHub actions)
-- **Periodically**: Run translation command periodically (e.g. every 1 hour or 1 day)
-- **Before release**: Run translation command before deploying to staging and production
-- **Watch mode**: Background runner that watches file changes and runs translation after a file is saved. Can be overkill, but can be helpful if there's a need to see the translated result during development
-
-The translation command can be run anytime because it does the minimal work required to get the project into the fully-translated state.
+Choose a workflow that leaves time to review generated text and validate your
+localization files. AI usage can incur provider charges.
 
 ## Manual workflow
 
-1. Update strings in app
-1. Developer runs CLI command → `langnostic translate`
-1. Commit updated files and deploy
+1. Update your source catalogs or documents.
+2. For changed FormatJS messages under existing IDs, update target translations
+   manually or remove affected target IDs to request replacements.
+3. Run `langnostic translate --dry-run` to inspect pending files and counts.
+4. Run `langnostic translate`.
+5. Review the diff and validate ICU messages, placeholders, Markdown, JSX, and code
+   examples with your application's tooling.
+6. Commit the source files, translated files, and MDX registries together.
+
+Keep `.langnostic/` debug output out of version control. Preserve the
+`*.langnostic.json` files beside source documents; removing them can trigger
+MDX retranslation. See [plugin tracking behavior](/docs/plugins).
 
 ## CI/CD workflow
 
-1. Update strings in app
-1. Commit source file changes and push to a branch
-1. CI pipeline runs `langnostic translate` upon code push or pull requests
-   - Commits the changes
-   - CI bot creates pull request with translated files. Human reviews the translation changes before merging
+A project-owned CI workflow can:
+
+1. Check out the source change and install the configured dependencies.
+2. Make the AI provider credentials available through the CI secret store.
+3. Run `langnostic translate` and check its exit status.
+4. Validate the generated files and collect the resulting diff.
+5. Commit changes to a translation branch or open a pull request for review.
+
+The CLI performs translation and file updates; it does not create commits,
+branches, or pull requests. Configure those operations and their permissions in
+your CI workflow. Avoid sending credentials to untrusted pull-request jobs.
+
+An exit status of `1` reports a failure, but completed batches or maintenance
+may already have changed files. Do not publish a partial result solely because
+some files were generated. A successful exit can also mean no source files
+matched; inspect warnings if output is unexpectedly empty.
+
+## External file watching
+
+Langnostic has no built-in watch mode. If you need translation during development,
+configure an external watcher to run the translation command when source files
+change.
+
+Watch source files rather than generated target files or registries, and serialize
+runs so multiple processes do not write the same targets at once. Consider API
+usage and reviewability before translating after every save.
+
+## Review and retries
+
+Unchanged runs normally avoid AI work according to the plugin's tracking rules.
+FormatJS does not detect source-value edits under existing IDs. MDX can queue
+all blocks when a registry is missing or the target block count changes.
+
+Before retrying, inspect changed files and preserve manual edits. Restore matching
+source, target, and registry state together when recovering an MDX document.
+See [CLI](/docs/cli) for debug logs and
+[Architecture](/docs/architecture) for batch completion and write behavior.

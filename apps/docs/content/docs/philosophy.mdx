@@ -1,12 +1,50 @@
 ---
 title: Philosophy
-description: TODO
+description: File ownership, provider choice, explicit workflows, and format-specific behavior.
 ---
 
-Flexibility, being agnostic, independence, are the core operating principles of Langnostic.
+Langnostic is built around files and explicit translation workflows. These
+principles guide its current design and the [roadmap](/docs/roadmap).
 
-1. No lock-in: You own your content
-2. Flexibility in choosing AI translation model
-3. Flexibility in adoption workflow
-4. Flexibility in directory structure
-5. Flexibility in files format
+## Keep content portable
+
+Generated translations stay in the project's own files. They can be reviewed,
+edited, committed, or consumed by compatible localization tooling without a
+Langnostic-hosted translation store.
+
+Portability still depends on format compatibility. Official plugins cover flat
+string/FormatJS JSON catalogs and Markdown/MDX; other schemas need plugins.
+
+## Make provider choice explicit
+
+Configure a compatible AI SDK model using your own provider credentials. Choose
+providers according to your content, quality expectations, availability, and
+usage costs. Changing the model does not automatically replace existing
+translations.
+
+## Fit the project's workflow
+
+Run translation before your application is built or deployed. Use existing
+scripts, version control, review, and validation tools. Project configuration
+controls file paths and locale groups rather than imposing a directory layout.
+
+## Let plugins own format behavior
+
+Each format has different units of translation and tracking requirements.
+FormatJS compares IDs; MDX tracks block and frontmatter hashes. The
+[plugin contract](/docs/plugins#lifecycle-and-writes) separates read-only
+discovery from file writes.
+
+The documentation describes those differences rather than promising identical
+change detection or preservation across formats. Model-generated text and syntax
+still need review.
+
+## Separate current behavior from future plans
+
+The [roadmap](/docs/roadmap) describes planned capabilities such as glossaries,
+local CLI backends, and a desktop workspace. It does not imply those features
+exist in the current CLI.
+
+[Availability and licensing](/docs#availability-and-licensing) distinguishes the
+upcoming release and its planned commercial policy from existing published
+packages.

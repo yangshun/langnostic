@@ -8,39 +8,39 @@ import Announcement from '../components/Announcement.astro';
 const { config } = data;
 const features = [
   {
-    title: 'Use with any i18n library',
+    title: 'Fit your localization workflow',
     description:
-      'Langnostic operates on files, so you can use any i18n library you want — i18next, react-intl, or next-intl, you name it',
+      'Translate flat string maps, FormatJS message catalogs, and Markdown/MDX. Other localization schemas need a compatible plugin.',
     icon: 'square-terminal',
   },
   {
     title: 'No lock-in',
     description:
-      'Translated contents are yours to keep within your own repository, there are no ongoing costs or vendor lock-in',
+      'Keep translated content in your repository without a hosted translation store. AI provider usage and applicable licensing are separate costs.',
     icon: 'lock-open',
   },
   {
     title: 'Bring your own AI',
     description:
-      'Use your own AI — OpenAI, Google AI, Anthropic, or any others supported by AI SDK',
+      'Choose a compatible language model from OpenAI, Google, Anthropic, or another AI SDK provider, using your own API credentials.',
     icon: 'brain',
   },
   {
-    title: 'Does minimal work',
+    title: 'Plugin-specific change detection',
     description:
-      'Langnostic only translates new or modified content, saving time and money',
+      'Fill missing message IDs in FormatJS catalogs and track changed Markdown blocks with source-file registries.',
     icon: 'zap',
   },
   {
     title: 'Extensible architecture',
     description:
-      'Designed for extensibility, supporting JSON, MDX, and custom file formats',
+      'Use separately installed official plugins for FormatJS JSON and Markdown/MDX, or build a plugin for another file format.',
     icon: 'layout-template',
   },
   {
-    title: 'Format preservation',
+    title: 'Format-aware instructions',
     description:
-      'Maintains code syntax, HTML tags, JSX components, and template variables',
+      'Give the model guidance for ICU syntax, markup, and inline code. Review generated syntax and examples before using them.',
     icon: 'palette',
   },
 ];
@@ -72,8 +72,8 @@ const features = [
         Translate your website <span class="whitespace-nowrap text-accent">using AI</span>
       </h1>
       <p class="mx-auto max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
-        Langnostic is an efficient and affordable translation toolchain for
-        websites using AI.
+        Translate your application messages and documentation with AI, using
+        your own provider and keeping the results in your repository.
       </p>
     </div>
     <a
@@ -82,9 +82,10 @@ const features = [
     >
       Get started <Icon name="arrow-right" size={16} />
     </a>
-    <div class="max-w-full rounded-blume border border-border bg-code px-5 py-4">
-      <code class="text-sm"><span class="text-muted-foreground">$</span> npm install langnostic</code>
-    </div>
+    <p class="text-sm text-muted-foreground">
+      The upcoming release is being prepared. See the documentation for
+      package availability and planned licensing.
+    </p>
   </section>
 
   <section class="border-y border-border bg-muted/30 px-6 py-16 sm:py-20">
@@ -107,7 +108,7 @@ const features = [
 
   <section class="mx-auto max-w-3xl space-y-6 px-6 py-20 text-center">
     <h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">Ready to translate your app?</h2>
-    <p class="text-lg text-muted-foreground">Get started with Langnostic in less than 5 minutes</p>
+    <p class="text-lg text-muted-foreground">Explore the setup guide and supported translation workflows.</p>
     <a
       class="inline-flex items-center justify-center gap-2 rounded-blume bg-action px-6 py-3 text-sm font-medium text-action-foreground transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
       href="/docs"

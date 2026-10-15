@@ -1,42 +1,86 @@
 ---
 title: CLI
-description: Commands available on Langnostic
+description: Initialize configuration, translate files, preview pending batches, and inspect requests.
 ---
 
-{/* Reference: https://vite.dev/guide/cli.html */}
-
-There are the following commands on Langnostic:
+Run commands from your project directory. The CLI loads `.env` and searches for
+`langnostic.config.ts` or `langnostic.config.js` from that directory.
+See [Quick start](/docs/quick-start) for upcoming-release setup.
 
 ## `init`
 
 ```bash
-# Initialize configuration
 npx langnostic init
 ```
 
-Initializes a configuration file in your current directory. You should customize it according to your files structure and use the necessary plugins.
+Creates `langnostic.config.ts` in the current directory if no existing project
+configuration is found. If a configuration already exists, the command reports
+its path and leaves it unchanged.
+
+The template imports the OpenAI provider and FormatJS plugin, uses
+`openai('gpt-6.1-sol')`, and targets `zh-CN` from `en-US`. The command does
+not install dependencies, create source catalogs, or configure provider credentials.
 
 ## `translate`
 
-Translates the files that match the config file.
-
 ```bash
-# Run translations
 npx langnostic translate
 ```
 
-### `--dry-run`
+Discovers configured source files, asks plugins for pending work, applies
+maintenance, and runs translation requests. Results and progress are reported
+per group and source-file batch.
 
-Preview changes without translating. Prints out the strings that will be translated.
+Change detection is [plugin-specific](/docs/features#change-detection). In
+particular, FormatJS source edits under an existing ID do not request fresh
+translations. A successful command is not a syntax or human-quality review.
+
+### `--dry-run` / `-r`
 
 ```bash
 npx langnostic translate --dry-run
 ```
 
-### `--debug`
+Shows pending group names, source file paths, and string counts without AI calls
+or file changes. It does not print individual source strings or proposed
+translations.
 
-Debug mode to see the prompts and responses of each call to the AI model. Logs are written into `.langnostic` directory.
+Removal-only and reordering-only maintenance is not listed as pending translation
+work. A dry run can report `Nothing to translate` even when a real run would
+apply maintenance. Custom plugins must also honor the read-only discovery
+contract.
+
+### `--debug` / `-d`
 
 ```bash
 npx langnostic translate --debug
 ```
+
+Runs real translations and saves request diagnostics under
+`.langnostic/runs/<run-id>/<job-id>/`:
+
+- `prompt.txt`: The prompt sent to the model.
+- `response.json`: Structured output, usage, and available request/response
+  metadata.
+- `error.log`: Errors for a failed generation, when available.
+
+Logs contain your source content and generated translations. Ignore
+`.langnostic/` in version control. MDX `*.langnostic.json` registries are
+separate files beside source documents and should be committed.
+
+## Exit statuses
+
+- `0`: Initialization or translation completed, a dry run completed, or no
+  translations were pending.
+- `1`: Initialization, configuration, discovery, maintenance, translation,
+  validation, or writing failed.
+
+A translation failure can leave maintenance and successful independent batches
+already written. Review the diff before retrying or committing. A source glob
+matching no files produces a warning rather than a failing exit status.
+
+## Automation
+
+There is no built-in watch command. Use an external file watcher if needed,
+and configure your own CI steps for committing output or opening pull requests.
+See [Workflows](/docs/workflows).

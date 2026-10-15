@@ -24,3 +24,4 @@ yarn-error.log*
 # others
 .env*.local
 .vercel
+.blume-verify/

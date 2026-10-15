@@ -1,48 +1,45 @@
 ---
 title: Quick start
-description: Get started with Langnostic in 5 minutes
+description: Configure the upcoming Langnostic release for message catalogs and Markdown.
 ---
 
-:::info
-We're polishing up Langnostic for a public release and the code will be open
-sourced soon. Langnostic will be free for open source projects and commercial
-projects can purchase a business license for a reasonable one-time fee. If
-you're interested in using Langnostic, just [send us an
-email](mailto:team@greatfrontend.com).
+:::info[Upcoming release]
+The renamed FormatJS package is awaiting publication. The commands below describe
+setup once the upcoming packages are available. Read
+[availability and licensing](/docs#availability-and-licensing) before installing;
+the existing npm release uses a different plugin name.
 :::
-
-Get Langnostic up and running in your project in just a few minutes.
 
 ## Prerequisites
 
-- Node.js 18 or higher
-- A project with source locale files in FormatJS JSON or Markdown/MDX format
+- A supported Node.js version: `^22.18.0`, `^24.11.0`, or `>=26.0.0`.
+- Source files in a [supported format](/docs/plugins).
+- An AI provider account and API key. Provider usage charges are separate from
+  Langnostic licensing.
 
-## Installation
+## Install the CLI, plugin, and provider
 
-Install Langnostic in your project:
+For the default OpenAI and FormatJS setup, install all three dependencies:
 
 ```package-install
-npm install langnostic @langnostic/plugin-formatjs --save-dev
+npm install langnostic @langnostic/plugin-formatjs @ai-sdk/openai --save-dev
 ```
 
-## Ignore the `.langnostic` directory
+Ignore debug output, but keep translation files and MDX registries in version
+control:
 
-Add the `.langnostic` directory into your `.gitignore` file. This directory is used for any intermediate data or debug output.
-
-```diff title=".gitignore"
-.langnostic
+```text title=".gitignore"
+.langnostic/
 ```
 
 ## Initialize configuration
-
-Initialize a default configuration file.
 
 ```package-install
 npx langnostic init
 ```
 
-This creates a `langnostic.config.ts` file in the root of the project:
+If no project configuration already exists, this creates the following
+`langnostic.config.ts` in your current directory:
 
 ```typescript title="langnostic.config.ts"
 import { openai } from '@ai-sdk/openai';
@@ -51,7 +48,7 @@ import type { ConfigType } from 'langnostic';
 
 export default {
   ai: {
-    model: openai('gpt-5'),
+    model: openai('gpt-6.1-sol'),
   },
   groups: [
     {
@@ -67,179 +64,114 @@ export default {
   ],
   localeConfig: {
     source: 'en-US',
-    target: ['zh-CN', 'es-ES', 'fr-FR'],
+    target: ['zh-CN'],
   },
 } satisfies ConfigType;
 ```
 
-## Configure the localization groups
+Change the paths to match your project and add target locales as needed.
+`{locale}` is replaced with each target locale. For example, adding `pt-BR`
+would also generate `src/locales/pt-BR.json`.
 
-Update the `groups` configuration to match your project structure.
+Create the source catalog before translating. A minimal FormatJS catalog is:
 
-For example, given a project with the following structure,
-
-```
-├── src
-│   └── locales
-│       └── en-US.json
-├── package.json
-└── langnostic.config.ts
-```
-
-Create a group that targets the source locale file at `src/locales/en-US.json`:
-
-```typescript title="langnostic.config.ts"
-import { openai } from '@ai-sdk/openai';
-import FormatJSPlugin from '@langnostic/plugin-formatjs';
-import type { ConfigType } from 'langnostic';
-
-export default {
-  ai: {
-    model: openai('gpt-5'), // Other providers
-  },
-  localeConfig: {
-    source: 'en-US', // Your source locale
-    target: ['zh-CN', 'pt-BR'], // Locales to translate to
-  },
-  groups: [
-    {
-      name: 'app-strings',
-      plugin: FormatJSPlugin(),
-      paths: [
-        {
-          source: './src/locales/en-US.json', // Path to source file
-          target: './src/locales/{locale}.json', // {locale} will be replaced with the target locales
-        },
-      ],
-    },
-  ],
-} satisfies ConfigType;
+```json title="src/locales/en-US.json"
+{
+  "welcome": {
+    "defaultMessage": "Welcome, {username}!",
+    "description": "Greeting for a signed-in user"
+  }
+}
 ```
 
-After translating, two new files `zh-CN.json` and `pt-BR.json` will be created:
+The plugin also accepts flat string values. It does not interpret arbitrary
+nested JSON structures.
 
-```
-├── src
-│   └── locales
-│       ├── en-US.json
-│       ├── pt-BR.json
-│       └── zh-CN.json
-├── package.json
-└── langnostic.config.ts
-```
+## Configure your AI provider
 
-## Set up your AI provider
-
-Langnostic uses AI models to translate content. Under the hood, it uses the [AI SDK](https://ai-sdk.dev/), which provides a common interface to access the major AI model providers and their latest models. AI SDK supports a huge list of [AI Providers](https://ai-sdk.dev/providers/ai-sdk-providers) and it's always growing.
-
-This allows you to have complete freedom over choice of AI model to use for the translation. You may change it anytime you want, without having to re-translate the entire project.
-
-The default config uses the OpenAI provider via `@ai-sdk/openai`. Install that package, or others if you want to use a different model:
-
-```package-install
-npm install @ai-sdk/openai --save-dev
-```
-
-Initialize the AI provider instance and pass it to the `ai.model` field of `langnostic.config.ts`:
-
-```typescript title="langnostic.config.ts"
-import { openai } from '@ai-sdk/openai';
-
-export default {
-  ai: {
-    model: openai('gpt-5'),
-  },
-  // Other options omitted...
-};
-```
-
-Depending on your AI provider of choice, add the respective environment variable key and value to your `.env` file:
+Add your key to a `.env` file in the directory where you run the command:
 
 ```bash title=".env"
-# OpenAI
 OPENAI_API_KEY="your-api-key-here"
-
-# Or Google AI
-GOOGLE_GENERATIVE_AI_API_KEY="your-api-key-here"
-
-# Or Anthropic
-ANTHROPIC_API_KEY="your-api-key-here"
 ```
 
-Refer to [AI SDK](https://ai-sdk.dev/providers/ai-sdk-providers) for more in-depth instructions on how to use the various AI providers (common ones listed here):
+The CLI loads this file automatically. Keep credentials out of version control.
 
-- [OpenAI](https://ai-sdk.dev/providers/ai-sdk-providers/openai)
-- [Google Generative AI](https://ai-sdk.dev/providers/ai-sdk-providers/google-generative-ai)
-- [Anthropic](https://ai-sdk.dev/providers/ai-sdk-providers/anthropic)
+The examples use GPT-6.1 Sol through the OpenAI provider. You can use another
+compatible language model and provider package without automatically regenerating
+existing translations. The model must support the structured translation output
+Langnostic requests.
 
-## Start translating
+See the AI SDK guides for
+[OpenAI](https://ai-sdk.dev/providers/ai-sdk-providers/openai),
+[Google](https://ai-sdk.dev/providers/ai-sdk-providers/google), and
+[Anthropic](https://ai-sdk.dev/providers/ai-sdk-providers/anthropic). Each provider
+has its own package, credentials, and model availability.
 
-Let's start translating content!
+## Translate and review
 
 ```package-install
 npx langnostic translate
 ```
 
-:::info
-We recommend adding `langnostic translate` into the `scripts` field of your `package.json`.
+With the generated configuration, this fills missing message IDs in
+`src/locales/zh-CN.json` and removes IDs no longer present in the source:
 
-```json title="package.json"
-"scripts": {
-  // ...other scripts
-  "translate": "langnostic translate"
+```text
+src/
+└── locales/
+    ├── en-US.json
+    └── zh-CN.json
+```
+
+:::info[Source edits in FormatJS catalogs]
+Changing the text or description under an existing message ID does not trigger
+retranslation. To request a replacement, remove that ID from the relevant target
+catalog and run translation again, or edit the target translation yourself.
+Review changes to ICU syntax, placeholders, and markup before using the result.
+:::
+
+For a repeatable command, add a script to your existing `package.json`:
+
+```json title="package.json scripts"
+{
+  "scripts": {
+    "translate": "langnostic translate"
+  }
 }
 ```
 
-And you'll be able to translate via the command `npm run translate`.
+Then run `npm run translate`. See [Workflows](/docs/workflows) for review and CI
+integration.
 
-:::
+## Translate Markdown/MDX
 
-The command will automatically detect which strings need translation and generate/update your target locale files.
-
-Using the example project structure and config above that has a single source JSON file at `src/locales/en-US.json` targeting the locales `zh-CN.json` and `pt-BR.json`, the translated files will be generated beside the source file.
-
-```
-├── src
-│   └── locales
-│       ├── en-US.json
-│       ├── pt-BR.json
-│       └── zh-CN.json
-├── package.json
-└── langnostic.config.ts
-```
-
-## Markdown/MDX files
-
-To translate Markdown/MDX files, you will need to use the MDX plugin.
-
-Firstly, install the MDX plugin:
+Install the MDX plugin alongside the CLI and your provider:
 
 ```package-install
 npm install @langnostic/plugin-mdx --save-dev
 ```
 
-Configure the paths to your Markdown/MDX files. Assuming the following file directory structure:
-
-```
-├── docs
-│   └── en-US
-│       ├── getting-started.mdx
-│       └── introduction.mdx
-├── package.json
-└── langnostic.config.ts
-```
-
-The following configuration will translate all the `.mdx` files in the `docs/en-US/` directory.
+For this example, start with `docs/en-US/getting-started.mdx`. Replace your
+configuration with this complete Markdown-only setup:
 
 ```typescript title="langnostic.config.ts"
+import { openai } from '@ai-sdk/openai';
 import MdxPlugin from '@langnostic/plugin-mdx';
+import type { ConfigType } from 'langnostic';
 
 export default {
-  // Other config omitted for brevity...
+  ai: {
+    model: openai('gpt-6.1-sol'),
+  },
+  localeConfig: {
+    source: 'en-US',
+    target: ['zh-CN', 'pt-BR'],
+  },
   groups: [
     {
       name: 'docs',
-      plugin: MdxPlugin(),
+      plugin: MdxPlugin({ frontmatterExcludedKeys: ['slug'] }),
       paths: [
         {
           source: './docs/en-US/**/*.mdx',
@@ -251,72 +183,69 @@ export default {
 } satisfies ConfigType;
 ```
 
-Say we have the following source Markdown/MDX file:
+To translate catalogs and documents together, keep both groups in the
+`groups` array, using a separate plugin instance for each group.
+
+Given this source document:
 
 ```mdx title="docs/en-US/getting-started.mdx"
 ---
-title: Getting Started
+title: Getting started
 description: Learn how to get started
+slug: getting-started
 ---
 
-# Getting Started
+# Getting started
 
 Welcome to our documentation!
 
 <Alert>This is an important note.</Alert>
 ```
 
-Run `langnostic translate` and the translated Markdown/MDX file will be created:
+Run `langnostic translate` to generate both target documents and a registry:
 
-```mdx title="docs/zh-CN/getting-started.mdx"
----
-title: 入门指南
-description: 学习如何开始
----
-
-# 入门指南
-
-欢迎阅读我们的文档！
-
-<Alert>这是一个重要的提示。</Alert>
+```text
+docs/
+├── en-US/
+│   ├── getting-started.langnostic.json
+│   └── getting-started.mdx
+├── pt-BR/
+│   └── getting-started.mdx
+└── zh-CN/
+    └── getting-started.mdx
 ```
 
-The translated file intelligently preserves the frontmatter, Markdown syntax, and any JSX syntax.
+The plugin sends translatable frontmatter and document blocks to the model.
+`frontmatterExcludedKeys` keeps fields such as `slug` out of translation
+requests. Review the generated frontmatter, Markdown, JSX, and code examples;
+syntax preservation is model-dependent.
 
-In the above example, the final file directory looks like this:
+Commit each source document's `*.langnostic.json` registry with the source and
+target files. The registry tracks source hashes and the blocks associated with
+each target. It is separate from the ignored `.langnostic/` debug directory.
 
-```
-├── docs
-│   ├── en-US
-│   │   ├── getting-started.langnostic.json
-│   │   ├── getting-started.mdx
-│   │   ├── introduction.langnostic.json
-│   │   └── introduction.mdx
-│   └── zh-CN
-│       ├── getting-started.mdx
-│       └── introduction.mdx
-├── package.json
-└── langnostic.config.ts
-```
+Missing registries or changes to a target document's block count can cause all
+source blocks to be translated again. See
+[MDX change detection](/docs/plugins#mdx-change-detection) before restructuring
+translated documents.
 
-`*.langnostic.json` files will be created for each source file and they are meant to be committed into the repository. These files track the translation status of the source file and target files so that any changes made to the source file can be compared against its last translated version. This is necessary so that Langnostic translates only the changes made to the source file and not the entire file. You can think of that file as a `.git` directory for each source file.
-
-## Other helpful tips
-
-The `langnostic translate` command comes with a few helpful flags for an improved developer experience:
-
-### Preview changes first
-
-Use the `--dry-run` flag to get a preview of the strings that will be translated.
+## Preview pending work
 
 ```package-install
 npx langnostic translate --dry-run
 ```
 
-### Debug mode
+The preview shows pending groups, source file paths, and string counts. It does
+not print individual strings or translated output, make AI requests, or apply
+file changes. Removal-only or reordering-only maintenance is not listed as
+pending translation work.
 
-Use the `--debug` flag to log the prompts and responses from the AI into the `.langnostic` folder.
+## Inspect AI requests
 
 ```package-install
 npx langnostic translate --debug
 ```
+
+Debug runs make real translation requests and write prompts, responses, and errors
+under `.langnostic/runs/`. See [CLI](/docs/cli) for flags and exit statuses, and
+[Configuration](/docs/configuration) for all settings.

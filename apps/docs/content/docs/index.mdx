@@ -1,54 +1,78 @@
 ---
 title: Introduction
+description: Translate localization files and documentation with your own AI provider.
 ---
 
-:::info
-We're polishing up Langnostic for a public release and the code will be open
-sourced soon. Langnostic will be free for open source projects and commercial
-projects can purchase a business license for a reasonable one-time fee. If
-you're interested in using Langnostic, just [send us an
-email](mailto:team@greatfrontend.com).
-:::
+Langnostic is a CLI for translating localization files and documentation before
+you build or deploy your application. Configure source files, target locales,
+and format plugins, then run `langnostic translate`.
 
-At its core, Langnostic is a powerful CLI tool for translating files. It is packed with features to make the internationalization process simple, fast, and affordable.
+Translations stay in your repository. You choose the AI provider and review the
+generated changes using your existing development workflow.
 
-Because Langnostic operates on files and does not enforce any directory structure, it works with any JavaScript framework and i18n runtime library. While we expect the majority of users to be using Langnostic to translate JavaScript applications, it can also be used to translate strings within web or mobile apps written in other languages like Python, Ruby, Java, Swift, Kotlin, etc., as long as the translation strings exist as text-based files (JSON, Markdown, XML, YAML, TOML, etc.).
+## Availability and licensing
+
+These docs describe the upcoming release and the current repository source.
+The renamed `@langnostic/plugin-formatjs` package is awaiting publication. The
+installation commands and configuration examples apply to that upcoming release;
+they are not a setup guide for the older npm packages.
+
+The existing `langnostic@0.0.10` release uses `@langnostic/plugin-json`. Existing
+published packages and the current repository license artifacts identify MIT as
+their license. The planned policy for the upcoming release is free use for
+open-source projects and a paid business license for commercial projects.
+Commercial terms and pricing will be announced separately; this planned policy
+does not replace the license included with an existing release.
+
+For upcoming-release access and commercial licensing, contact
+[team@greatfrontend.com](mailto:team@greatfrontend.com).
+
+AI provider usage is a separate cost. Keeping generated files in your repository
+does not require a hosted translation store, but translation requests can incur
+charges from your provider.
+
+## Supported content
+
+The separately installed official plugins support:
+
+- **FormatJS JSON:** Flat message-ID maps containing strings or FormatJS
+  descriptors with `defaultMessage` and `description`.
+- **Markdown/MDX:** Document blocks and translatable frontmatter fields, with a
+  registry beside each source file for incremental translation.
+
+The CLI works independently of your application framework. Your i18n runtime must
+be able to consume the generated file schema. Nested JSON catalogs, XML, YAML,
+TOML, and other localization formats need a suitable custom plugin; they are not
+automatically supported because they are text files.
+
+See [Using plugins](/docs/plugins) for formats, options, and authoring guidance.
 
 ## Use cases
 
-Langnostic is perfect for:
+- Fill missing translations in application message catalogs.
+- Translate Markdown/MDX documentation and revisit changed source blocks.
+- Run translation as a reviewable step in a development or release workflow.
 
-- **SaaS/mobile applications**: Translate UI strings and notifications
-- **Documentation sites**: Localize your MDX files automatically
-- **Marketing content**: Keep marketing pages in sync across languages
+Change detection depends on the plugin. FormatJS fills missing message IDs and
+removes obsolete IDs; it does not detect source text edits under an existing ID.
+MDX tracks source block and frontmatter hashes. Read the
+[change-detection details](/docs/features#change-detection) before choosing a
+workflow.
 
-## When to use Langnostic
+## How it fits into your application
 
-Langnostic is ideal when you:
+An i18n library such as React Intl or i18next loads localized content and displays
+it in your application. Langnostic translates files for that workflow; it does
+not provide runtime localization APIs, extract strings from application source,
+or translate a page after it loads.
 
-- Want fast iteration on internationalization
-- Desire translation workflows to be automated
-- Do not want to pay for storage of translated content
-- Have frequently changing content
-- Support multiple languages quickly
-- Reduce manual translation management
+You still need an extraction or authoring process that produces supported source
+files, a compatible i18n runtime, and a review step for translations and syntax.
 
-## What Langnostic isn't
+## Next steps
 
-- **Not an i18n library**: An i18n library provide tools and APIs to localize strings in your software, loads translation files, and displays the relevant translated strings. Your translation strings are typically defined in a central file or can be extracted out from your source code into a central file. Common i18n libraries in the JavaScript ecosystem include [i18next](https://www.i18next.com/), [React Intl](https://formatjs.github.io/docs/react-intl), [Polyglot.js](https://github.com/airbnb/polyglot.js), [Lingui](https://lingui.dev/). Langnostic is not an i18n library, it is a tool to translate these central files that contain source locale strings into the desired target locales. You would usually by using an i18n library along with Langnostic.
-- **Not to be used for on-demand translation**: Some translation tools allow users to convert a website into another language **after** the page has loaded, in an on-demand fashion. Langnostic is meant to translate the strings in your application **before** it is built or rendered to screen, and not after.
-
-## Comparison with traditional approaches
-
-| Feature                 | Langnostic                             | Translation platforms (e.g. Crowdin)                                         |
-| ----------------------- | -------------------------------------- | ---------------------------------------------------------------------------- |
-| **Steps**               | Just one command                       | A few — upload, wait for translations, download                              |
-| **Cost**                | None, but you provide your own API key | Recurring charges per translated word (both new and existing) in the project |
-| **Format preservation** | Very good                              | Poor, often requires fixes                                                   |
-
-## What's next?
-
-Now that you understand what Langnostic does, start using and exploring:
-
-- [Quick start](/docs/quick-start): Set up your first project
-- [Features](/docs/features): View the full feature set
+- [Why Langnostic](/docs/why): Decide whether this workflow fits your project.
+- [Quick start](/docs/quick-start): Configure the upcoming release.
+- [Features](/docs/features): Understand supported behavior and limitations.
+- [Comparisons](/docs/comparisons): Compare file-based translation with hosted
+  localization workflows.

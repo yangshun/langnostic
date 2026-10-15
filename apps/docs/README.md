@@ -25,6 +25,14 @@ the documentation.
 Use Blume's native `:::info` callouts and `package-install` code fences in MDX.
 Keep JSX examples inside fenced code blocks.
 
+All existing content pages are complete and included in navigation. Removing a
+page from the sidebar alone does not make it private or exclude it from search,
+the sitemap, or the LLM exports. Keep internal notes out of published content.
+
+The Introduction's availability and licensing section is the canonical statement
+of upcoming-release status and planned commercial policy. The shared announcement
+and quick start link there. Existing MIT license artifacts remain unchanged.
+
 ## Build and validate
 
 ```bash
@@ -45,6 +53,31 @@ and skip production post-processing such as the search index and LLM exports;
 run a normal build before testing or publishing those features.
 
 ## Deploy to Cloudflare
+
+### Release prerequisites
+
+The current documentation describes the upcoming source release. It explicitly
+marks the renamed FormatJS package as awaiting publication; it must not imply
+the upcoming installation commands work with the older npm release.
+
+Before announcing general availability:
+
+1. Finalize the commercial license terms and align future-release legal artifacts
+   and package metadata with the approved policy. Preserve the distinction from
+   existing MIT releases.
+2. Version, validate, and publish the CLI and official plugins as a compatible
+   release, including `@langnostic/plugin-formatjs`. Verify public installation,
+   peer dependencies, and the generated configuration outside the workspace.
+3. Update the canonical availability section and shared announcement to reflect
+   what was actually published.
+4. Build and deploy the matching documentation, including the roadmap, navigation,
+   search index, sitemap, and Markdown/LLM exports. Check the public URLs and
+   installation examples after deployment.
+
+Documentation changes alone do not publish packages or update production. Report
+package publication and deployment separately until each has been verified.
+
+### Deployment setup
 
 The production site is served by the `langnostic` Cloudflare Worker at
 https://langnostic.com. `www.langnostic.com` redirects to the same path on the

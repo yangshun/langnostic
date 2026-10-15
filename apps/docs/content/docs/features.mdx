@@ -1,117 +1,118 @@
 ---
 title: Features
-description: Learn about all the features that goes into Langnostic
+description: Supported formats, AI providers, batching, and change-detection behavior.
 ---
 
-{/* Reference: https://vite.dev/guide/features.html */}
+Langnostic translates localization files and Markdown documents through format
+plugins. The CLI manages discovery, batching, AI requests, and progress reporting.
+Plugins decide what needs translation and how to update files.
 
-Langnostic is a modern translation toolchain that uses AI to continuously translate strings within apps and Markdown documents. It's designed for developers who want to maintain multilingual applications without the overhead of manual translation management.
+## AI providers
 
-## AI-powered translation
+Langnostic uses the [AI SDK](https://ai-sdk.dev/) to access compatible language
+models. You supply the provider package, credentials, and model through
+`ai.model`. Examples in these docs use `openai('gpt-6.1-sol')`.
 
-Leverage the latest AI models from OpenAI, Google AI, Anthropic, and more. Langnostic uses the [AI SDK](https://ai-sdk.dev/) by Vercel, giving you access to powerful models by these providers:
+Provider catalogs change independently of Langnostic. Check availability and
+structured-output support before selecting a model:
 
-- **OpenAI**: GPT-5, GPT-4, GPT-4 Turbo
-- **Google AI**: Gemini 2.5 Pro, Gemini 2.5 Flash
-- **Anthropic**: Claude Sonnet 4.5, Claude Haiku 4.5, Claude Opus 4.1
+- [OpenAI models](https://developers.openai.com/api/docs/models) and the
+  [AI SDK OpenAI provider](https://ai-sdk.dev/providers/ai-sdk-providers/openai).
+- [Google models](https://ai.google.dev/gemini-api/docs/models) and the
+  [AI SDK Google provider](https://ai-sdk.dev/providers/ai-sdk-providers/google).
+  A current example is `google('gemini-3.8-flash')`.
+- [Claude models](https://platform.claude.com/docs/en/models/overview) and the
+  [AI SDK Anthropic provider](https://ai-sdk.dev/providers/ai-sdk-providers/anthropic).
+  A current example is `anthropic('claude-sonnet-5-5')`.
 
-And any provider supported by the [AI SDK](https://ai-sdk.dev/).
+Changing the configured model does not itself invalidate existing translations.
+Provider usage is billed under your provider's terms.
 
-## Supported file formats
+## Supported formats
 
-Langostic's extensible system supporting multiple file formats:
+Official plugins are installed separately from the CLI:
 
-- Built-in plugins for FormatJS JSON and Markdown/MDX
-- Flexible plugin API that allows adding support for for any file format
-- Plugin-specific optimization settings
+| Plugin                        | Source content                                    | Default strings per request |
+| ----------------------------- | ------------------------------------------------- | --------------------------- |
+| `@langnostic/plugin-formatjs` | Flat string maps and FormatJS message descriptors | 50                          |
+| `@langnostic/plugin-mdx`      | Markdown/MDX blocks and frontmatter fields        | 20                          |
 
-Langnostic comes with official plugins for:
-
-### FormatJS message catalogs
-
-Use `@langnostic/plugin-formatjs` for React Intl/FormatJS application messages:
+FormatJS catalogs can contain ICU messages, tags, and placeholders:
 
 ```json
 {
   "welcome": {
     "defaultMessage": "Welcome, {username}!",
-    "description": "Greeting message for logged-in users"
+    "description": "Greeting for a signed-in user"
   },
   "itemCount": {
-    "defaultMessage": "{count, plural, =0 {no items} =1 {1 item} other {# items}}",
-    "description": "Display count of items"
+    "defaultMessage": "{count, plural, =0 {no items} one {# item} other {# items}}",
+    "description": "Number of items in the cart"
   }
 }
 ```
 
-Supports:
+Nested JSON, XML, YAML, TOML, and other localization schemas require a compatible
+custom plugin. See [Using plugins](/docs/plugins) for setup and authoring.
 
-- ICU message format
-- HTML/XML tags
-- Template variables
-- Pluralization rules
+## Change detection
 
-### Markdown files
+### FormatJS catalogs
 
-Ideal for documentation:
+The plugin compares message IDs between source and target files. Missing IDs
+need translation; IDs removed from the source are removed from target files on
+a real run. Existing target values are kept.
 
-```mdx
----
-title: Getting Started
-description: Learn how to use our platform
----
+Edits to source text or descriptions under an existing ID do not trigger
+retranslation. Remove that ID from the relevant target catalog to request a new
+translation, or update it manually.
 
-# Getting started
+### Markdown/MDX
 
-Welcome to our platform! Here's how to get started:
+The plugin hashes source blocks and frontmatter fields, storing progress in a
+`*.langnostic.json` registry beside each source document. It can reuse
+translations for tracked blocks and translate new or modified source content.
+Removal-only and reordering-only changes can update files without AI calls.
 
-<CustomComponent prop="value" />
-```
+Keep registries in version control. Missing registries or a target block count
+that differs from the registry can trigger full content retranslation. Manual
+edits that change block structure can break the association between source and
+target blocks. Read [MDX change detection](/docs/plugins#mdx-change-detection)
+before editing target structure.
 
-Supports:
+## Format-aware translation
 
-- Frontmatter translation
-- Markdown content translation
-- JSX component preservation
-- Code block preservation
+Plugins provide instructions for their content. The FormatJS plugin asks the model
+to retain ICU placeholders and tags; the MDX plugin provides Markdown/JSX guidance
+and asks it to preserve inline code.
 
-### Custom plugins
+These are model instructions, not a syntax-preservation guarantee. MDX code
+blocks and JSX blocks are also sent to the model. The runner validates the shape
+and completeness of translation results, but does not validate ICU syntax,
+placeholder equivalence, JSX, or unchanged code examples.
 
-You can create plugins for any file format. We will create documentation for this soon.
+Review and validate generated content before using it. Markdown and frontmatter
+are reserialized, so original whitespace and formatting are not retained exactly.
 
-## Format preservation
+## Batching and concurrency
 
-Maintains the integrity of your content:
+Strings from a source file share a batch ID. The runner divides each batch into
+requests according to `stringsPerRequest`, keeping related strings together.
+Each source string can request translations for multiple locales.
 
-- **HTML/XML tags**: Preserves `<div>`, `<span>`, and other markup
-- **Template variables**: Keeps `{username}`, `{count}` intact
-- **JSX components**: Maintains `<Component />` in MDX files
-- **Code blocks**: Leaves code examples untranslated
-- **ICU message format**: Supports pluralization and complex formatting
+Set a group's `stringsPerRequest` to override its plugin's default. The global
+`concurrencyLimit` controls concurrent requests and defaults to **5**. Both
+settings must be positive integers.
 
-## Batch processing
+Results are passed to the plugin after all requests for a batch succeed. The
+official plugins use atomic writes for individual files; a run is not one
+transaction across all files or locales.
 
-Efficiently processes multiple strings per request:
+## Preview and debug output
 
-- Groups related translations together
-- Reduces API calls and costs
-- Configurable batch sizes per plugin
-- Maintains context for better translation quality
+`--dry-run` shows pending file batches and string counts without AI requests or
+file changes. `--debug` runs translations and saves prompts, responses, and
+errors in `.langnostic/runs/`.
 
-## Concurrent processing
-
-Configurable parallel translation for faster results:
-
-- Process multiple translation jobs simultaneously
-- Adjustable concurrency limits
-- Efficient resource utilization
-
-## Smart change detection
-
-Only translate what's changed. Langnostic's built-in plugins intelligently tracks:
-
-- New strings that haven't been translated
-- Modified source strings that need retranslation
-- Removed strings that should be cleaned up
-
-This saves both time and API costs by avoiding unnecessary translation calls.
+See [CLI](/docs/cli) for the exact output and
+[Configuration](/docs/configuration) for available options.

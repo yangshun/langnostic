@@ -1,301 +1,211 @@
 ---
 title: Architecture
-description: Understand the architecture and workflow of Langnostic's translation system
+description: How the runner and plugins discover, translate, validate, and write content.
 ---
 
-Langnostic's architecture is built around two core components: the **Runner** and the **Plugin System**. The Runner orchestrates the translation workflow, while Plugins handle the specifics of different file formats.
+Langnostic separates the translation runner from format plugins. The runner
+loads configuration, resolves files, batches requests, and validates AI output.
+Plugins interpret file schemas, select pending content, and write results.
 
-## Architecture overview
+See [Configuration](/docs/configuration) for a complete setup and
+[Using plugins](/docs/plugins#custom-plugins) for a working plugin example.
 
-Langnostic separates concerns into two main components — (1) runner and (2) plugins
+## 1. Configuration and discovery
 
-### Runner
+The CLI loads environment variables and searches for `langnostic.config.ts`
+or `langnostic.config.js`. It validates the configuration, resolves each group's
+source patterns, and substitutes target locales and wildcard captures.
 
-The runner is the orchestration engine that manages the entire translation lifecycle:
+For a source at `src/locales/en-US.json` and target pattern
+`src/locales/{locale}.json`, the resolved metadata has this shape:
 
-- **Initialization**: Loads configuration and sets up translation groups
-- **Discovery**: Resolves file paths and initializes plugins with source/target files
-- **Translation**: Creates job queues and manages concurrent AI translation requests
-- **Shutdown**: Completes all jobs and reports results
-
-### Plugins
-
-Plugins handle format-specific operations for different file types (FormatJS JSON, MDX, etc.):
-
-- **Loading**: Reads and parses files in their specific format
-- **Change Detection**: Determines what content needs translation
-- **Writing**: Writes translated content back to files while preserving format
-
-## Why this architecture?
-
-This separation of concerns provides several benefits:
-
-- **Flexibility**: New file formats can be added by creating plugins without modifying the runner
-- **Optimization**: Each plugin can optimize for its format (e.g., hash-based detection for MDX, message ID comparison for FormatJS)
-- **Reusability**: The runner handles all the complex orchestration (concurrency, batching, AI calls) once
-- **Extensibility**: Plugin-specific instructions allow format-specific AI guidance
-
-## Translation flow
-
-Here's how the runner and plugins work together when you run `npx langnostic translate`:
-
-### Phase 1: Initialization
-
-**Runner responsibilities:**
-
-- Loads your `langnostic.config.ts`
-- Creates translation groups based on configuration
-- Initializes AI provider settings
-
-**Example configuration:**
-
-The configuration tells the runner which AI model to use, what languages to translate between, and which plugins to use for each file types.
-
-```typescript
-// langnostic.config.ts
-export default {
-  ai: {
-    model: openai('gpt-4'),
+```json
+{
+  "source": {
+    "locale": "en-US",
+    "path": "src/locales/en-US.json"
   },
-  localeConfig: {
-    source: 'en-US',
-    target: ['zh-CN', 'es-ES'],
-  },
-  groups: [
+  "targets": [
     {
-      name: 'app',
-      plugin: FormatJSPlugin(),
-      paths: [
-        {
-          source: './src/locales/en-US.json',
-          target: './src/locales/{locale}.json',
-        },
-      ],
-    },
-  ],
-} satisfies ConfigType;
-```
-
-### Phase 2: Discovery
-
-**Runner responsibilities:**
-
-- Expands path patterns (e.g., `./locales/{locale}.json` → `./locales/zh-CN.json`, `./locales/es-ES.json`)
-- Resolves source and target file pairs
-- Passes file metadata to plugins
-
-**Plugin responsibilities:**
-
-- Receives file paths and locale information via `trackFiles()`
-- Prepares internal state for tracking these files
-
-**Example:**
-
-```typescript
-// Runner expands this:
-{
-  source: './src/locales/en-US.json',
-  target: './src/locales/{locale}.json',
-}
-
-// Into actual file pairs:
-Source: ./src/locales/en-US.json
-Targets: [
-  { locale: 'zh-CN', path: './src/locales/zh-CN.json' },
-  { locale: 'es-ES', path: './src/locales/es-ES.json' }
-]
-```
-
-### Phase 3: Plugin loading & change detection
-
-**Plugin responsibilities:**
-
-- **Read files**: Parse source and target files in format-specific ways
-- **Detect changes**: Determine what content needs translation
-- **Return translation strings**: Provide the runner with strings to translate via `getTranslationStrings()`
-
-Each plugin implements its own change detection strategy:
-
-**FormatJS Plugin:**
-
-```typescript
-// Compares message IDs
-Source (en-US.json): { "welcome": "Hello", "new": "New key" }
-Target (zh-CN.json): { "welcome": "你好" }
-
-// Returns: "new" needs translation for zh-CN
-```
-
-**MDX Plugin:**
-
-```typescript
-// Uses hash-based detection
-Source hash: "abc123" (changed from "abc122")
-Registry hash: "abc122"
-
-// Returns: Content needs retranslation
-```
-
-The plugin returns data in a standard format:
-
-```typescript
-{
-  batchId: './src/locales/en-US.json',  // Groups related strings
-  id: 'welcomeMessage',                  // Unique identifier
-  source: {
-    locale: 'en-US',
-    string: 'Welcome, {username}!',
-    description: 'Greeting for logged-in users'
-  },
-  targets: ['zh-CN', 'es-ES']            // Which locales need this
-}
-```
-
-### Phase 4: Translation (runner orchestration)
-
-**Runner responsibilities:**
-
-- **Create job queue**: Batches strings into jobs based on `stringsPerRequest`
-- **Execute jobs concurrently**: Runs multiple translation requests in parallel
-- **Call AI provider**: Sends structured prompts with plugin-specific instructions
-- **Collect results**: Gathers translated strings from AI responses
-
-**How batching works:**
-
-```typescript
-// Plugin says: "Process 50 strings per request"
-Total strings: 120
-
-// Runner creates jobs:
-Job 1: Strings 1-50
-Job 2: Strings 51-100
-Job 3: Strings 101-120
-
-// Executes with concurrency limit (default: 5 concurrent jobs)
-```
-
-**AI Translation request:**
-
-```typescript
-// Runner sends to AI:
-{
-  prompt: `Translate these strings to zh-CN and es-ES.
-  
-  ${pluginInstructions} // From plugin.getInstructions()
-  
-  Strings: [
-    { id: "welcome", source: { locale: "en-US", string: "Hello" }, targets: ["zh-CN", "es-ES"] }
-  ]`;
-}
-
-// AI responds:
-{
-  data: [
-    {
-      id: 'welcome',
-      translations: [
-        { locale: 'zh-CN', string: '你好' },
-        { locale: 'es-ES', string: 'Hola' },
-      ],
-    },
-  ];
-}
-```
-
-### Phase 5: Generation (plugin writes files)
-
-**Runner responsibilities:**
-
-- Receives completed translation results from AI
-- Calls plugin's `onTranslationBatchComplete()` with results
-- Provides status updates
-
-**Plugin responsibilities:**
-
-- **Receive translated strings**: Gets results for a batch of completed translations
-- **Merge with existing content**: Combines new translations with existing files
-- **Write files**: Updates target files while preserving format and structure
-
-**Example (FormatJS Plugin):**
-
-```typescript
-// Receives from runner:
-{
-  id: 'greeting',
-  translations: [
-    { locale: 'zh-CN', string: '你好，{name}！' }
+      "locale": "zh-CN",
+      "path": "src/locales/zh-CN.json"
+    }
   ]
 }
+```
 
-// Plugin merges into existing file:
-Existing (zh-CN.json): { "welcome": "欢迎！" }
-New translation: { "greeting": "你好，{name}！" }
+Before calling plugins, the runner rejects destination collisions and paths that
+would overwrite discovered source files. It passes readonly file metadata to each
+plugin's `trackFiles()`.
 
-// Writes:
+## 2. Read-only change detection
+
+The runner calls `getTranslationStrings()` on each plugin. Discovery reads
+files and plans work without changing them.
+
+- **FormatJS** compares IDs. Missing target IDs need translation, obsolete IDs
+  need removal, and edits to source values under existing IDs are not detected.
+- **MDX** hashes top-level source blocks and frontmatter fields, comparing them
+  with registries and target state. Missing tracking data or mismatched target
+  block counts can cause full content retranslation.
+
+Plugins return `TranslationStringArg` objects. This is an illustrative argument:
+
+```json
 {
-  "welcome": "欢迎！",
-  "greeting": "你好，{name}！"
+  "batchId": "src/locales/en-US.json",
+  "id": "welcome",
+  "source": {
+    "locale": "en-US",
+    "string": "Welcome, {username}!",
+    "description": "Greeting for a signed-in user"
+  },
+  "targets": ["zh-CN"]
 }
 ```
 
-**Example (MDX Plugin):**
+The official plugins use the source file path as `batchId`. The `targets`
+array contains only locales needing this string.
 
-```typescript
-// Plugin also updates its registry
-.langnostic/registry-abc123.json:
+## 3. Batching, maintenance, and dry runs
+
+The runner groups pending strings by group and batch ID, then chunks each batch
+by the group's `stringsPerRequest` override or the plugin default. For example,
+120 strings at 50 per request produce requests of 50, 50, and 20 strings. The
+global request concurrency defaults to **5**.
+
+On real runs, the runner calls each plugin's optional `onTranslationStart()`
+before any AI requests. This hook applies queued maintenance such as removals
+or reordering. It runs even when no strings need translation.
+
+Dry runs skip maintenance, generation, and result writes. They report pending
+file batches and string counts rather than individual messages. Maintenance-only
+changes do not appear as pending AI work; a run can report nothing to translate
+even when a real run would apply those changes.
+
+## 4. AI generation and validation
+
+Before each request, the runner gets the plugin's optional instructions. It sends
+those instructions and serialized argument objects through AI SDK `generateText`
+with an `Output.object` schema.
+
+The AI output uses `translations`, and each entry must include its original
+`batchId` and `id`:
+
+```json
+{
+  "data": [
+    {
+      "batchId": "src/locales/en-US.json",
+      "id": "welcome",
+      "translations": [
+        {
+          "locale": "zh-CN",
+          "string": "欢迎，{username}！"
+        }
+      ]
+    }
+  ]
+}
+```
+
+The runner rejects missing or duplicate entries, unexpected IDs or batches, and
+missing, duplicate, or unexpected locales. It validates response shape and
+completeness, not translation quality, ICU syntax, placeholder equivalence, JSX,
+or unchanged code examples.
+
+## 5. Plugin result writes
+
+The runner converts AI output into plugin results. Each result retains the input
+batch, ID, and source, but its `targets` now contain translated strings:
+
+```json
+{
+  "batchId": "src/locales/en-US.json",
+  "id": "welcome",
+  "source": {
+    "locale": "en-US",
+    "string": "Welcome, {username}!",
+    "description": "Greeting for a signed-in user"
+  },
+  "targets": [
+    {
+      "locale": "zh-CN",
+      "string": "欢迎，{username}！"
+    }
+  ]
+}
+```
+
+After all requests in a batch succeed, the runner calls
+`onTranslationBatchComplete()` with the batch's readonly result array.
+
+The FormatJS plugin merges results into target catalogs. The MDX plugin combines
+translations with tracked blocks and frontmatter, writes documents, then updates
+the registry. Official plugins use atomic writes for individual files, not a
+transaction for the whole batch or run. Maintenance or other completed batches
+can already have written files when a later request fails.
+
+### MDX registry
+
+For `docs/en-US/setup.mdx`, the registry is
+`docs/en-US/setup.langnostic.json`, beside the source. Its schema looks like this
+(the hashes below are illustrative):
+
+```json
 {
   "content": {
-    "source": ["hash1", "hash2"],
+    "source": {
+      "hashes": ["a1b2c3", "d4e5f6"],
+      "locale": "en-US"
+    },
     "targets": {
-      "zh-CN": ["hash1", "hash2"]  // Tracks what's been translated
+      "zh-CN": ["a1b2c3", "d4e5f6"]
     }
+  },
+  "frontmatter": {
+    "title": "abc123"
   }
 }
 ```
 
-### Phase 6: Shutdown
+Target arrays record the source hashes associated with translated blocks, not
+hashes of translated text. Commit registries with the documents. They do not live
+in the ignored `.langnostic/` debug directory.
 
-**Runner responsibilities:**
+## 6. Completion and failures
 
-- Waits for all jobs to complete
-- Reports translation statistics
-- Reports any errors
+The runner waits for requests, reports batch successes and failures, and exits
+with status `1` if any batch failed. Independent batches can finish despite
+another batch's failure. Configuration, discovery, or maintenance failures also
+fail the command.
 
-## Runner-plugin communication
+Read [CLI](/docs/cli) for debug output and
+[Workflows](/docs/workflows) for review and CI integration.
 
-The runner and plugins communicate through a well-defined interface:
+## Plugin contract
+
+Use the exported type instead of maintaining a separate interface definition:
 
 ```typescript
-interface LangnosticPlugin {
-  type: string; // Plugin identifier (e.g., 'formatjs', 'mdx')
-  stringsPerRequest: number; // How many strings to translate per AI request
+import type { LangnosticPlugin } from 'langnostic';
 
-  // Runner calls these methods in sequence:
-  trackFiles(files: TranslationFileMetadata[]): Promise<void>;
-  getTranslationStrings(): Promise<TranslationStringArg[]>;
-  onTranslationBatchComplete(results: TranslationStringResult[]): Promise<void>;
-  getInstructions?(): Promise<string>; // Optional AI-specific guidance
-}
+type PluginFileMetadata = Parameters<LangnosticPlugin['trackFiles']>[0];
+type PendingStrings = Awaited<
+  ReturnType<LangnosticPlugin['getTranslationStrings']>
+>;
+type CompletedStrings = Parameters<
+  LangnosticPlugin['onTranslationBatchComplete']
+>[0];
+
+export type PluginData = {
+  files: PluginFileMetadata;
+  pending: PendingStrings;
+  completed: CompletedStrings;
+};
 ```
 
-### Data flow
-
-```
-Runner → Plugin: trackFiles()
-  Passes: File paths and locale information
-
-Plugin → Runner: getTranslationStrings()
-  Returns: Array of strings needing translation
-
-Runner → AI Provider: Translate request
-  Sends: Batched strings + plugin instructions
-
-AI Provider → Runner: Translation results
-  Returns: Translated strings
-
-Runner → Plugin: onTranslationBatchComplete()
-  Passes: Completed translations
-
-Plugin: Writes files
-  Updates: Target locale files
-```
+The required members are `type`, `stringsPerRequest`, `trackFiles`,
+`getTranslationStrings`, and `onTranslationBatchComplete`.
+`getInstructions` and `onTranslationStart` are optional. See the
+[lifecycle reference](/docs/plugins#lifecycle-and-writes) for hook responsibilities.
