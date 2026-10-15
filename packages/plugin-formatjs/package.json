@@ -2,9 +2,10 @@
   "name": "@langnostic/plugin-formatjs",
   "version": "0.0.10",
   "description": "FormatJS message catalog plugin for Langnostic",
-  "license": "MIT",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "files": [
-    "dist"
+    "dist",
+    "LICENSE"
   ],
   "type": "module",
   "sideEffects": false,

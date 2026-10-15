@@ -338,10 +338,15 @@ groups translated results by locale and ID.
 
 ## 📄 License
 
-Langnostic is free to use for open-source projects. Commercial projects require
-a paid business license. See
-[licensing](apps/docs/content/docs/index.mdx#licensing) for commercial terms and
-contact details.
+Langnostic is source-available under the
+[PolyForm Noncommercial License 1.0.0](LICENSE). Noncommercial use and the other
+uses expressly permitted by that license are free. Commercial use outside those
+permissions requires a paid business license covering the CLI and both official
+plugins. Contact [team@greatfrontend.com](mailto:team@greatfrontend.com) for terms
+and pricing.
 
-Versions distributed under the [MIT license](packages/langnostic/LICENSE) retain
-the license terms included with those versions.
+The same license applies to all first-party code, shared configuration, examples,
+and documentation in this repository. Third-party dependencies retain their own
+licenses.
+
+Required Notice: Copyright (c) 2025-2026 Yangshun Tay

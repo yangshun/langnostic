@@ -38,9 +38,10 @@ All existing content pages are complete and included in navigation. Removing a
 page from the sidebar alone does not make it private or exclude it from search,
 the sitemap, or the LLM exports. Keep internal notes out of published content.
 
-The Introduction's licensing section is the canonical statement of open-source
-and commercial terms. The quick start links there. Existing MIT license
-artifacts remain unchanged.
+The Introduction's licensing section summarizes the source-available and
+commercial terms defined in the root `LICENSE` and README. The quick start links
+there. Keep that summary aligned with package metadata and packaged `LICENSE`
+files.
 
 ## Build and validate
 

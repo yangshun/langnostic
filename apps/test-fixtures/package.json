@@ -4,6 +4,7 @@
   "private": true,
   "description": "",
   "keywords": [],
+  "license": "PolyForm-Noncommercial-1.0.0",
   "main": "index.js",
   "scripts": {
     "i18n": "langnostic translate",

@@ -2,10 +2,11 @@
   "name": "langnostic",
   "version": "0.0.10",
   "description": "Modern translation toolchain using AI",
-  "license": "MIT",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "bin": "dist/cli.js",
   "files": [
-    "dist"
+    "dist",
+    "LICENSE"
   ],
   "type": "module",
   "sideEffects": false,

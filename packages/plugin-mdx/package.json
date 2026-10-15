@@ -2,9 +2,10 @@
   "name": "@langnostic/plugin-mdx",
   "version": "0.0.10",
   "description": "MDX plugin for Langnostic",
-  "license": "MIT",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "files": [
-    "dist"
+    "dist",
+    "LICENSE"
   ],
   "type": "module",
   "sideEffects": false,

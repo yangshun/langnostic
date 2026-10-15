@@ -1,6 +1,7 @@
 {
   "name": "@langnostic/monorepo",
   "private": true,
+  "license": "PolyForm-Noncommercial-1.0.0",
   "scripts": {
     "build": "vp run -r build:package",
     "clean": "vp run -r clean",
