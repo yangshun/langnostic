@@ -1,0 +1,250 @@
+---
+title: Plugin API
+description: Implement format plugins with typed file metadata, translation arguments, lifecycle hooks, and results.
+---
+
+Implement `LangnosticPlugin` to support another file format. A plugin discovers
+pending strings, supplies format-specific instructions, and writes translated
+content. The runner owns AI requests, response validation, and concurrency.
+
+For official plugin setup, see [Using plugins](/docs/plugins). For the full
+translation pipeline, see [Architecture](/docs/architecture).
+
+## `LangnosticPlugin`
+
+Import the type from `langnostic` and return a new instance for each
+[translation group](/docs/configuration#translation-groups).
+
+| Member                       | Required | Type or return value                                             |
+| ---------------------------- | -------- | ---------------------------------------------------------------- |
+| `type`                       | Yes      | Non-empty string identifying the format, such as `'plain-text'`. |
+| `stringsPerRequest`          | Yes      | Positive integer used when the group has no batch-size override. |
+| `trackFiles`                 | Yes      | `Promise<void>`                                                  |
+| `getTranslationStrings`      | Yes      | Promise resolving to [pending strings](#pending-strings).        |
+| `onTranslationStart`         | No       | `Promise<void>`                                                  |
+| `getInstructions`            | No       | `Promise<string>`                                                |
+| `onTranslationBatchComplete` | Yes      | `Promise<void>`                                                  |
+
+All hooks are asynchronous. Keep the readonly metadata and result arrays
+unchanged; store plugin state separately.
+
+## Data types
+
+The package exports these types for plugin authors:
+
+| Type                      | Shape and purpose                                                                                              |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `TranslationLocale`       | A locale string, such as `'zh-CN'`.                                                                            |
+| `TranslationFileItem`     | Readonly `{ locale, path }` for one source or target file.                                                     |
+| `TranslationFileMetadata` | Readonly `{ source, targets }`, where `source` is a file item and `targets` is a readonly array of file items. |
+| `TranslationStringArg`    | Readonly `{ batchId, id, source, targets }` describing one pending string.                                     |
+
+Derive hook parameter and result types directly from the exported contract:
+
+```typescript
+import type { LangnosticPlugin } from 'langnostic';
+
+export type TrackedFiles = Parameters<LangnosticPlugin['trackFiles']>[0];
+export type PendingStrings = Awaited<
+  ReturnType<LangnosticPlugin['getTranslationStrings']>
+>;
+export type CompletedStrings = Parameters<
+  LangnosticPlugin['onTranslationBatchComplete']
+>[0];
+```
+
+### Pending strings
+
+`TranslationStringArg.source` contains `locale`, `string`, and an optional
+`description` providing translator context. Its `targets` array contains locale
+strings for only the translations needed:
+
+```typescript
+import type { TranslationStringArg } from 'langnostic';
+
+export const pending = {
+  batchId: 'messages/en-US.json',
+  id: 'welcome',
+  source: {
+    locale: 'en-US',
+    string: 'Welcome, {name}!',
+    description: 'Greeting shown after sign-in',
+  },
+  targets: ['zh-CN'],
+} satisfies TranslationStringArg;
+```
+
+Use a stable `batchId` for strings that should be written together. The official
+plugins use the source file path. Give each string a unique `id` within its
+batch and request each target locale once.
+
+### Completed strings
+
+The completion hook receives the original `batchId`, `id`, and `source`, with
+`targets` replaced by readonly `{ locale, string }` objects:
+
+```json
+{
+  "batchId": "messages/en-US.json",
+  "id": "welcome",
+  "source": {
+    "locale": "en-US",
+    "string": "Welcome, {name}!",
+    "description": "Greeting shown after sign-in"
+  },
+  "targets": [
+    {
+      "locale": "zh-CN",
+      "string": "欢迎，{name}！"
+    }
+  ]
+}
+```
+
+The AI response uses a separate `translations` field. The runner validates that
+response and converts it to the plugin result shape before invoking your hook.
+
+## Lifecycle
+
+### `trackFiles(filesMetadata)`
+
+Called once for each group after source discovery and destination validation.
+Its argument is `ReadonlyArray<TranslationFileMetadata>`. Store the resolved
+paths and locales for subsequent hooks, including when discovery returns no files.
+
+### `getTranslationStrings()`
+
+Called after file tracking on both real and dry runs. Read source, target, and
+tracking files to return the pending `TranslationStringArg` objects. Return an
+empty array when nothing needs translation. The return type is
+`Promise<ReadonlyArray<TranslationStringArg>>`.
+
+Leave files unchanged. Plan removal or reordering maintenance in memory for
+`onTranslationStart()`. The runner groups the returned strings by `batchId` and
+splits each batch into requests using the configured `stringsPerRequest`.
+
+### `onTranslationStart()`
+
+Optional hook called after discovery on real runs, before any AI requests.
+Apply queued maintenance here. It runs even when no strings need translation
+and is skipped during dry runs.
+
+### `getInstructions()`
+
+Optional hook called before each AI request. Return format-specific translation
+instructions, such as how to handle ICU placeholders or Markdown syntax. When
+omitted, the runner uses an empty plugin instruction string.
+
+Instructions do not guarantee syntax preservation. Validate your format as part
+of writing or in the project's review workflow.
+
+### `onTranslationBatchComplete(translatedStrings)`
+
+Called once after every request in a batch has completed successfully. Its
+argument contains all translated strings in that batch, including strings split
+across multiple requests. Map results by `id` and locale; request completion
+order can differ from discovery order.
+
+Merge the results with existing content, write the target files, and update any
+tracking data. The runner does not call this hook for a batch with a failed
+request, or for an empty batch. Dry runs skip it.
+
+Requests run under the global concurrency limit, and hooks for different batches
+can overlap. Keep batch state independent and avoid writing the same file from
+multiple batches.
+
+### Errors and file writes
+
+A rejected discovery or maintenance hook fails the command. A rejected
+instruction or completion hook marks that batch as failed; independent batches
+can still complete. The command exits with status `1` when a batch fails.
+
+Completed file writes are not rolled back. The
+[atomic write helpers](/docs/utilities#atomic-file-writes) replace individual
+files after their complete contents are written; they do not create a transaction
+covering every file in a batch or run.
+
+## Complete example
+
+This plugin translates each missing plain-text target as one string. It keeps
+existing targets and does not track source edits or removals:
+
+```typescript title="text-plugin.ts"
+import { access, readFile } from 'node:fs/promises';
+import type {
+  LangnosticPlugin,
+  TranslationFileMetadata,
+  TranslationStringArg,
+} from 'langnostic';
+import { writeFileAtomic } from 'langnostic';
+
+export default function TextPlugin(): LangnosticPlugin {
+  let files: ReadonlyArray<TranslationFileMetadata> = [];
+
+  return {
+    type: 'plain-text',
+    stringsPerRequest: 1,
+    async trackFiles(metadata) {
+      files = metadata;
+    },
+    async getTranslationStrings() {
+      const strings: TranslationStringArg[] = [];
+
+      for (const file of files) {
+        const targets: string[] = [];
+        for (const target of file.targets) {
+          try {
+            await access(target.path);
+          } catch (error) {
+            if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+              throw error;
+            }
+            targets.push(target.locale);
+          }
+        }
+
+        if (targets.length > 0) {
+          strings.push({
+            batchId: file.source.path,
+            id: 'content',
+            source: {
+              locale: file.source.locale,
+              string: await readFile(file.source.path, 'utf8'),
+            },
+            targets,
+          });
+        }
+      }
+
+      return strings;
+    },
+    async getInstructions() {
+      return 'Translate the plain text, retaining its paragraph structure.';
+    },
+    async onTranslationBatchComplete(results) {
+      for (const result of results) {
+        const file = files.find((item) => item.source.path === result.batchId);
+        for (const translation of result.targets) {
+          const target = file?.targets.find(
+            (item) => item.locale === translation.locale,
+          );
+          if (!target) {
+            throw new Error('Translation has no matching target file');
+          }
+          await writeFileAtomic(target.path, translation.string);
+        }
+      }
+    },
+  };
+}
+```
+
+Import `TextPlugin` into your configuration and assign `TextPlugin()` to a group.
+Map source `.txt` files to target `.txt` paths using `{locale}`. See
+[Configuration](/docs/configuration) for the surrounding AI and locale settings.
+
+For formats with multiple messages per file,
+[`buildTranslationStrings`](/docs/utilities#buildtranslationstrings) builds pending
+arguments and
+[`buildTranslatedContentMap`](/docs/utilities#buildtranslatedcontentmap) groups
+completed results by locale and ID.

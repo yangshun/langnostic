@@ -10,8 +10,9 @@ found; it does not overwrite an existing configuration.
 
 ## Complete example
 
-This configuration translates an application catalog and Markdown documents. Each
-group owns a separate plugin instance:
+Use the exported `ConfigType` with `satisfies` to check your configuration. This
+example translates an application catalog and Markdown documents. Each group
+owns a separate plugin instance:
 
 ```typescript title="langnostic.config.ts"
 import { openai } from '@ai-sdk/openai';
@@ -59,7 +60,7 @@ export default {
 ```
 
 Install each imported provider and plugin separately. The
-[quick start](/docs/quick-start) describes upcoming-release availability and setup.
+[quick start](/docs/quick-start) covers installation and setup.
 
 ## Top-level settings
 
@@ -124,7 +125,9 @@ request respectively. A string can be a short message, a frontmatter value, or a
 whole Markdown block; this setting is not a token limit.
 
 Use a new plugin instance for each group so tracked files and options stay
-independent. See [Using plugins](/docs/plugins) for plugin-specific options.
+independent. See [Using plugins](/docs/plugins) for shared setup and the
+[FormatJS](/docs/plugins/formatjs) and [Markdown / MDX](/docs/plugins/mdx)
+references for plugin-specific options and behavior.
 
 ## Path mappings
 
@@ -160,4 +163,4 @@ or duplicate group names cause the command to fail. Configuration and discovery
 failures exit with status `1`.
 
 See [CLI](/docs/cli) for command behavior and
-[Architecture](/docs/architecture) for the runner/plugin contract.
+[Plugin API](/docs/plugin-api) for the plugin contract.

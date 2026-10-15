@@ -1,0 +1,131 @@
+---
+title: Utilities
+description: Build pending translation arguments, group completed results, and write files atomically.
+---
+
+The `langnostic` package exports four runtime helpers for custom plugins. Use
+them with the types and hooks described in [Plugin API](/docs/plugin-api).
+
+- [`buildTranslationStrings`](#buildtranslationstrings): Turn source values and
+  changed-ID lists into pending arguments.
+- [`buildTranslatedContentMap`](#buildtranslatedcontentmap): Group completed
+  translations by locale and message ID.
+- [`writeFileAtomic`](#writefileatomicfilepath-content): Replace a UTF-8 text file
+  after writing its full contents.
+- [`writeJsonAtomic`](#writejsonatomicfilepath-value): Format JSON and replace the
+  destination file atomically.
+
+## `buildTranslationStrings`
+
+```typescript
+import { buildTranslationStrings } from 'langnostic';
+import type { TranslationFileMetadata } from 'langnostic';
+
+const file: TranslationFileMetadata = {
+  source: { locale: 'en-US', path: 'messages/en-US.json' },
+  targets: [
+    { locale: 'zh-CN', path: 'messages/zh-CN.json' },
+    { locale: 'pt-BR', path: 'messages/pt-BR.json' },
+  ],
+};
+
+export const pending = buildTranslationStrings(
+  {
+    welcome: { string: 'Welcome!', description: 'Greeting after sign-in' },
+    save: { string: 'Save' },
+  },
+  { 'zh-CN': ['welcome', 'save'], 'pt-BR': ['save'] },
+  file,
+);
+```
+
+| Parameter | Value                                                                              |
+| --------- | ---------------------------------------------------------------------------------- |
+| `content` | Readonly record of message IDs mapped to `{ string, description? }` source values. |
+| `changes` | Record of locales mapped to readonly arrays of IDs needing translation.            |
+| `file`    | `TranslationFileMetadata`: source path and locale, plus configured target files.   |
+
+Returns `ReadonlyArray<TranslationStringArg>`. Each argument uses the source path
+as `batchId`, the content key as `id`, and the source file's locale. It retains
+the source string and optional description.
+
+The example returns two arguments: `welcome` for `zh-CN`, and `save` for both
+`zh-CN` and `pt-BR`. A content ID is omitted when no configured target locale
+lists it in `changes`. IDs absent from `content` and locales absent from
+`file.targets` do not produce arguments. Target locale order follows
+`file.targets`.
+
+The helper does not read files or detect changes. Your plugin supplies the
+normalized content and per-locale changed-ID lists.
+
+## `buildTranslatedContentMap`
+
+```typescript
+import { buildTranslatedContentMap } from 'langnostic';
+import type { LangnosticPlugin } from 'langnostic';
+
+type CompletedStrings = Parameters<
+  LangnosticPlugin['onTranslationBatchComplete']
+>[0];
+
+export function contentByLocale(results: CompletedStrings) {
+  return buildTranslatedContentMap(results);
+}
+```
+
+Accepts the readonly completed-result array passed to
+`onTranslationBatchComplete()` and returns
+`Map<TranslationLocale, Record<string, string>>`.
+
+For a result with `id: 'welcome'` and target
+`{ locale: 'zh-CN', string: '欢迎！' }`, the returned map contains
+`'zh-CN'` mapped to `{ welcome: '欢迎！' }`. Empty input returns an empty map;
+locales without translated values have no entry.
+
+Only IDs and target strings are retained. The helper does not merge with existing
+target files or retain source descriptions. `batchId` is not part of the map key,
+so use it on a single batch when IDs repeat across files. If an ID and locale
+appear more than once, the last value wins.
+
+## Atomic file writes
+
+Call these helpers from write hooks, not during read-only discovery.
+
+### `writeFileAtomic(filePath, content)`
+
+Accepts a destination path and string content, both typed as `string`, and
+returns `Promise<void>`.
+
+```typescript
+import { writeFileAtomic } from 'langnostic';
+
+export async function writeDocument(path: string, markdown: string) {
+  await writeFileAtomic(path, markdown);
+}
+```
+
+Creates missing parent directories and writes UTF-8 content to a temporary file
+beside the destination before renaming it into place. Existing file permissions
+are preserved. When the destination is a symlink, its resolved target is replaced
+and the symlink is preserved.
+
+Write or rename failures reject the promise, and the temporary file is cleaned
+up. Atomic replacement applies to one file; a failure does not undo other files
+already written by a plugin.
+
+### `writeJsonAtomic(filePath, value)`
+
+Accepts `filePath: string` and `value: unknown`, and returns `Promise<void>`.
+
+```typescript
+import { writeJsonAtomic } from 'langnostic';
+
+export async function writeCatalog(path: string) {
+  await writeJsonAtomic(path, { welcome: '欢迎！' });
+}
+```
+
+Serializes the value with `JSON.stringify(value, null, 2)`, appends a newline, and
+passes the text to `writeFileAtomic`. Supply JSON-serializable values; serialization
+errors reject the promise. This helper does not validate a catalog schema, sort
+message IDs, or merge translations.

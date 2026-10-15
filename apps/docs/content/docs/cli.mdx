@@ -5,7 +5,7 @@ description: Initialize configuration, translate files, preview pending batches,
 
 Run commands from your project directory. The CLI loads `.env` and searches for
 `langnostic.config.ts` or `langnostic.config.js` from that directory.
-See [Quick start](/docs/quick-start) for upcoming-release setup.
+See [Quick start](/docs/quick-start) for installation and setup.
 
 ## `init`
 
@@ -31,7 +31,7 @@ Discovers configured source files, asks plugins for pending work, applies
 maintenance, and runs translation requests. Results and progress are reported
 per group and source-file batch.
 
-Change detection is [plugin-specific](/docs/features#change-detection). In
+Change detection is [plugin-specific](/docs/features#translate-only-what-has-changed). In
 particular, FormatJS source edits under an existing ID do not request fresh
 translations. A successful command is not a syntax or human-quality review.
 

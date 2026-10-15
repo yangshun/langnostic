@@ -2,8 +2,6 @@
 
 Translate FormatJS message catalogs and Markdown documents with your own AI provider, keeping the results in your repository.
 
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-
 ## ✨ Features
 
 - 🤖 **AI-powered translation** - Use compatible language models with structured output through AI SDK providers
@@ -19,19 +17,13 @@ Translate FormatJS message catalogs and Markdown documents with your own AI prov
 - **FormatJS JSON** - React Intl/FormatJS message catalogs with ICU syntax
 - **MDX** - Documentation files with frontmatter and content translation
 
-In the upcoming release, `@langnostic/plugin-formatjs` replaces
-`@langnostic/plugin-json`. Import it as `FormatJSPlugin`; locale paths remain
-`.json`. Other localization schemas and formats require a compatible custom plugin.
+Use `@langnostic/plugin-formatjs` for FormatJS JSON catalogs. Import it as
+`FormatJSPlugin`; locale paths use the `.json` extension. Other localization
+schemas and formats require a compatible custom plugin.
 
 ## 🚀 Quick start
 
-### Availability and installation
-
-This README describes the upcoming release. The renamed FormatJS package awaits
-publication; the commands below apply once the upcoming packages are available.
-The existing npm release uses `@langnostic/plugin-json`. See
-[availability and licensing](apps/docs/content/docs/index.mdx#availability-and-licensing)
-for the distinction between existing MIT releases and planned commercial licensing.
+### Install the CLI, plugin, and provider
 
 ```bash
 npm install langnostic @langnostic/plugin-formatjs @ai-sdk/openai --save-dev
@@ -141,7 +133,7 @@ The plugin sends Markdown, JSX, and code blocks to the model. Review generated
 syntax and code examples; preservation is model-dependent. Missing registries or
 target block-count changes can trigger full content retranslation.
 
-See [MDX setup and tracking](apps/docs/content/docs/plugins.mdx#markdownmdx-plugin)
+See [MDX setup and tracking](apps/docs/content/docs/plugins/mdx.mdx)
 for options, limitations, and a complete configuration.
 
 ## 🏗️ Repository structure
@@ -317,7 +309,7 @@ and builds from the repository root.
 ## 🔌 Plugin development
 
 Implement the exported `LangnosticPlugin` type. See the
-[complete plain-text plugin example](apps/docs/content/docs/plugins.mdx#custom-plugins)
+[complete plain-text plugin example](apps/docs/content/docs/plugin-api.mdx#complete-example)
 and [runner architecture](apps/docs/content/docs/architecture.mdx) for current
 argument/result shapes.
 
@@ -346,9 +338,10 @@ groups translated results by locale and ID.
 
 ## 📄 License
 
-The current repository and existing published releases include the
-[MIT license](packages/langnostic/LICENSE). The upcoming release has a planned
-free-for-open-source and paid-commercial policy; its terms and pricing will be
-announced separately. See
-[availability and licensing](apps/docs/content/docs/index.mdx#availability-and-licensing).
-This planned policy does not replace the license included with an existing release.
+Langnostic is free to use for open-source projects. Commercial projects require
+a paid business license. See
+[licensing](apps/docs/content/docs/index.mdx#licensing) for commercial terms and
+contact details.
+
+Versions distributed under the [MIT license](packages/langnostic/LICENSE) retain
+the license terms included with those versions.

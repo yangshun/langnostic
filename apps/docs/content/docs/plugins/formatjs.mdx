@@ -1,0 +1,87 @@
+---
+title: FormatJS
+description: Translate flat JSON message catalogs with the FormatJS plugin, including ICU messages and descriptors.
+---
+
+The FormatJS plugin translates flat JSON message catalogs containing strings or
+FormatJS descriptors. It fills missing target IDs and removes obsolete IDs.
+
+See [Using plugins](/docs/plugins) for shared setup, groups, paths, and batching.
+
+## Installation
+
+```package-install
+npm install langnostic @ai-sdk/openai @langnostic/plugin-formatjs --save-dev
+```
+
+## Configuration
+
+Import the default factory as `FormatJSPlugin` and pass `FormatJSPlugin()` as
+the group's `plugin`. Catalog filenames use the `.json` extension.
+
+```typescript title="langnostic.config.ts"
+import { openai } from '@ai-sdk/openai';
+import FormatJSPlugin from '@langnostic/plugin-formatjs';
+import type { ConfigType } from 'langnostic';
+
+export default {
+  ai: {
+    model: openai('gpt-6.1-sol'),
+  },
+  localeConfig: {
+    source: 'en-US',
+    target: ['zh-CN'],
+  },
+  groups: [
+    {
+      name: 'app-strings',
+      plugin: FormatJSPlugin(),
+      paths: [
+        {
+          source: './src/locales/en-US.json',
+          target: './src/locales/{locale}.json',
+        },
+      ],
+    },
+  ],
+} satisfies ConfigType;
+```
+
+`FormatJSPlugin()` takes no options and returns a `LangnosticPlugin` with
+`type: 'formatjs'`. Its default `stringsPerRequest` is **50**; override this
+on the [translation group](/docs/configuration#translation-groups).
+
+## Catalog schema
+
+A catalog is a flat map of message IDs to strings or FormatJS descriptors:
+
+```json
+{
+  "greeting": {
+    "defaultMessage": "Hello, {name}!",
+    "description": "Greeting on the dashboard"
+  },
+  "save": "Save"
+}
+```
+
+For descriptors, the model receives `defaultMessage` plus `description` as
+context. Newly translated descriptors retain the source description. Nested
+objects representing message namespaces are not supported by this plugin.
+
+## FormatJS change detection
+
+- A missing target file queues every source ID for that locale.
+- IDs missing from an existing target are queued for translation.
+- IDs removed from the source are removed from existing targets on a real run,
+  even when no AI requests are needed.
+- Existing IDs are not queued when their source text or description changes.
+  Update target values manually or remove affected target IDs to request new
+  translations.
+
+The plugin does not maintain source-value history. It preserves existing target
+entries when merging new translations, sorts IDs on translation writes, and
+writes formatted JSON. Original JSON whitespace is not preserved.
+
+ICU syntax, tags, and placeholders are handled through model instructions.
+Validate the generated messages with your application's tooling.

@@ -32,19 +32,9 @@ controls file paths and locale groups rather than imposing a directory layout.
 
 Each format has different units of translation and tracking requirements.
 FormatJS compares IDs; MDX tracks block and frontmatter hashes. The
-[plugin contract](/docs/plugins#lifecycle-and-writes) separates read-only
+[plugin contract](/docs/plugin-api#lifecycle) separates read-only
 discovery from file writes.
 
 The documentation describes those differences rather than promising identical
 change detection or preservation across formats. Model-generated text and syntax
 still need review.
-
-## Separate current behavior from future plans
-
-The [roadmap](/docs/roadmap) describes planned capabilities such as glossaries,
-local CLI backends, and a desktop workspace. It does not imply those features
-exist in the current CLI.
-
-[Availability and licensing](/docs#availability-and-licensing) distinguishes the
-upcoming release and its planned commercial policy from existing published
-packages.

@@ -1,21 +1,14 @@
 ---
 title: Quick start
-description: Configure the upcoming Langnostic release for message catalogs and Markdown.
+description: Configure Langnostic for message catalogs and Markdown, then run your first translation.
 ---
-
-:::info[Upcoming release]
-The renamed FormatJS package is awaiting publication. The commands below describe
-setup once the upcoming packages are available. Read
-[availability and licensing](/docs#availability-and-licensing) before installing;
-the existing npm release uses a different plugin name.
-:::
 
 ## Prerequisites
 
 - A supported Node.js version: `^22.18.0`, `^24.11.0`, or `>=26.0.0`.
-- Source files in a [supported format](/docs/plugins).
+- Source files in a [supported format](/docs/plugins#official-plugins).
 - An AI provider account and API key. Provider usage charges are separate from
-  Langnostic licensing.
+  [Langnostic licensing](/docs#licensing).
 
 ## Install the CLI, plugin, and provider
 
@@ -226,7 +219,7 @@ each target. It is separate from the ignored `.langnostic/` debug directory.
 
 Missing registries or changes to a target document's block count can cause all
 source blocks to be translated again. See
-[MDX change detection](/docs/plugins#mdx-change-detection) before restructuring
+[MDX change detection](/docs/plugins/mdx#mdx-change-detection) before restructuring
 translated documents.
 
 ## Preview pending work

@@ -1,0 +1,110 @@
+---
+title: Markdown / MDX
+description: Translate Markdown and MDX documents, configure frontmatter options, and preserve translation registries.
+---
+
+The MDX plugin handles both Markdown and MDX files. It translates document blocks
+and frontmatter fields, using a registry beside each source document to track
+which source content has been translated.
+
+See [Using plugins](/docs/plugins) for shared setup, groups, paths, and batching.
+
+## Installation
+
+```package-install
+npm install langnostic @ai-sdk/openai @langnostic/plugin-mdx --save-dev
+```
+
+## Configuration
+
+Use this complete configuration to translate Markdown documents while keeping
+non-translatable metadata out of AI requests:
+
+```typescript title="langnostic.config.ts"
+import { openai } from '@ai-sdk/openai';
+import MdxPlugin from '@langnostic/plugin-mdx';
+import type { ConfigType } from 'langnostic';
+
+export default {
+  ai: {
+    model: openai('gpt-6.1-sol'),
+  },
+  localeConfig: {
+    source: 'en-US',
+    target: ['zh-CN'],
+  },
+  groups: [
+    {
+      name: 'docs',
+      plugin: MdxPlugin({
+        frontmatterExcludedKeys: ['slug', 'date', 'tags'],
+      }),
+      paths: [
+        {
+          source: './docs/en-US/**/*.md',
+          target: './docs/{locale}/**/*.md',
+        },
+      ],
+    },
+  ],
+} satisfies ConfigType;
+```
+
+The same plugin handles `.mdx`; change both path patterns to that extension.
+The default `stringsPerRequest` is **20**. The factory accepts optional
+`PluginOptions` and returns a plugin with `type: 'mdx'`.
+
+## Frontmatter options
+
+`frontmatterExcludedKeys?: string[]` names top-level frontmatter fields to
+exclude from translation requests. It defaults to no excluded keys.
+
+The package exports `PluginOptions` for reusable typed options:
+
+```typescript
+import type { PluginOptions } from '@langnostic/plugin-mdx';
+
+export const options = {
+  frontmatterExcludedKeys: ['slug', 'date', 'tags'],
+} satisfies PluginOptions;
+```
+
+Use it for identifiers, slugs, dates, numbers, arrays, and objects that should not
+be translated. Translatable frontmatter values should be strings. Exclusion
+keeps a field out of AI requests; review generated metadata when source fields
+change.
+
+## MDX change detection
+
+The plugin parses a document into top-level Markdown/MDX blocks and hashes the
+serialized source blocks. It separately tracks source frontmatter hashes.
+For `docs/en-US/setup.mdx`, the registry is
+`docs/en-US/setup.langnostic.json`.
+
+Commit this registry with source and translated documents. The ignored
+`.langnostic/` directory is only for debug output and is not the registry store.
+
+Source hashes identify which blocks have been translated for each target locale.
+New or modified source blocks and missing or changed translatable frontmatter
+are queued. Removal-only or reordering-only changes can be applied without
+translation requests.
+
+Existing target blocks are associated with source hashes by position. Manual
+text edits can be reused while that association remains intact, but changing the
+number or order of target blocks can invalidate it or associate text with the
+wrong source block. If the target block count differs from the registry, every
+source block is queued again. A missing registry also causes retranslation.
+
+Review manual structural edits carefully and keep a version-control copy before
+rebuilding translations. Restoring matching source, target, and registry files
+together preserves the tracking context.
+
+## Syntax and code examples
+
+The plugin sends Markdown blocks, including code fences and JSX, to the model.
+Its instructions ask the model to retain inline code and handle Markdown/JSX,
+but code blocks are not excluded or validated as unchanged. Review syntax,
+placeholders, links, and executable examples after translation.
+
+Markdown and YAML frontmatter are reserialized. Expect formatting changes even
+when the resulting document has equivalent structure.

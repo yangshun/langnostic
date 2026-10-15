@@ -8,7 +8,7 @@ loads configuration, resolves files, batches requests, and validates AI output.
 Plugins interpret file schemas, select pending content, and write results.
 
 See [Configuration](/docs/configuration) for a complete setup and
-[Using plugins](/docs/plugins#custom-plugins) for a working plugin example.
+[Plugin API](/docs/plugin-api#complete-example) for a working plugin example.
 
 ## 1. Configuration and discovery
 
@@ -185,27 +185,7 @@ Read [CLI](/docs/cli) for debug output and
 
 ## Plugin contract
 
-Use the exported type instead of maintaining a separate interface definition:
-
-```typescript
-import type { LangnosticPlugin } from 'langnostic';
-
-type PluginFileMetadata = Parameters<LangnosticPlugin['trackFiles']>[0];
-type PendingStrings = Awaited<
-  ReturnType<LangnosticPlugin['getTranslationStrings']>
->;
-type CompletedStrings = Parameters<
-  LangnosticPlugin['onTranslationBatchComplete']
->[0];
-
-export type PluginData = {
-  files: PluginFileMetadata;
-  pending: PendingStrings;
-  completed: CompletedStrings;
-};
-```
-
-The required members are `type`, `stringsPerRequest`, `trackFiles`,
-`getTranslationStrings`, and `onTranslationBatchComplete`.
-`getInstructions` and `onTranslationStart` are optional. See the
-[lifecycle reference](/docs/plugins#lifecycle-and-writes) for hook responsibilities.
+The [Plugin API reference](/docs/plugin-api) documents `LangnosticPlugin`,
+exported metadata types, pending arguments, completed results, and every lifecycle
+hook. Use [Utilities](/docs/utilities) for building arguments, grouping results,
+and writing files atomically.

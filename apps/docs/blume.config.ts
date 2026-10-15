@@ -13,21 +13,22 @@ export default defineConfig({
   navigation: {
     actions: [{ label: 'Documentation', href: '/' }],
     sidebar: [
-      { label: 'Getting started', items: ['/', '/why', '/quick-start'] },
       {
-        label: 'Guide',
-        items: [
-          '/features',
-          '/configuration',
-          '/cli',
-          '/workflows',
-          '/plugins',
-        ],
+        label: 'Getting started',
+        items: ['/', '/why', '/features', '/quick-start'],
       },
-      { label: 'Advanced', items: ['/architecture'] },
+      { label: 'Guides', items: ['/workflows', '/plugins'] },
+      {
+        label: 'References',
+        items: ['/cli', '/configuration', '/plugin-api', '/utilities'],
+      },
+      {
+        label: 'Plugins',
+        items: ['/plugins/formatjs', '/plugins/mdx'],
+      },
       {
         label: 'Resources',
-        items: ['/philosophy', '/comparisons', '/roadmap'],
+        items: ['/architecture', '/philosophy', '/comparisons', '/roadmap'],
       },
     ],
   },

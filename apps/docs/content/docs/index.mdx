@@ -10,26 +10,27 @@ and format plugins, then run `langnostic translate`.
 Translations stay in your repository. You choose the AI provider and review the
 generated changes using your existing development workflow.
 
-## Availability and licensing
+## Use cases
 
-These docs describe the upcoming release and the current repository source.
-The renamed `@langnostic/plugin-formatjs` package is awaiting publication. The
-installation commands and configuration examples apply to that upcoming release;
-they are not a setup guide for the older npm packages.
+- Fill missing translations in application message catalogs.
+- Translate Markdown/MDX documentation and revisit changed source blocks.
+- Run translation as a reviewable step in a development or release workflow.
 
-The existing `langnostic@0.0.10` release uses `@langnostic/plugin-json`. Existing
-published packages and the current repository license artifacts identify MIT as
-their license. The planned policy for the upcoming release is free use for
-open-source projects and a paid business license for commercial projects.
-Commercial terms and pricing will be announced separately; this planned policy
-does not replace the license included with an existing release.
+Change detection depends on the plugin. FormatJS fills missing message IDs and
+removes obsolete IDs; it does not detect source text edits under an existing ID.
+MDX tracks source block and frontmatter hashes. Read the
+[change-detection details](/docs/features#translate-only-what-has-changed) before choosing a
+workflow.
 
-For upcoming-release access and commercial licensing, contact
-[team@greatfrontend.com](mailto:team@greatfrontend.com).
+## How it fits into your application
 
-AI provider usage is a separate cost. Keeping generated files in your repository
-does not require a hosted translation store, but translation requests can incur
-charges from your provider.
+An i18n library such as React Intl or i18next loads localized content and displays
+it in your application. Langnostic translates files for that workflow; it does
+not provide runtime localization APIs, extract strings from application source,
+or translate a page after it loads.
+
+You still need an extraction or authoring process that produces supported source
+files, a compatible i18n runtime, and a review step for translations and syntax.
 
 ## Supported content
 
@@ -45,34 +46,44 @@ be able to consume the generated file schema. Nested JSON catalogs, XML, YAML,
 TOML, and other localization formats need a suitable custom plugin; they are not
 automatically supported because they are text files.
 
-See [Using plugins](/docs/plugins) for formats, options, and authoring guidance.
-
-## Use cases
-
-- Fill missing translations in application message catalogs.
-- Translate Markdown/MDX documentation and revisit changed source blocks.
-- Run translation as a reviewable step in a development or release workflow.
-
-Change detection depends on the plugin. FormatJS fills missing message IDs and
-removes obsolete IDs; it does not detect source text edits under an existing ID.
-MDX tracks source block and frontmatter hashes. Read the
-[change-detection details](/docs/features#change-detection) before choosing a
-workflow.
-
-## How it fits into your application
-
-An i18n library such as React Intl or i18next loads localized content and displays
-it in your application. Langnostic translates files for that workflow; it does
-not provide runtime localization APIs, extract strings from application source,
-or translate a page after it loads.
-
-You still need an extraction or authoring process that produces supported source
-files, a compatible i18n runtime, and a review step for translations and syntax.
+See [Using plugins](/docs/plugins) for shared setup, or the
+[FormatJS](/docs/plugins/formatjs) and [Markdown / MDX](/docs/plugins/mdx)
+references for format-specific options and behavior.
 
 ## Next steps
 
 - [Why Langnostic](/docs/why): Decide whether this workflow fits your project.
-- [Quick start](/docs/quick-start): Configure the upcoming release.
+- [Quick start](/docs/quick-start): Configure Langnostic and run your first translation.
 - [Features](/docs/features): Understand supported behavior and limitations.
+- [Workflows](/docs/workflows): Review translations and integrate them into CI.
+- [Using plugins](/docs/plugins): Install plugins and configure translation groups.
 - [Comparisons](/docs/comparisons): Compare file-based translation with hosted
   localization workflows.
+
+## References
+
+- [CLI](/docs/cli): Commands, flags, diagnostics, and exit statuses.
+- [Configuration](/docs/configuration): Fields, defaults, overrides, and path mappings.
+- [Plugin API](/docs/plugin-api): Types, lifecycle hooks, and a complete custom plugin.
+- [Utilities](/docs/utilities): Translation helpers and atomic file writes.
+
+## Plugins
+
+- [FormatJS](/docs/plugins/formatjs): Flat JSON catalogs, descriptors, and ID-based tracking.
+- [Markdown / MDX](/docs/plugins/mdx): Document blocks, frontmatter, and translation registries.
+
+<span id="availability-and-licensing" />
+
+## Licensing
+
+Langnostic is free to use for open-source projects. Commercial projects require
+a paid business license. Contact
+[team@greatfrontend.com](mailto:team@greatfrontend.com) for commercial terms and
+pricing.
+
+Versions distributed under the MIT license retain the license terms included
+with those versions.
+
+AI provider usage is a separate cost. Keeping generated files in your repository
+does not require a hosted translation store, but translation requests can incur
+charges from your provider.
