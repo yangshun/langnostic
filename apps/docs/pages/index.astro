@@ -1,52 +1,83 @@
 ---
 import data from 'blume:data';
-import Card from 'blume/components/content/Card.astro';
 import Icon from 'blume/components/Icon.astro';
 import PageLayout from 'blume/components/layout/PageLayout.astro';
 
+import FeatureVisual from '@/components/homepage/FeatureVisual.astro';
+import TranslationPreview from '@/components/homepage/TranslationPreview.astro';
+import '@/components/homepage/homepage.css';
+
 const { config } = data;
+const heroDescription =
+  'Translate your app and docs with your choice of AI. Review the changes and commit translations alongside your code.';
+const greetings = [
+  { language: 'ja', text: 'こんにちは' },
+  { language: 'es', text: 'Hola, mundo.' },
+  { language: 'fr', text: 'Bonjour.' },
+  { language: 'zh', text: '你好，世界。' },
+  { language: 'ko', text: '안녕하세요' },
+  { language: 'de', text: 'Hallo, Welt.' },
+  { language: 'pt', text: 'Olá, mundo.' },
+  { language: 'ar', text: 'مرحبًا بالعالم' },
+  { language: 'hi', text: 'नमस्ते दुनिया' },
+  { language: 'it', text: 'Ciao, mondo.' },
+  { language: 'sw', text: 'Habari, dunia.' },
+  { language: 'tr', text: 'Merhaba, dünya.' },
+] as const;
 const features = [
   {
-    title: 'Fit your localization workflow',
+    kind: 'changes',
+    title: 'Translate only the changes',
     description:
-      'Translate flat string maps, FormatJS message catalogs, and Markdown/MDX. Other localization schemas need a compatible plugin.',
-    icon: 'square-terminal',
+      'Reuse existing translations. Fill missing messages and translate updated documentation without starting over.',
+    href: '/docs/features#change-detection',
+    link: 'See what gets translated',
   },
   {
-    title: 'No lock-in',
+    kind: 'instructions',
+    title: 'Keep your syntax intact',
     description:
-      'Keep translated content in your repository without a hosted translation store. AI provider usage and applicable licensing are separate costs.',
-    icon: 'lock-open',
+      'Give AI instructions to preserve Markdown, HTML, placeholders, and inline code while translating your content.',
+    href: '/docs/plugins/mdx#syntax-and-code-examples',
+    link: 'See how syntax is handled',
   },
   {
+    kind: 'providers',
     title: 'Bring your own AI',
     description:
-      'Choose a compatible language model from OpenAI, Google, Anthropic, or another AI SDK provider, using your own API credentials.',
-    icon: 'brain',
+      'Choose OpenAI, Anthropic, Google, or an OpenAI-compatible endpoint. Pick the model that fits your content and budget.',
+    href: '/docs/configuration#ai-settings',
+    link: 'Choose your provider',
   },
   {
-    title: 'Plugin-specific change detection',
+    kind: 'plugins',
+    title: 'Add the formats you need',
     description:
-      'Fill missing message IDs in FormatJS catalogs and track changed Markdown blocks with source-file registries.',
-    icon: 'zap',
+      'Start with FormatJS and Markdown/MDX. Build a custom plugin for other file formats.',
+    href: '/docs/plugin-api',
+    link: 'Build a plugin',
   },
   {
-    title: 'Extensible architecture',
+    kind: 'workflow',
+    title: 'Translate when you’re ready',
     description:
-      'Use separately installed official plugins for FormatJS JSON and Markdown/MDX, or build a plugin for another file format.',
-    icon: 'layout-template',
+      'Translate on demand, after a commit, or before a release. Fit localization into your development and CI workflows.',
+    href: '/docs/workflows',
+    link: 'Choose your workflow',
   },
   {
-    title: 'Format-aware instructions',
+    kind: 'ownership',
+    title: 'Keep translations in Git',
     description:
-      'Give the model guidance for ICU syntax, markup, and inline code. Review generated syntax and examples before using them.',
-    icon: 'palette',
+      'Review, edit, and commit translations alongside your code. Use the files with your existing tools.',
+    href: '/docs/workflows',
+    link: 'See the workflow',
   },
-];
+] as const;
 ---
 
 <PageLayout
-  site={{ title: config.title, description: config.description }}
+  site={{ title: config.title, description: heroDescription }}
   logo={config.logo}
   navigation={data.navigation}
   themeMode={config.theme.mode}
@@ -55,58 +86,108 @@ const features = [
   searchEnabled={config.search.enabled}
   siteUrl={config.site}
   ogEnabled={config.og.enabled}
+  transparentHeader
   page={{
-    title: 'Langnostic - AI-Powered Translation for Modern Apps',
-    description: config.description,
+    title: 'Langnostic — Ship in more languages',
+    description: heroDescription,
   }}
 >
-  <section class="mx-auto flex max-w-5xl flex-col items-center gap-8 px-6 py-20 text-center sm:py-28">
-    <p class="rounded-full border border-border bg-muted px-4 py-1.5 text-sm text-muted-foreground">
-      AI-powered translation for modern websites
-    </p>
-    <div class="space-y-6">
-      <h1 class="text-balance text-4xl font-semibold tracking-tight sm:text-6xl lg:text-7xl">
-        Translate your website <span class="whitespace-nowrap text-accent">using AI</span>
-      </h1>
-      <p class="mx-auto max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
-        Translate your application messages and documentation with AI, using
-        your own provider and keeping the results in your repository.
-      </p>
-    </div>
-    <a
-      class="inline-flex items-center justify-center gap-2 rounded-blume bg-action px-6 py-3 text-sm font-medium text-action-foreground transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-      href="/docs"
-    >
-      Get started <Icon name="arrow-right" size={16} />
-    </a>
-  </section>
-
-  <section class="border-y border-border bg-muted/30 px-6 py-16 sm:py-20">
-    <div class="mx-auto max-w-6xl">
-      <div class="mb-10 space-y-3 text-center">
-        <h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">Why Langnostic?</h2>
-        <p class="text-lg text-muted-foreground">
-          Built for developers who need fast, reliable translations
-        </p>
+  <div class="langnostic-home">
+    <section class="home-hero" aria-labelledby="hero-title">
+      <div class="hero-art" aria-hidden="true">
+        <canvas class="hero-canvas"></canvas>
+        <div class="hero-grain"></div>
+        <div class="hero-globe">
+          {greetings.map((greeting, index) => (
+            <div
+              class={`orb-label orb-label-${index % 6}`}
+              style={`--label-index: ${index}`}
+              data-label-static={index === 0 || index === 3 || index === 4}
+            >
+              <bdi lang={greeting.language}>{greeting.text}</bdi>
+            </div>
+          ))}
+        </div>
       </div>
-      <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+
+      <div class="hero-content home-container">
+        <h1 id="hero-title">Ship in<br /><span>more languages</span></h1>
+        <p class="hero-description">{heroDescription}</p>
+        <div class="hero-actions">
+          <a class="home-button home-button-primary" href="/docs/quick-start">
+            Start translating <Icon name="arrow-right" size={17} />
+          </a>
+          <a class="home-button home-button-secondary" href="#translation-title">
+            See it in action <Icon name="arrow-down" size={15} />
+          </a>
+        </div>
+      </div>
+
+      <div class="hero-controls home-container">
+        <button class="motion-toggle" type="button" aria-label="Pause animation" aria-pressed="false" title="Pause animation" hidden>
+          <span class="pause-symbol" aria-hidden="true"><Icon name="pause" size={13} /></span><span class="play-symbol" aria-hidden="true"><Icon name="play" size={13} /></span>
+        </button>
+      </div>
+    </section>
+
+    <section class="translation-section home-container" id="in-action" aria-labelledby="translation-title">
+      <div class="section-heading">
+        <h2 id="translation-title">See it in action</h2>
+      </div>
+
+      <TranslationPreview />
+    </section>
+
+    <section class="features-section home-container" id="features" aria-labelledby="features-title">
+      <div class="section-heading features-heading">
+        <h2 id="features-title">Why Langnostic?</h2>
+        <a class="home-text-link" href="/docs/why">Learn more <Icon name="arrow-right" size={16} /></a>
+      </div>
+      <div class="features-grid">
         {features.map((feature) => (
-          <Card title={feature.title} icon={feature.icon}>
-            <p class="leading-relaxed">{feature.description}</p>
-          </Card>
+          <article class="feature-card">
+            <FeatureVisual kind={feature.kind} />
+            <div class="feature-copy">
+              <h3>{feature.title}</h3>
+              <p>{feature.description}</p>
+              <a class="home-text-link" href={feature.href}>{feature.link} <Icon name="arrow-right" size={16} /></a>
+            </div>
+          </article>
         ))}
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="mx-auto max-w-3xl space-y-6 px-6 py-20 text-center">
-    <h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">Ready to translate your app?</h2>
-    <p class="text-lg text-muted-foreground">Explore the setup guide and supported translation workflows.</p>
-    <a
-      class="inline-flex items-center justify-center gap-2 rounded-blume bg-action px-6 py-3 text-sm font-medium text-action-foreground transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-      href="/docs"
-    >
-      Read the documentation <Icon name="arrow-right" size={16} />
-    </a>
-  </section>
+    <section class="workflow-section home-container" aria-labelledby="workflow-title">
+      <div class="workflow-copy">
+        <h2 id="workflow-title">Translate. Review. Ship.</h2>
+        <p>Choose your languages and AI provider. Translate locally or in CI, review the changes, and ship them with your project.</p>
+        <a class="home-text-link" href="/docs/quick-start">Follow the quick start <Icon name="arrow-right" size={16} /></a>
+      </div>
+      <div class="terminal-window">
+        <div class="terminal-top"><span class="terminal-dots"><i></i><i></i><i></i></span><span>~/your-project</span><Icon name="square-terminal" size={14} /></div>
+        <div class="terminal-content">
+          <p class="terminal-comment"># Add the CLI and a format plugin</p>
+          <p class="terminal-command"><span class="terminal-prompt">$</span><span>npm i -D langnostic @langnostic/plugin-formatjs</span></p>
+          <p class="terminal-comment"># Create a configuration</p>
+          <p class="terminal-command"><span class="terminal-prompt">$</span><span>npx langnostic init</span></p>
+          <p class="terminal-comment"># Configure your provider, then translate</p>
+          <p class="terminal-command"><span class="terminal-prompt">$</span><span>npx langnostic translate<span class="terminal-cursor" aria-hidden="true"></span></span></p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="home-footer home-container">
+      <a class="footer-brand" href="/">Langnostic</a>
+      <div><a href="/docs">Documentation</a><a href={data.navigation.repoUrl}>GitHub</a><a href="/docs#licensing">License</a></div>
+    </footer>
+
+  </div>
+  <Fragment slot="footer" />
 </PageLayout>
+
+<script>
+  import { mountHomepage } from '@/components/homepage/homepage';
+
+  mountHomepage();
+  document.addEventListener('astro:page-load', mountHomepage);
+</script>

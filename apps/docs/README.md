@@ -20,6 +20,34 @@ the documentation.
   sidebar groups. Pages omitted from the sidebar remain available at their URLs.
 - `pages/index.astro` is the homepage, using Blume's full-width `PageLayout`.
 
+The homepage uses the Prism design and follows Blume's light/dark site theme,
+including the animated WebGL globe, glowing continent outlines, connection arcs,
+and twelve greetings that fade in and out around the globe. Labels are staggered
+across six positions on desktop and three on mobile. The map overlay shares the
+shader's clock and projection; the greeting animations follow its pause state.
+The shader, map overlay, and labels use the same CSS globe frame. At tablet widths
+and below, a larger globe sits beneath the copy, with labels positioned inside it.
+Natural Earth geography is bundled locally in `components/homepage/geography/`.
+Its styles, six illustrated feature cards,
+animated translation preview, and shader live in `components/homepage/`.
+The feature cards cover workflow timing, ownership, AI providers, incremental
+updates, extensibility, and syntax preservation. The preview
+shows `en-US.json`, a CLI run, a new `zh-CN.json` file opening in a separate
+editor pane, a new source message, a second CLI run, and the updated translation.
+The two editor panes sit side by side on desktop and can be swiped between on
+mobile. It uses illustrative local strings, not an
+AI request. The source edit adds a message ID to match FormatJS change detection.
+The file explorer follows the active editor. Pause, replay, and step controls
+let visitors inspect the sequence. On mobile, the translated file is shown during
+the re-run before its new message appears.
+Both animations respect reduced-motion preferences and stop while offscreen
+or the browser tab is hidden. The hero keeps a CSS background when WebGL is
+unavailable.
+
+The homepage and documentation share the Prism palette: `blume.config.ts` sets
+the light/dark accent and background colors, and `theme.css` defines the matching
+text, surface, border, and code colors. Homepage styles consume those same tokens.
+
 Use Blume's native `:::info` callouts and `package-install` code fences in MDX.
 Keep JSX examples inside fenced code blocks.
 

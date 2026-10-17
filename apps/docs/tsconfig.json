@@ -8,6 +8,9 @@
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
+    "paths": {
+      "@/*": ["./*"]
+    },
     "resolveJsonModule": true
   },
   "include": [
@@ -15,6 +18,7 @@
     ".blume-verify/.astro/types.d.ts",
     "*.ts",
     "components/**/*.astro",
+    "components/**/*.ts",
     "pages/**/*.astro"
   ],
   "exclude": ["node_modules", "dist"]

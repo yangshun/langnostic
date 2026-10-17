@@ -1,6 +1,8 @@
 import { defineConfig } from 'blume';
 import { orama } from 'blume/search';
 
+const repositoryUrl = 'https://github.com/yangshun/langnostic';
+
 export default defineConfig({
   title: 'Langnostic',
   description:
@@ -8,10 +10,18 @@ export default defineConfig({
   basePath: '/docs',
   deployment: { site: 'https://langnostic.com' },
   content: { root: 'content/docs' },
-  logo: { text: 'Langnostic', href: '/' },
-  theme: { accent: 'blue', mode: 'system' },
+  logo: { image: '/logo.svg', text: 'Langnostic', href: '/' },
+  theme: {
+    accent: { light: '#7452ab', dark: '#c9a9f3' },
+    background: { light: '#f9f7f2', dark: '#121018' },
+    mode: 'system',
+  },
   navigation: {
-    actions: [{ label: 'Documentation', href: '/' }],
+    actions: [
+      { label: 'Docs', href: '/docs' },
+      { label: 'GitHub', href: repositoryUrl },
+    ],
+    repo: repositoryUrl,
     sidebar: [
       {
         label: 'Getting started',
@@ -36,7 +46,6 @@ export default defineConfig({
   agents: { llmsTxt: true },
   seo: {
     metatags: {
-      author: 'GreatFrontEnd',
       keywords:
         'translation, i18n, internationalization, AI translation, localization, React, MDX, JSON',
     },

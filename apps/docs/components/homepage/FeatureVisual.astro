@@ -1,0 +1,84 @@
+---
+import Icon from 'blume/components/Icon.astro';
+
+import anthropicLogo from './logos/anthropic.svg?raw';
+import googleLogo from './logos/google.svg?raw';
+import openaiLogo from './logos/openai.svg?raw';
+import './features.css';
+
+interface Props {
+  kind: 'workflow' | 'ownership' | 'providers' | 'changes' | 'plugins' | 'instructions';
+}
+
+const { kind } = Astro.props;
+---
+
+<div class={`feature-visual feature-visual-${kind}`} aria-hidden="true">
+  {kind === 'workflow' && (
+    <div class="workflow-diagram">
+      <div class="workflow-triggers">
+        <div><span class="workflow-event feature-surface"><Icon name="square-terminal" size={19} /></span><span>On demand</span></div>
+        <div><span class="workflow-event feature-surface"><Icon name="git-commit-horizontal" size={19} /></span><span>After commit</span></div>
+        <div><span class="workflow-event feature-surface"><Icon name="rocket" size={19} /></span><span>Before release</span></div>
+      </div>
+      <div class="workflow-connectors"><span /><span /><span /></div>
+      <div class="workflow-command feature-surface"><span class="workflow-prompt">❯</span><code>npx langnostic translate</code></div>
+    </div>
+  )}
+  {kind === 'ownership' && (
+    <div class="repo-preview feature-surface">
+      <div class="visual-toolbar"><Icon name="git-branch" size={13} /><span>your-repo / locales</span><Icon name="lock-open" size={13} /></div>
+      <div class="repo-files">
+        {['en.json', 'es.json', 'ja.json'].map((file) => (
+          <div><span class="repo-file-branch" /><Icon name="file-code" size={13} /><span>{file}</span><Icon name="check" size={12} /></div>
+        ))}
+      </div>
+    </div>
+  )}
+  {kind === 'providers' && (
+    <div class="provider-constellation">
+      <span class="provider-orbit" /><span class="provider-orbit provider-orbit-inner" />
+      <span class="provider-hub"><Icon name="sparkles" size={26} /></span>
+      <span class="provider-node provider-node-openai feature-surface"><span class="provider-logo provider-logo-monochrome" set:html={openaiLogo} />OpenAI</span>
+      <span class="provider-node provider-node-anthropic feature-surface"><span class="provider-logo provider-logo-monochrome" set:html={anthropicLogo} />Anthropic</span>
+      <span class="provider-node provider-node-google feature-surface"><span class="provider-logo provider-logo-monochrome" set:html={googleLogo} />Google</span>
+      <span class="provider-orbit-dot" />
+    </div>
+  )}
+  {kind === 'changes' && (
+    <div class="change-preview feature-surface">
+      <div class="visual-toolbar"><Icon name="file-code" size={13} /><span>fr.json</span><span class="change-count">+1</span></div>
+      <div class="change-lines">
+        <div><span>1</span><code>{'{'}</code></div>
+        <div><span>2</span><code>"title": "Bonjour",</code></div>
+        <div class="change-added"><span>+</span><code>"welcome": "Bienvenue"</code></div>
+        <div><span>4</span><code>{'}'}</code></div>
+      </div>
+      <div class="change-caption"><Icon name="check" size={12} /> Missing message added</div>
+    </div>
+  )}
+  {kind === 'plugins' && (
+    <div class="plugin-diagram">
+      <div class="plugin-core feature-surface"><Icon name="blocks" size={19} /><span>langnostic</span><span class="plugin-port" /></div>
+      <div class="plugin-connectors"><span /><span /><span /></div>
+      <div class="plugin-modules">
+        <div class="plugin-module feature-surface"><Icon name="braces" size={19} /><span>FormatJS</span></div>
+        <div class="plugin-module feature-surface"><Icon name="file-text" size={19} /><span>MDX</span></div>
+        <div class="plugin-module plugin-module-custom"><Icon name="plus" size={19} /><span>Your plugin</span></div>
+      </div>
+    </div>
+  )}
+  {kind === 'instructions' && (
+    <div class="syntax-preview feature-surface">
+      <div class="visual-toolbar"><Icon name="code" size={13} /><span>Syntax stays intact</span><Icon name="check" size={12} /></div>
+      <div class="syntax-example">
+        <span>EN</span><code><span class="syntax-token">**</span>Hello<span class="syntax-token">**</span>, <span class="syntax-token">{'{name}'}</span></code>
+        <span>ZH</span><code lang="zh-CN"><span class="syntax-token">**</span>你好<span class="syntax-token">**</span>, <span class="syntax-token">{'{name}'}</span></code>
+      </div>
+      <div class="syntax-example">
+        <span>EN</span><code><span class="syntax-token">{'<Link>'}</span>Learn more<span class="syntax-token">{'</Link>'}</span></code>
+        <span>ZH</span><code lang="zh-CN"><span class="syntax-token">{'<Link>'}</span>了解更多<span class="syntax-token">{'</Link>'}</span></code>
+      </div>
+    </div>
+  )}
+</div>

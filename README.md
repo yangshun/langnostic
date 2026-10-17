@@ -241,7 +241,7 @@ for environment references, request parameters, and plugin settings.
 
 ```bash
 # Clone the repository
-git clone https://github.com/greatfrontend/langnostic.git
+git clone https://github.com/yangshun/langnostic.git
 cd langnostic
 
 # Install dependencies

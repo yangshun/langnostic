@@ -1,0 +1,72 @@
+/* Shared Prism colors for the homepage, documentation, and search. */
+:root {
+  --blume-foreground: #302b33;
+  --blume-muted: #efebe5;
+  --blume-muted-foreground: #706876;
+  --blume-border: #e2ddd8;
+  --blume-code-background: #f4f0eb;
+  --blume-code-highlight: color-mix(
+    in srgb,
+    var(--blume-accent) 10%,
+    transparent
+  );
+  --blume-code-highlight-border: color-mix(
+    in srgb,
+    var(--blume-accent) 55%,
+    transparent
+  );
+  --blume-code-word: color-mix(in srgb, var(--blume-accent) 14%, transparent);
+  --blume-code-word-border: color-mix(
+    in srgb,
+    var(--blume-accent) 50%,
+    transparent
+  );
+}
+
+:root[data-theme='dark'] {
+  --blume-foreground: #f2eef7;
+  --blume-muted: #25202f;
+  --blume-muted-foreground: #a49aaf;
+  --blume-border: #302a3b;
+  --blume-code-background: #1a1722;
+  --blume-code-highlight: color-mix(
+    in srgb,
+    var(--blume-accent) 14%,
+    transparent
+  );
+  --blume-code-highlight-border: color-mix(
+    in srgb,
+    var(--blume-accent) 55%,
+    transparent
+  );
+  --blume-code-word: color-mix(in srgb, var(--blume-accent) 18%, transparent);
+  --blume-code-word-border: color-mix(
+    in srgb,
+    var(--blume-accent) 50%,
+    transparent
+  );
+}
+
+/* Keep the link's GitHub label accessible while displaying its brand mark. */
+[data-blume-header] a[href='https://github.com/yangshun/langnostic'] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 0;
+}
+
+[data-blume-header] a[href='https://github.com/yangshun/langnostic']::before {
+  content: '';
+  width: 18px;
+  height: 18px;
+  background: currentColor;
+  mask: url('/github.svg') center / contain no-repeat;
+}
+
+[data-blume-header] a[href='https://github.com/yangshun/langnostic']:hover {
+  background-color: var(--blume-muted);
+}

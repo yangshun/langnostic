@@ -1,0 +1,83 @@
+---
+import Icon from 'blume/components/Icon.astro';
+
+import { previewCommand, previewFiles, previewSteps } from './translation-preview-data';
+import './translation-preview.css';
+---
+
+<div class="translation-preview" data-translation-preview data-stage="0" data-playing="false" aria-describedby="preview-description">
+  <p class="preview-sr-only" id="preview-description">
+    An illustrative translation workflow. Run the CLI to translate the English
+    source into Chinese, add a source message, and run the CLI again to update
+    the translated file. Use the step buttons to inspect each stage.
+  </p>
+
+  <div class="preview-window-bar">
+    <nav class="preview-timeline" data-preview-timeline aria-label="Translation workflow steps">
+      {previewSteps.map((step, index) => (
+        <button type="button" class="preview-step" data-preview-step={index} aria-label={`Step ${index + 1}: ${step.title}`} aria-current={index === 0 ? 'step' : undefined} disabled>
+          <span>{step.label}</span>
+          <span class="preview-step-track" aria-hidden="true"><span></span></span>
+        </button>
+      ))}
+    </nav>
+    <div class="preview-playback" data-preview-controls hidden>
+      <button type="button" data-preview-play aria-label="Pause translation preview" aria-pressed="false" title="Pause translation preview">
+        <span data-preview-pause-icon><Icon name="pause" size={14} /></span>
+        <span data-preview-play-icon hidden><Icon name="play" size={14} /></span>
+      </button>
+      <button type="button" data-preview-replay aria-label="Replay translation preview" title="Replay translation preview">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10a9 9 0 1 1 2.6 8.4M3 4v6h6" /></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="preview-workspace">
+    <div class="preview-explorer" role="group" aria-label="Example files">
+      <div class="preview-folder"><Icon name="chevron-down" size={12} /><Icon name="folder" size={14} /><span>src / locales</span></div>
+      <div class="preview-file-list" role="list">
+        {previewFiles.map((file, index) => (
+          <div class="preview-file" role="listitem" data-preview-file={file.locale} aria-current={index === 0 ? 'true' : undefined} hidden={index > 0}>
+            <span class="preview-file-icon" aria-hidden="true">{'{}'}</span>
+            <span>{file.locale}.json</span>
+            <span class="preview-file-badge" data-preview-file-badge></span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="preview-main">
+      <div class="preview-editors" data-preview-editors>
+        {previewFiles.map((file, index) => (
+          <div class="preview-editor" role="region" aria-label={`${file.locale}.json editor`} data-preview-editor={file.locale} data-selected={index === 0 ? 'true' : 'false'} hidden={index > 0}>
+            <div class="preview-editor-tab">
+              <span class="preview-open-file"><span class="preview-file-icon" aria-hidden="true">{'{}'}</span><span>{file.locale}.json</span></span>
+              <span class="preview-file-kind">{index === 0 ? 'Source' : 'Translation'}</span>
+            </div>
+            <div class="preview-editor-breadcrumb">src <span>/</span> locales</div>
+            <pre class="preview-code" aria-label={`${file.language} example messages`} data-preview-code lang={file.locale}><code><span class="preview-code-line"><span class="preview-line-number" aria-hidden="true">1</span><span>{'{'}</span></span><span class="preview-code-line"><span class="preview-line-number" aria-hidden="true">2</span><span>&nbsp; <span class="preview-code-key">"cta"</span>: <span class="preview-code-value">{JSON.stringify(file.cta)}</span>,</span></span><span class="preview-code-line"><span class="preview-line-number" aria-hidden="true">3</span><span>&nbsp; <span class="preview-code-key">"welcome"</span>: <span class="preview-code-value">{JSON.stringify(file.welcome)}</span></span></span><span class="preview-code-line"><span class="preview-line-number" aria-hidden="true">4</span><span>{'}'}</span></span></code></pre>
+            <div class="preview-editor-status"><span data-preview-editor-status>2 messages</span><span>JSON</span></div>
+          </div>
+        ))}
+      </div>
+
+      <div class="preview-terminal" role="region" aria-label="Illustrative terminal output">
+        <div class="preview-terminal-heading"><span class="preview-terminal-state" data-preview-terminal-state>Translating…</span></div>
+        <div class="preview-terminal-content">
+          <div class="preview-command-line"><span class="preview-prompt" aria-hidden="true">❯</span><code data-preview-command>{previewCommand}</code><span class="preview-terminal-cursor" data-preview-cursor aria-hidden="true"></span></div>
+          <p class="preview-terminal-progress" data-preview-progress hidden></p>
+          <div class="preview-terminal-results">
+            {previewFiles.slice(1).map((file) => (
+              <p data-preview-result={file.locale} hidden><span class="preview-check" aria-hidden="true">✓</span><span>Created {file.locale}.json</span><span class="preview-result-detail">2 messages</span></p>
+            ))}
+          </div>
+          <div class="preview-command-line preview-rerun" data-preview-rerun hidden><span class="preview-prompt" aria-hidden="true">❯</span><code data-preview-second-command></code><span class="preview-terminal-cursor" data-preview-second-cursor aria-hidden="true"></span></div>
+          <p class="preview-terminal-progress" data-preview-second-progress hidden></p>
+          <p class="preview-terminal-complete" data-preview-complete hidden><span class="preview-check" aria-hidden="true">✓</span> Updated 1 file <span class="preview-result-detail">1 new message</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="preview-sr-only" role="status" aria-live="polite" data-preview-announcement></p>
+</div>
