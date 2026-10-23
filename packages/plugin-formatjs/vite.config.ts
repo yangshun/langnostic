@@ -9,7 +9,7 @@ export default defineConfig({
         cache: false,
       },
       typecheck: {
-        command: 'tsc',
+        command: 'tsrs --noEmit',
         dependsOn: ['langnostic#build:package'],
         cache: false,
       },
@@ -28,7 +28,11 @@ export default defineConfig({
   },
   pack: {
     format: 'esm',
-    dts: true,
+    dts: {
+      // Vite+ 1.2 only auto-detects TypeScript 7.0.
+      generator: 'tsgo',
+      tsgo: { path: 'tsc' },
+    },
     fixedExtension: false,
     deps: {
       neverBundle: ['langnostic'],

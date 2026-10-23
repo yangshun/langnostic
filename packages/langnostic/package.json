@@ -50,6 +50,7 @@
     "@types/node": "catalog:",
     "@types/yargs": "^17.0.35",
     "rimraf": "catalog:",
+    "tsrs": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:",

@@ -11,7 +11,7 @@ export default defineConfig({
           output: ['dist/**'],
         },
       },
-      typecheck: 'tsc',
+      typecheck: 'tsrs --noEmit',
       'test:unit': 'vp test run',
       'test:integration': {
         command: 'vp test run --config vite.integration.config.ts',
@@ -33,7 +33,11 @@ export default defineConfig({
   },
   pack: {
     format: 'esm',
-    dts: true,
+    dts: {
+      // Vite+ 1.2 only auto-detects TypeScript 7.0.
+      generator: 'tsgo',
+      tsgo: { path: 'tsc' },
+    },
     fixedExtension: false,
     entry: ['./src/cli.ts', './src/index.ts'],
     hash: false,

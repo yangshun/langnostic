@@ -262,6 +262,15 @@ pnpm dev
 Vite+ runs workspace tasks and caches builds. Plugin builds, tests, and type checks
 build `langnostic` first.
 
+Library type checks use [tsrs](https://github.com/oxc-project/tsrs) with the
+existing strict TypeScript configurations. Run `vp run tc` to check all libraries
+and the documentation site, or `vp run langnostic#typecheck` to check one library.
+The docs use Blume's Astro checker. TypeScript remains installed for declaration
+builds, Astro tooling, and the integration test of published types. Vite+ also
+retains its built-in type-aware linting and type checks in `vp check`.
+The pinned tsrs release supports macOS arm64 and Linux x64/arm64. See the
+[typechecking benchmark](benchmarks/typecheck.md) for measured time and memory.
+
 ```bash
 # Build all packages
 pnpm build
@@ -323,7 +332,7 @@ and builds from the repository root.
 - `pnpm test` - Run all tests
 - `vp run test:coverage` - Run tests with coverage and enforce 100% per file
 - `vp run test:integration` - Test the packed CLI and plugins in an isolated consumer
-- `pnpm tc` - Type check all libraries
+- `pnpm tc` - Type check libraries with tsrs and docs with Blume
 - `pnpm exec vp check` - Check formatting, lint, and types with Vite+
 - `pnpm lint` - Lint all packages with Vite+
 - `pnpm format` - Format code with Vite+
